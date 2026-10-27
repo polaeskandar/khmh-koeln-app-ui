@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges">
+  <rect width="9" height="9" fill="#047857"/>
+  <g transform="translate(1.25 1.25) scale(0.722)" fill="#ecfdf5">
+    <path d="M4 1h1v3h3v1h-3v3h-1v-3h-3v-1h3z"/>
+    <path d="M3 0h3v1h-3z M3 8h3v1h-3z M0 3h1v3h-1z M8 3h1v3h-1z"/>
+  </g>
+</svg>

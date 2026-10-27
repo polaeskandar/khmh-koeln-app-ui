@@ -1,0 +1,265 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.147 0.004 49.25);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.147 0.004 49.25);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.147 0.004 49.25);
+  --primary: oklch(0.508 0.118 165.612);
+  --primary-foreground: oklch(0.979 0.021 166.113);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.97 0.001 106.424);
+  --muted-foreground: oklch(0.553 0.013 58.071);
+  --accent: oklch(0.97 0.001 106.424);
+  --accent-foreground: oklch(0.216 0.006 56.043);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.923 0.003 48.717);
+  --input: oklch(0.923 0.003 48.717);
+  --ring: oklch(0.709 0.01 56.259);
+  --chart-1: oklch(0.845 0.143 164.978);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.596 0.145 163.225);
+  --chart-4: oklch(0.508 0.118 165.612);
+  --chart-5: oklch(0.432 0.095 166.913);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0.001 106.423);
+  --sidebar-foreground: oklch(0.147 0.004 49.25);
+  --sidebar-primary: oklch(0.596 0.145 163.225);
+  --sidebar-primary-foreground: oklch(0.979 0.021 166.113);
+  --sidebar-accent: oklch(0.97 0.001 106.424);
+  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
+  --sidebar-border: oklch(0.923 0.003 48.717);
+  --sidebar-ring: oklch(0.709 0.01 56.259);
+}
+
+.dark {
+  --background: oklch(0.147 0.004 49.25);
+  --foreground: oklch(0.985 0.001 106.423);
+  --card: oklch(0.216 0.006 56.043);
+  --card-foreground: oklch(0.985 0.001 106.423);
+  --popover: oklch(0.216 0.006 56.043);
+  --popover-foreground: oklch(0.985 0.001 106.423);
+  --primary: oklch(0.432 0.095 166.913);
+  --primary-foreground: oklch(0.979 0.021 166.113);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.268 0.007 34.298);
+  --muted-foreground: oklch(0.709 0.01 56.259);
+  --accent: oklch(0.268 0.007 34.298);
+  --accent-foreground: oklch(0.985 0.001 106.423);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.553 0.013 58.071);
+  --chart-1: oklch(0.845 0.143 164.978);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.596 0.145 163.225);
+  --chart-4: oklch(0.508 0.118 165.612);
+  --chart-5: oklch(0.432 0.095 166.913);
+  --sidebar: oklch(0.216 0.006 56.043);
+  --sidebar-foreground: oklch(0.985 0.001 106.423);
+  --sidebar-primary: oklch(0.696 0.17 162.48);
+  --sidebar-primary-foreground: oklch(0.262 0.051 172.552);
+  --sidebar-accent: oklch(0.268 0.007 34.298);
+  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.553 0.013 58.071);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   KHMK Köln extensions to preset b3a10z1gt0 (radix-sera · stone · emerald).
+   The preset tokens above are generated by `shadcn init --preset b3a10z1gt0`
+   and stay untouched. These add the semantic states the attendance workflow
+   needs (success / info / warning) and the service identity swatches. All
+   values sit in the same oklch space as the preset.
+   ------------------------------------------------------------------------ */
+:root {
+  --success: oklch(0.508 0.118 165.612); /* = preset primary (emerald 700) */
+  --success-foreground: oklch(0.979 0.021 166.113);
+  --success-soft: oklch(0.979 0.021 166.113);
+  --info: oklch(0.5 0.134 242.749); /* sky 700 */
+  --info-foreground: oklch(0.977 0.013 236.62);
+  --info-soft: oklch(0.977 0.013 236.62);
+  --warning: oklch(0.555 0.163 48.998); /* amber 700 */
+  --warning-foreground: oklch(0.987 0.022 95.277);
+  --warning-soft: oklch(0.987 0.022 95.277);
+  --danger-soft: oklch(0.971 0.013 17.38);
+
+  /* Service identity swatches, assigned in creation order. Only ever used as
+     small squares next to the service name, never as the only cue. The order
+     is the validated categorical order from the data-viz reference palette. */
+  --identity-1: #2a78d6;
+  --identity-2: #eb6834;
+  --identity-3: #1baf7a;
+  --identity-4: #eda100;
+  --identity-5: #e87ba4;
+  --identity-6: #008300;
+  --identity-7: #6250d6;
+  --identity-8: #e34948;
+}
+
+.dark {
+  --success: oklch(0.696 0.17 162.48);
+  --success-foreground: oklch(0.262 0.051 172.552);
+  --success-soft: oklch(0.262 0.051 172.552);
+  --info: oklch(0.746 0.16 232.661);
+  --info-foreground: oklch(0.293 0.066 243.157);
+  --info-soft: oklch(0.293 0.066 243.157);
+  --warning: oklch(0.828 0.189 84.429);
+  --warning-foreground: oklch(0.279 0.077 45.635);
+  --warning-soft: oklch(0.279 0.077 45.635);
+  --danger-soft: oklch(0.258 0.092 26.042);
+
+  --identity-1: #3987e5;
+  --identity-2: #d95926;
+  --identity-3: #199e70;
+  --identity-4: #c98500;
+  --identity-5: #d55181;
+  --identity-6: #008300;
+  --identity-7: #9085e9;
+  --identity-8: #e66767;
+}
+
+@theme inline {
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger-soft: var(--danger-soft);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Fonts: the preset's Oxanium (text) and Geist (headings) come first; they have
+   no Arabic letters, so the browser takes those from Noto Kufi Arabic, letter by
+   letter. Text that mixes both scripts (an Arabic page with a Latin name) keeps
+   each script in its own face. Noto Kufi also has Latin letters, which is why it
+   must not come first. */
+:root {
+  --font-sans: var(--font-oxanium), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-geist), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Arabic letters join: letter spacing would pull them apart, so the preset's
+   tracked labels are set without it in Arabic. */
+:lang(ar),
+:lang(ar) * {
+  letter-spacing: normal !important;
+}
+
+/* Icons that point along the reading direction are mirrored right to left.
+   Components that already flip an icon (an rtl: class) are left alone. */
+[dir="rtl"]
+  :is(
+    .lucide-arrow-left,
+    .lucide-arrow-right,
+    .lucide-chevron-left,
+    .lucide-chevron-right,
+    .lucide-chevrons-left,
+    .lucide-chevrons-right,
+    .lucide-move-left,
+    .lucide-move-right,
+    .lucide-log-in,
+    .lucide-log-out,
+    .lucide-external-link,
+    .lucide-send,
+    .lucide-undo-2,
+    .lucide-redo-2
+  ):not([class*="rtl:"]) {
+  transform: scaleX(-1);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes khmk-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@utility animate-live {
+  animation: khmk-pulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-live {
+    animation: none;
+  }
+}

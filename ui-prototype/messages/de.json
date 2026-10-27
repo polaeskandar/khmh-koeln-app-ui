@@ -1,0 +1,1984 @@
+{
+  "meta": {
+    "description": "Dienste, Termine und Anwesenheit für KHMK Köln."
+  },
+  "brand": {
+    "church": "Koptisch-Orthodoxe Kirche"
+  },
+  "nav": {
+    "main": "Hauptnavigation",
+    "dashboard": "Übersicht",
+    "services": "Dienste",
+    "meetings": "Termine",
+    "attendance": "Anwesenheit",
+    "members": "Mitglieder",
+    "settings": "Einstellungen",
+    "takeAttendance": "Anwesenheit erfassen",
+    "more": "Mehr",
+    "openSessions": "{count, plural, other {# offen}}",
+    "backTo": "Zurück zu {page}",
+    "breadcrumb": "Brotkrumen"
+  },
+  "shell": {
+    "demoData": "Demodaten",
+    "demoDataHint": "Prototyp mit erfundenen Demodaten, die im Speicher des Servers liegen. Änderungen gehen beim Neustart verloren. Noch wird nichts im Backend gespeichert.",
+    "prototypeViewAs": "Prototyp: App ansehen als",
+    "nowViewingAs": "Sie sehen die App jetzt als {name} ({role}).",
+    "openStaffApp": "Mitarbeiter-App öffnen",
+    "openParentPortal": "Elternbereich öffnen",
+    "signOut": "Abmelden",
+    "resetDemoData": "Demodaten zurücksetzen",
+    "demoDataReset": "Demodaten auf Sonntag, 8. November, 12:08 zurückgesetzt.",
+    "accountMenu": "Kontomenü",
+    "yourAccount": "Ihr Konto"
+  },
+  "prefs": {
+    "language": "Sprache",
+    "appearance": "Darstellung",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "Wie das Gerät"
+  },
+  "common": {
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saveChanges": "Änderungen speichern",
+    "saved": "Gespeichert.",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "archive": "Archivieren",
+    "restore": "Wiederherstellen",
+    "close": "Schließen",
+    "more": "Mehr",
+    "moreActions": "Weitere Aktionen",
+    "moreActionsFor": "Weitere Aktionen für {name}",
+    "actionsFor": "Aktionen für {name}",
+    "optional": "optional",
+    "clearSearch": "Suche leeren",
+    "loading": "Wird geladen",
+    "none": "Keine",
+    "dash": "—",
+    "archived": "Archiviert",
+    "inactive": "Inaktiv",
+    "optionalNote": "(optional)",
+    "reason": "Grund",
+    "loadingEllipsis": "Wird geladen …",
+    "formerAccount": "Ehemaliges Konto"
+  },
+  "ui": {
+    "close": "Schließen",
+    "more": "Mehr",
+    "toggleSidebar": "Seitenleiste ein- oder ausblenden",
+    "sidebar": "Seitenleiste",
+    "sidebarDescription": "Die Navigation der App.",
+    "loading": "Wird geladen",
+    "breadcrumb": "Brotkrumen"
+  },
+  "errors": {
+    "title": {
+      "forbidden": "Nicht erlaubt",
+      "notFound": "Nicht gefunden",
+      "conflict": "Gerade nicht möglich",
+      "invalid": "Bitte prüfen Sie einige Felder"
+    },
+    "forbidden": "Ihre Rolle erlaubt das nicht.",
+    "checkFields": "Bitte prüfen Sie die markierten Felder.",
+    "invalidRequest": "Die Anfrage war ungültig.",
+    "notFound": {
+      "service": "Dieser Dienst existiert nicht oder wurde gelöscht.",
+      "stage": "Diese Stufe existiert nicht oder wurde gelöscht.",
+      "person": "Diese Person existiert nicht oder wurde gelöscht.",
+      "membership": "Diese Zugehörigkeit existiert nicht oder wurde gelöscht.",
+      "schedule": "Dieser Regeltermin existiert nicht oder wurde gelöscht.",
+      "session": "Dieser Termin existiert nicht oder wurde gelöscht.",
+      "attendance": "Dieser Anwesenheitseintrag existiert nicht oder wurde gelöscht.",
+      "lesson": "Diese Lektion existiert nicht oder wurde gelöscht.",
+      "homework": "Diese Hausaufgabe existiert nicht oder wurde gelöscht.",
+      "user": "Dieses Konto existiert nicht oder wurde gelöscht.",
+      "guardian": "Diese Eltern-Verknüpfung existiert nicht oder wurde entfernt.",
+      "request": "Diese Anfrage existiert nicht oder wurde gelöscht."
+    },
+    "validation": {
+      "tooLong": "Höchstens {max} Zeichen.",
+      "chooseDate": "Wählen Sie ein Datum.",
+      "invalidDate": "Geben Sie ein gültiges Datum ein.",
+      "chooseTime": "Wählen Sie eine Uhrzeit.",
+      "invalidTime": "Geben Sie eine Uhrzeit wie 18:30 ein."
+    },
+    "services": {
+      "adminOnlyCreate": "Nur Administratoren können Dienste anlegen.",
+      "adminOnlyArchive": "Nur Administratoren können Dienste archivieren.",
+      "adminOnlyRestore": "Nur Administratoren können Dienste wiederherstellen.",
+      "adminOnlyDelete": "Nur Administratoren können Dienste löschen.",
+      "nameRequired": "Geben Sie einen Namen für den Dienst ein.",
+      "nameTaken": "Es gibt schon einen Dienst namens „{name}“.",
+      "nameTakenArchived": "Ein archivierter Dienst heißt bereits „{name}“. Stellen Sie ihn wieder her, statt einen neuen anzulegen.",
+      "alreadyArchived": "{name} ist bereits archiviert.",
+      "notArchived": "{name} ist nicht archiviert.",
+      "takingAttendance": "In {name} wird gerade Anwesenheit erfasst. Schließen Sie zuerst die offenen Termine ab.",
+      "hasHistory": "{name} hat schon Termine ({count, plural, one {# Termin} other {# Termine}}). Archivieren Sie den Dienst, statt ihn zu löschen.",
+      "archivedNoStageChanges": "{name} ist archiviert. Stellen Sie den Dienst wieder her, bevor Sie seine Stufen ändern."
+    },
+    "stages": {
+      "nameRequired": "Geben Sie einen Namen für die Stufe ein.",
+      "nameTaken": "Dieser Dienst hat schon eine Stufe namens „{name}“.",
+      "nameTakenArchived": "Eine archivierte Stufe heißt bereits „{name}“. Stellen Sie sie stattdessen wieder her.",
+      "reorderStale": "Die Stufen haben sich geändert, während Sie sortiert haben. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
+      "alreadyArchived": "{name} ist bereits archiviert.",
+      "notArchived": "{name} ist nicht archiviert.",
+      "takingAttendance": "In {name} wird gerade Anwesenheit erfasst. Schließen Sie zuerst den Termin ab.",
+      "hasHistory": "{name} hat schon Termine ({count, plural, one {# Termin} other {# Termine}}). Archivieren Sie die Stufe, statt sie zu löschen.",
+      "hasMembers": "{count, plural, one {# Person ist} other {# Personen sind}} noch in {name}. Verschieben Sie sie zuerst in eine andere Stufe oder archivieren Sie die Stufe."
+    },
+    "meetings": {
+      "chooseService": "Wählen Sie einen Dienst.",
+      "serviceArchived": "{name} ist archiviert.",
+      "chooseStage": "Wählen Sie eine Stufe dieses Dienstes.",
+      "stageArchived": "{name} ist archiviert.",
+      "scheduleNameRequired": "Geben Sie einen Namen ein, zum Beispiel „Sonntagsklasse“.",
+      "endAfterStart": "Das Treffen muss nach dem Beginn enden.",
+      "chooseRosterMode": "Wählen Sie, wer erwartet wird.",
+      "serviceArchivedRestoreFirst": "{name} ist archiviert. Stellen Sie den Dienst zuerst wieder her.",
+      "stageArchivedRestoreFirst": "{name} ist archiviert. Stellen Sie zuerst die Stufe wieder her.",
+      "scheduleHasSessions": "Aus diesem Regeltermin {count, plural, one {wurde schon # Termin} other {wurden schon # Termine}} angelegt. Deaktivieren Sie ihn stattdessen: Es entstehen keine neuen Termine und der Verlauf bleibt erhalten.",
+      "sessionCanceled": "Dieser Termin wurde abgesagt.",
+      "attendanceClosed": "Die Anwesenheit für diesen Termin ist abgeschlossen. Öffnen Sie sie erneut, um etwas zu korrigieren.",
+      "opensOnTheDay": "Die Anwesenheit kann erst am Tag des Termins geöffnet werden.",
+      "onlyActiveCanClose": "Nur ein Termin, bei dem gerade Anwesenheit erfasst wird, kann abgeschlossen werden.",
+      "reopenLeadersOnly": "Nur die Dienstleitung und Administratoren können einen abgeschlossenen Termin wieder öffnen.",
+      "onlyCompletedCanReopen": "Nur ein abgeschlossener Termin kann wieder geöffnet werden.",
+      "onlyScheduledCanCancel": "Nur ein Termin, der noch nicht begonnen hat, kann abgesagt werden.",
+      "sessionEndAfterStart": "Der Termin muss nach dem Beginn enden.",
+      "onlyScheduledCanMove": "Nur ein Termin, der noch nicht begonnen hat, kann verschoben werden.",
+      "chooseFutureTime": "Wählen Sie einen Zeitpunkt in der Zukunft.",
+      "titleRequired": "Geben Sie einen Titel ein.",
+      "noMeetingOnDate": "Der Regeltermin hat an diesem Datum kein Treffen.",
+      "scheduleInactive": "Dieser Regeltermin ist inaktiv. Aktivieren Sie ihn zuerst."
+    },
+    "recurrence": {
+      "interval": "Der Abstand muss zwischen 1 und 52 liegen.",
+      "weekdays": "Wählen Sie mindestens einen Wochentag.",
+      "weekdayRange": "Wochentage sind von 1 (Montag) bis 7 (Sonntag) nummeriert.",
+      "monthlyOneDay": "Ein monatliches Treffen findet an genau einem Wochentag statt.",
+      "monthWeek": "Wählen Sie den ersten, zweiten, dritten, vierten oder letzten Wochentag im Monat.",
+      "monthWeekOnlyMonthly": "Nur monatliche Treffen haben eine Woche im Monat.",
+      "endBeforeStart": "Das Enddatum kann nicht vor dem Startdatum liegen."
+    },
+    "attendance": {
+      "openFirst": "Öffnen Sie zuerst die Anwesenheit für diesen Termin.",
+      "closedReopen": "Die Anwesenheit ist abgeschlossen. Öffnen Sie den Termin erneut, um sie zu korrigieren.",
+      "personInactive": "{name} ist inaktiv. Aktivieren Sie die Person zuerst unter „Mitglieder“ wieder.",
+      "alreadyPresent": "{name} ist bereits als anwesend markiert ({time}).",
+      "alreadyPresentBy": "{name} ist bereits als anwesend markiert ({time}, von {by}).",
+      "alreadyRemoved": "Dieser Eintrag wurde bereits entfernt."
+    },
+    "people": {
+      "firstNameRequired": "Geben Sie einen Vornamen ein.",
+      "lastNameRequired": "Geben Sie einen Nachnamen ein.",
+      "editOutsideServices": "Sie können nur Personen in Ihren Diensten bearbeiten. {name} ist in keinem davon.",
+      "addOutsideServices": "Sie können Personen nur zu Ihren Diensten und Stufen hinzufügen.",
+      "chooseJoinService": "Wählen Sie den Dienst, zu dem die Person gehört.",
+      "duplicateTitle": "Mögliche Doppelung",
+      "duplicate": "{count, plural, one {Es gibt schon eine Person namens {name}.} other {Es gibt schon # Personen namens {name}.}} Prüfen Sie, ob es eine andere Person ist.",
+      "alreadyIn": "{name} ist bereits in {where}.",
+      "membershipOutsideServices": "Sie können Zugehörigkeiten nur in Ihren Diensten und Stufen ändern.",
+      "membershipEnded": "Diese Zugehörigkeit ist bereits beendet.",
+      "moveOutsideStages": "Sie können Personen nur in Stufen verschieben, in denen Sie dienen."
+    },
+    "roles": {
+      "adminOnly": "Nur Administratoren können Rollen ändern.",
+      "chooseService": "Wählen Sie den Dienst, für den die Rolle gilt.",
+      "alreadyHasRole": "{name} hat diese Rolle bereits.",
+      "ownAdminRole": "Sie können Ihre eigene Administratorrolle nicht entfernen. Bitten Sie einen anderen Administrator darum."
+    },
+    "materials": {
+      "labelTooLong": "Höchstens 120 Zeichen für die Bezeichnung.",
+      "url": "Geben Sie eine Webadresse ein, die mit https:// beginnt.",
+      "tooMany": "Höchstens 10 Einträge."
+    },
+    "lessons": {
+      "titleRequired": "Geben Sie einen Titel ein, z. B. „Der barmherzige Samariter“.",
+      "chooseMeeting": "Wählen Sie ein Treffen dieser Stufe.",
+      "chooseDate": "Wählen Sie ein Datum.",
+      "noMeetingThatDay": "{name} trifft sich an diesem Datum nicht.",
+      "chooseWhen": "Wählen Sie, wann die Lektion gehalten wird.",
+      "meetingHasLesson": "Für dieses Treffen gibt es schon eine Lektion: „{title}“. Bearbeiten Sie diese oder wählen Sie ein anderes Datum.",
+      "chooseResponsible": "Wählen Sie einen Diener dieser Stufe.",
+      "helpersInStage": "Alle Helfenden müssen in dieser Stufe dienen.",
+      "prepareStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Lektionen vorbereiten.",
+      "changeStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Lektionen ändern.",
+      "stageArchived": "{name} ist archiviert.",
+      "archived": "Diese Lektion ist archiviert.",
+      "taughtAfterDate": "Eine Lektion wird erst am Tag des Unterrichts oder danach als gehalten markiert.",
+      "deleteDraftsOnly": "Nur Lektionen im Entwurf können gelöscht werden. Archivieren Sie sie stattdessen.",
+      "homeworkPublished": "Hausaufgaben dieser Lektion wurden für Eltern veröffentlicht. Archivieren Sie die Lektion stattdessen."
+    },
+    "homework": {
+      "titleRequired": "Geben Sie einen Titel ein, z. B. „Merkvers auswendig lernen“.",
+      "instructionsRequired": "Schreiben Sie, was Eltern und Kind tun sollen.",
+      "instructionsTooLong": "Höchstens 2.000 Zeichen.",
+      "dueBeforeLesson": "Das Fälligkeitsdatum kann nicht vor der Lektion liegen.",
+      "changeStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Hausaufgaben ändern.",
+      "lessonWithoutStage": "Hausaufgaben gehören zu einer Stufe. Ordnen Sie die Lektion zuerst einer Stufe zu.",
+      "assignStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Hausaufgaben vergeben.",
+      "lessonArchived": "Die Lektion ist archiviert. Stellen Sie zuerst die Lektion wieder her.",
+      "archivedNoEdit": "Archivierte Hausaufgaben können nicht bearbeitet werden.",
+      "archivedNoPublish": "Archivierte Hausaufgaben können nicht veröffentlicht werden. Stellen Sie sie zuerst wieder her.",
+      "notArchived": "Nur archivierte Hausaufgaben können wiederhergestellt werden.",
+      "onlyPublishedBack": "Nur veröffentlichte Hausaufgaben können zurückgenommen werden.",
+      "alreadyReported": "Eltern haben sie schon als erledigt gemeldet. Archivieren Sie sie stattdessen.",
+      "publishedStays": "Veröffentlichte Hausaufgaben bleiben im Verlauf. Archivieren Sie sie stattdessen.",
+      "ownChildrenOnly": "Sie können Hausaufgaben nur für Ihre eigenen Kinder melden.",
+      "notAvailable": "Diese Hausaufgabe ist nicht verfügbar.",
+      "otherClass": "Diese Hausaufgabe ist für eine andere Klasse als die von {name}."
+    },
+    "guardians": {
+      "adminOnlyGrant": "Nur Administratoren können Eltern Zugang zu einem Kind geben.",
+      "alreadyHasAccess": "{parent} hat bereits Zugang zu {child}.",
+      "adminOnlyApprove": "Nur Administratoren können den Elternzugang freigeben.",
+      "adminOnlyRemove": "Nur Administratoren können den Elternzugang entfernen."
+    },
+    "accounts": {
+      "firstNameRequired": "Geben Sie Ihren Vornamen ein.",
+      "lastNameRequired": "Geben Sie Ihren Nachnamen ein.",
+      "emailRequired": "Geben Sie Ihre E-Mail-Adresse ein.",
+      "emailInvalid": "Geben Sie eine E-Mail-Adresse wie name@example.org ein.",
+      "emailTaken": "Mit dieser E-Mail-Adresse gibt es bereits ein Konto. Melden Sie sich an oder setzen Sie das Passwort zurück, falls Sie es vergessen haben.",
+      "passwordTooShort": "Verwenden Sie mindestens {min, number} Zeichen.",
+      "childrenRequired": "Nennen Sie die Namen und Klassen Ihrer Kinder, damit das Gemeindebüro sie mit Ihrem Konto verknüpfen kann.",
+      "serviceDetailsRequired": "Schreiben Sie, wo Sie dienen, damit das Gemeindebüro Ihnen den passenden Zugang geben kann.",
+      "chooseService": "Wählen Sie den Dienst, in dem Sie dienen.",
+      "chooseServiceForRole": "Wählen Sie den Dienst für diese Rolle.",
+      "acceptPrivacy": "Bitte bestätigen Sie, dass Sie die Datenschutzhinweise gelesen haben.",
+      "adminOnly": "Nur Administratoren können Konten freigeben oder ablehnen.",
+      "alreadyApproved": "Dieses Konto wurde bereits freigegeben.",
+      "chooseChild": "Wählen Sie mindestens ein Kind aus.",
+      "childNotFound": "Eines der ausgewählten Kinder existiert nicht mehr oder ist inaktiv.",
+      "stageNotInService": "Diese Stufe gehört nicht zum gewählten Dienst."
+    },
+    "privacy": {
+      "adminOnly": "Nur Administratoren können Datenschutzanfragen bearbeiten.",
+      "chooseSubject": "Wählen Sie das Mitglied oder Konto, um das es geht.",
+      "requestedByRequired": "Geben Sie an, wer die Anfrage gestellt hat.",
+      "receivedInFuture": "Das Datum darf nicht in der Zukunft liegen.",
+      "alreadyRequested": "Sie haben die Löschung Ihres Kontos und Ihrer Daten bereits beantragt. Das Gemeindebüro antwortet innerhalb eines Monats nach Ihrer Anfrage.",
+      "notOpen": "Diese Anfrage ist bereits abgeschlossen.",
+      "notErasure": "Nur Löschanfragen löschen Daten.",
+      "notCopy": "Dies ist keine Anfrage nach einer Kopie.",
+      "subjectGone": "Die Daten, um die es in dieser Anfrage geht, gibt es nicht mehr.",
+      "ownAccount": "Sie können Ihr eigenes Konto nicht löschen. Bitten Sie einen anderen Administrator darum.",
+      "declineReasonRequired": "Geben Sie den Grund an. Die Person muss ihn erfahren und darauf hingewiesen werden, dass sie sich bei der Datenschutzaufsicht beschweren kann."
+    }
+  },
+  "toast": {
+    "saved": "Gespeichert.",
+    "orderSaved": "Reihenfolge gespeichert.",
+    "created": "{name} angelegt.",
+    "added": "{name} hinzugefügt.",
+    "archived": "{name} archiviert.",
+    "restored": "{name} wiederhergestellt.",
+    "deleted": "{name} gelöscht.",
+    "serviceArchived": "{name} archiviert. Für den Dienst werden keine neuen Termine mehr angelegt.",
+    "scheduleCreated": "Regeltermin angelegt.{created, plural, =0 {} one { Für heute und morgen wurde # Termin angelegt.} other { Für heute und morgen wurden # Termine angelegt.}}",
+    "scheduleSaved": "Regeltermin gespeichert. Ab jetzt angelegte Termine übernehmen die neuen Angaben.{created, plural, =0 {} one { Für heute und morgen wurde # Termin angelegt.} other { Für heute und morgen wurden # Termine angelegt.}}",
+    "scheduleActivated": "Regeltermin aktiviert.{created, plural, =0 {} one { Für heute und morgen wurde # Termin angelegt.} other { Für heute und morgen wurden # Termine angelegt.}}",
+    "scheduleDeactivated": "Regeltermin deaktiviert. Es werden keine neuen Termine angelegt; vorhandene bleiben.",
+    "scheduleDeleted": "Regeltermin gelöscht.",
+    "attendanceOpen": "Die Anwesenheit ist geöffnet.",
+    "attendanceClosed": "Anwesenheit abgeschlossen.",
+    "sessionReopened": "Termin zur Korrektur wieder geöffnet.",
+    "sessionCanceled": "Termin abgesagt. Der Regeltermin und seine anderen Termine bleiben unverändert.",
+    "sessionMoved": "Termin verschoben. Der Regeltermin und seine anderen Termine bleiben unverändert.",
+    "sessionSaved": "Termin gespeichert. Der Regeltermin bleibt unverändert.",
+    "dateCanceled": "Dieser Termin ist abgesagt. Der Regeltermin und seine anderen Termine bleiben unverändert.",
+    "dateMoved": "Dieser Termin ist verschoben. Der Regeltermin und seine anderen Termine bleiben unverändert.",
+    "oneOffCreated": "Einzeltermin angelegt.",
+    "personReactivated": "Wieder aktiviert.",
+    "personInactive": "Als inaktiv markiert. Die Person erscheint nicht mehr auf den Listen.",
+    "membershipAdded": "Hinzugefügt.",
+    "membershipEnded": "Entfernt. Die bisherige Anwesenheit bleibt erhalten.",
+    "membershipMoved": "Verschoben. Die bisherige Anwesenheit bleibt bei der alten Stufe.",
+    "roleAssigned": "Rolle vergeben.",
+    "roleRemoved": "Rolle entfernt.",
+    "lessonReady": "„{title}“ ist bereit zum Unterrichten.",
+    "lessonDraftSaved": "Entwurf gespeichert: „{title}“.",
+    "lessonSavedReady": "Gespeichert. Die Lektion ist bereit zum Unterrichten.",
+    "lessonTaught": "Als gehalten markiert.",
+    "lessonMarkedReady": "Als bereit markiert.",
+    "lessonBackToDraft": "Zurück zum Entwurf.",
+    "archivedTitle": "„{title}“ archiviert.",
+    "restoredTitle": "„{title}“ wiederhergestellt.",
+    "deletedTitle": "„{title}“ gelöscht.",
+    "homeworkPublishedNew": "Veröffentlicht. Die Eltern der Klasse sehen sie jetzt.",
+    "homeworkDraftSaved": "Als Entwurf gespeichert. Eltern sehen sie noch nicht.",
+    "homeworkSavedPublished": "Gespeichert. Eltern sehen die neue Fassung.",
+    "homeworkSavedDraft": "Als Entwurf gespeichert.",
+    "homeworkPublished": "„{title}“ veröffentlicht. Die Eltern der Klasse sehen sie jetzt.",
+    "homeworkUnpublished": "„{title}“ ist wieder ein Entwurf und für Eltern verborgen.",
+    "homeworkArchived": "„{title}“ archiviert. Gemeldete Erledigungen bleiben erhalten.",
+    "homeworkRestoredPublished": "„{title}“ wiederhergestellt. Die Eltern der Klasse sehen sie wieder.",
+    "homeworkRestoredDraft": "„{title}“ als Entwurf wiederhergestellt.",
+    "accessGiven": "Zugang erteilt. Der Elternteil sieht die veröffentlichten Hausaufgaben dieses Kindes.",
+    "approved": "Freigegeben.",
+    "accessRemoved": "Zugang entfernt.",
+    "registered": "Konto angelegt. Es wartet auf Freigabe.",
+    "accountApproved": "{name} kann sich jetzt anmelden.",
+    "accountDeclined": "Abgelehnt. Die Registrierung von {name} wurde gelöscht.",
+    "dataRequestRecorded": "Anfrage erfasst. Die Antwort ist in einem Monat fällig.",
+    "dataErased": "Daten gelöscht. Die Anfrage bleibt ohne Namen im Protokoll.",
+    "copySent": "Als verschickt markiert.",
+    "dataRequestDeclined": "Anfrage abgelehnt. Teilen Sie der Person den Grund mit und dass sie sich bei der Datenschutzaufsicht beschweren kann.",
+    "erasureRequested": "Ihre Anfrage ist beim Gemeindebüro eingegangen. Es antwortet innerhalb eines Monats."
+  },
+  "roles": {
+    "administrator": "Administrator",
+    "service_leader": "Dienstleitung",
+    "servant": "Diener/in",
+    "parent": "Elternteil",
+    "description": {
+      "administrator": "Verwaltet Dienste, Konten, Rollen und den Elternzugang für die ganze Gemeinde.",
+      "service_leader": "Leitet einen Dienst: Stufen, Regeltermine, Termine, Mitglieder, Lektionen und Hausaufgaben.",
+      "servant": "Erfasst Anwesenheit, bereitet Lektionen und Hausaufgaben vor – in einem Dienst oder einer seiner Stufen.",
+      "parent": "Sieht die veröffentlichten Hausaufgaben der Kinder, die ein Administrator mit dem Konto verknüpft hat."
+    },
+    "summary": {
+      "staff": "{role} · {where}{more, plural, =0 {} other { +#}}",
+      "parentOf": "Elternteil von {children}",
+      "parentWaiting": "Elternteil, wartet auf Zugang",
+      "none": "Noch keine Rolle"
+    }
+  },
+  "dashboard": {
+    "greeting": {
+      "morning": "Guten Morgen, {name}",
+      "afternoon": "Guten Tag, {name}",
+      "evening": "Guten Abend, {name}"
+    },
+    "stagesCount": "{count, plural, one {# Stufe} other {# Stufen}}",
+    "summary": {
+      "none": "Heute gibt es keine Treffen in Ihren Diensten.",
+      "open": "{count, plural, one {Bei # Treffen} other {Bei # Treffen}} wird gerade Anwesenheit erfasst",
+      "notOpened": "{count, plural, other {# noch nicht geöffnet}}"
+    },
+    "today": {
+      "title": "Heute",
+      "description": "Alle heutigen Treffen in Ihren Diensten.",
+      "allMeetings": "Alle Termine",
+      "empty": "Heute keine Treffen",
+      "tomorrow": "Morgen: {names}.",
+      "checkMeetings": "Unter Termine sehen Sie die nächsten Tage."
+    },
+    "attention": {
+      "title": "Braucht Aufmerksamkeit",
+      "description": "Frühere Termine, bei denen die Anwesenheit nie erfasst oder nie abgeschlossen wurde.",
+      "notClosed": "Nicht abgeschlossen",
+      "notTaken": "Nicht erfasst"
+    },
+    "recent": {
+      "title": "Zuletzt abgeschlossen",
+      "description": "Abgeschlossene Anwesenheit in Ihren Diensten.",
+      "link": "Anwesenheit",
+      "empty": "Noch nichts abgeschlossen.",
+      "closedAt": "abgeschlossen um {time}",
+      "closedAtBy": "abgeschlossen um {time} von {name}"
+    },
+    "comingUp": {
+      "title": "Demnächst",
+      "description": "Die nächsten sieben Tage in Ihren Diensten.",
+      "empty": "In Ihren Diensten ist nichts geplant."
+    },
+    "services": {
+      "title": "Ihre Dienste",
+      "link": "Dienste",
+      "next": "nächstes Mal {when}, {time}",
+      "ofRoster": "der Liste, 4 Wochen",
+      "onAverage": "im Schnitt",
+      "noSessionsYet": "Noch keine Termine"
+    }
+  },
+  "stages": {
+    "deleteBlocked": {
+      "history": "Hat schon Termine ({count, plural, one {# Termin} other {# Termine}})",
+      "members": "{count, plural, one {# Person ist} other {# Personen sind}} noch in dieser Stufe"
+    },
+    "title": "Stufen",
+    "kind": "Stufe",
+    "tabs": {
+      "overview": "Überblick",
+      "lessons": "Lektionen",
+      "homework": "Hausaufgaben"
+    },
+    "sections": "Bereiche von {name}",
+    "meets": "{pattern}, {time}",
+    "servants": "Diener: {names}",
+    "leader": "{name} (Dienstleitung)",
+    "noSchedule": "Kein Regeltermin",
+    "pastSessions": "{count, plural, one {# vergangener Termin} other {# vergangene Termine}}",
+    "archivedOn": "Archiviert am {date}",
+    "form": {
+      "add": "Stufe hinzufügen",
+      "addTitle": "Stufe zu {service} hinzufügen",
+      "editTitle": "{name} bearbeiten",
+      "addDescription": "Eine Stufe ist eine Gruppe innerhalb des Dienstes, etwa eine Klasse oder ein Niveau. Sie wird am Ende der Liste hinzugefügt; die Reihenfolge können Sie danach ändern.",
+      "editDescription": "Der neue Name erscheint überall, auch bei vergangenen Terminen.",
+      "name": "Name",
+      "namePlaceholder": "z. B. 3. Klasse",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "z. B. 8 bis 9 Jahre"
+    },
+    "actions": {
+      "rename": "Umbenennen",
+      "moveUp": "Nach oben verschieben",
+      "moveDown": "Nach unten verschieben"
+    },
+    "archive": {
+      "title": "{name} archivieren?",
+      "description": "Die Stufe wird in der Stufenliste von {service} ausgeblendet. Es wird nichts gelöscht.",
+      "schedules": "Die Regeltermine der Stufe legen keine neuen Termine mehr an.",
+      "members": "{count, plural, one {# Person bleibt ihr zugeordnet; verschieben Sie sie in eine andere Stufe, wenn sie weiter teilnimmt.} other {# Personen bleiben ihr zugeordnet; verschieben Sie sie in eine andere Stufe, wenn sie weiter teilnehmen.}}",
+      "sessions": "{count, plural, one {Der vergangene Termin der Stufe und seine Anwesenheit bleiben erhalten.} other {Die # vergangenen Termine der Stufe und ihre Anwesenheit bleiben erhalten.}}"
+    },
+    "restore": {
+      "title": "{name} wiederherstellen?",
+      "description": "Die Stufe kommt wieder ans Ende der Stufenliste. Aktivieren Sie ihre Regeltermine wieder, wenn sie sich trifft."
+    },
+    "delete": {
+      "title": "{name} löschen?",
+      "description": "Die Stufe hat keine Mitglieder und hat sich nie getroffen, deshalb kann sie vollständig entfernt werden.",
+      "schedules": "Die Regeltermine der Stufe werden ebenfalls gelöscht.",
+      "cantUndo": "Das kann nicht rückgängig gemacht werden."
+    },
+    "page": {
+      "title": "Stufen von {name}",
+      "description": "Jede Stufe hat eigene Mitglieder, Termine, Lektionen und Hausaufgaben. Namen sind innerhalb des Dienstes eindeutig.",
+      "hint": "Ziehen Sie die Zeilen oder verwenden Sie „Nach oben verschieben“ und „Nach unten verschieben“, um die Reihenfolge festzulegen, in der Stufen überall aufgeführt werden.",
+      "withoutStage": "{count, plural, one {# Person gehört} other {# Personen gehören}} ohne Stufe zu {name}."
+    },
+    "manager": {
+      "dragHandle": "Ziehen, um {name} zu verschieben",
+      "instructions": "Zum Verschieben drücken Sie die Leertaste oder die Eingabetaste, verwenden die Pfeiltasten und drücken dann erneut die Leertaste oder die Eingabetaste.",
+      "announce": {
+        "pickedUp": "{name} aufgenommen, Position {position, number} von {total, number}.",
+        "moved": "{name} ist jetzt an Position {position, number} von {total, number}.",
+        "dropped": "{name} wurde an Position {position, number} von {total, number} abgelegt.",
+        "canceled": "Verschieben abgebrochen. {name} ist wieder an der alten Position."
+      },
+      "columns": {
+        "order": "Reihenfolge",
+        "position": "Nr.",
+        "stage": "Stufe",
+        "members": "Mitglieder",
+        "meets": "Regeltermin",
+        "sessions": "Termine",
+        "actions": "Aktionen"
+      },
+      "empty": "Noch keine Stufen. {name} trifft sich als eine Gruppe, bis Sie welche hinzufügen.",
+      "archived": "Archivierte Stufen"
+    },
+    "overview": {
+      "members": "Mitglieder ({count, number})",
+      "squares": "Die Kästchen zeigen {count, plural, one {den letzten Termin} other {die letzten # Termine, den ältesten zuerst}}. Gefüllt heißt: als anwesend markiert.",
+      "squaresEmpty": "Die Anwesenheit erscheint hier nach dem ersten Termin.",
+      "empty": "Noch keine Mitglieder",
+      "emptyDescription": "Fügen Sie die Kinder oder Personen dieser Stufe hinzu, um ihre Liste aufzubauen.",
+      "since": "seit {date}",
+      "presentAt": "Bei {present, number} von {total, plural, one {# letzten Termin} other {den letzten # Terminen}} anwesend",
+      "dayPresent": "{date}: anwesend",
+      "dayNotMarked": "{date}: nicht als anwesend markiert",
+      "comingUp": "Demnächst",
+      "nothingPlanned": "Nichts geplant.",
+      "nextLesson": "Nächste Lektion",
+      "noLesson": "Noch keine Lektion vorbereitet.",
+      "openHomework": "Offene Hausaufgaben",
+      "noHomework": "Es ist keine veröffentlichte Hausaufgabe fällig.",
+      "due": "Fällig: {date}",
+      "noDueDate": "Ohne Fälligkeitsdatum",
+      "completedOf": "{completed, number} von {assigned, plural, one {# Kind} other {# Kindern}}"
+    }
+  },
+  "history": {
+    "createdFromSchedule": "Am Vortag aus dem Regeltermin angelegt",
+    "createdByHand": "Von Hand als Einzeltermin angelegt",
+    "movedFrom": "War am {date} um {time}",
+    "created": "Angelegt",
+    "opened": "Anwesenheit geöffnet",
+    "closed": "Anwesenheit abgeschlossen",
+    "reopened": "Zur Korrektur wieder geöffnet",
+    "canceled": "Abgesagt",
+    "moved": "Verschoben",
+    "edited": "Titel oder Ort geändert"
+  },
+  "lessons": {
+    "theSchedule": "Der Regeltermin",
+    "title": "Lektionen",
+    "lesson": "Lektion",
+    "newLesson": "Neue Lektion",
+    "editLesson": "Lektion bearbeiten",
+    "editTitle": "„{title}“ bearbeiten",
+    "newDescription": "Bereiten Sie die Lektion so früh vor, wie Sie möchten. Eltern sehen nie den Unterrichtsplan, nur die Bibelstelle, den Merkvers und die Hausaufgaben, die Sie veröffentlichen.",
+    "backToLessons": "Zurück zu den Lektionen",
+    "backToLesson": "Zurück zur Lektion",
+    "completion": "<strong>{completed, number}</strong> von {assigned, number} als erledigt gemeldet",
+    "status": {
+      "draft": "Entwurf",
+      "ready": "Bereit",
+      "completed": "Abgeschlossen",
+      "taught": "Gehalten",
+      "published": "Veröffentlicht",
+      "draftHidden": "Eltern sehen keine Entwürfe",
+      "publishedVisible": "Für die Eltern der Klasse sichtbar"
+    },
+    "visibility": {
+      "parents": "Für Eltern sichtbar",
+      "servants": "Nur für Diener"
+    },
+    "meeting": {
+      "none": "{date} · kein Treffen verknüpft",
+      "when": "{title}, {date} {time}",
+      "createdOn": "Termin wird am {date} angelegt",
+      "notOnSchedule": "{name} findet am {date} nicht mehr statt. Wählen Sie ein anderes Datum.",
+      "canceled": "Das Treffen am {date} wurde abgesagt. Verschieben Sie die Lektion auf ein anderes Datum.",
+      "canceledReason": "Das Treffen am {date} wurde abgesagt: <bdi>{reason}</bdi> Verschieben Sie die Lektion auf ein anderes Datum.",
+      "moved": "verschoben",
+      "attendanceOpen": "Anwesenheit jetzt offen",
+      "held": "stattgefunden"
+    },
+    "fields": {
+      "teachingPlan": "Unterrichtsplan",
+      "objectives": "Lernziele",
+      "teachingPoints": "Kernpunkte",
+      "activities": "Aktivitäten",
+      "materials": "Materialien",
+      "notes": "Vorbereitungsnotizen",
+      "passage": "Bibelstelle",
+      "memoryVerse": "Merkvers",
+      "servants": "Diener",
+      "responsible": "Verantwortlich",
+      "teachingDate": "Unterrichtsdatum",
+      "status": "Status"
+    },
+    "list": {
+      "sectionTitle": "Lektionsvorbereitung",
+      "sectionDescription": "Was bei jedem Treffen unterrichtet wird. Bereiten Sie Wochen im Voraus vor: Eine Lektion ist mit dem Datum eines Treffens verknüpft, nicht mit einem Termin, und muss deshalb nicht warten, bis der Termin angelegt ist.",
+      "upcoming": "Anstehend ({count, number})",
+      "previous": "Vergangen ({count, number})",
+      "archived": "Archiviert ({count, number})",
+      "search": "Lektionen durchsuchen",
+      "searchPlaceholder": "Titel, Bibelstelle oder Datum",
+      "anyStatus": "Alle Status",
+      "servant": "Diener",
+      "anyServant": "Alle Diener",
+      "noMatch": "Keine passende Lektion",
+      "noUpcoming": "Noch keine Lektionen vorbereitet",
+      "noPrevious": "Keine vergangenen Lektionen",
+      "noArchived": "Nichts archiviert",
+      "noMatchHint": "Versuchen Sie eine andere Suche oder setzen Sie die Filter zurück.",
+      "noUpcomingHint": "Bereiten Sie die nächste Lektion jetzt vor. Die Termine müssen dafür noch nicht angelegt sein: Wählen Sie einfach ein kommendes Treffen.",
+      "noPreviousHint": "Lektionen erscheinen hier nach ihrem Datum.",
+      "clearFilters": "Filter zurücksetzen",
+      "withHelpers": "{name} mit {helpers}",
+      "drafts": "{count, plural, one {# Entwurf} other {# Entwürfe}}",
+      "onlyServants": "Nur die Diener dieser Stufe und die Dienstleitung können ihre Lektionen vorbereiten."
+    },
+    "detail": {
+      "readyHint": "Bereit zum Unterrichten. Markieren Sie die Lektion nach dem Treffen am {date} als gehalten.",
+      "noObjectives": "Noch keine Lernziele.",
+      "noTeachingPoints": "Noch keine Kernpunkte.",
+      "noActivities": "Noch keine Aktivitäten.",
+      "noMaterials": "Keine Materialien angegeben.",
+      "homework": "Hausaufgaben",
+      "homeworkDescription": "Die Eltern von {stage} sehen veröffentlichte Hausaufgaben im Elternbereich und haken sie ab, wenn sie erledigt sind.",
+      "addHomework": "Hausaufgabe hinzufügen",
+      "noHomework": "Zu dieser Lektion gibt es keine Hausaufgaben. Fügen Sie eine hinzu, wenn die Kinder zu Hause weiterlernen sollen, zum Beispiel den Merkvers.",
+      "archivedHomework": "{count, plural, one {# archivierte Hausaufgabe bleibt} other {# archivierte Hausaufgaben bleiben}} im <link>Hausaufgabenverlauf</link> erhalten.",
+      "sharedWithParents": "Mit Eltern geteilt",
+      "sharedHint": "Wird im Elternbereich neben den veröffentlichten Hausaufgaben dieser Lektion angezeigt{count, plural, =0 {, sobald es welche gibt} other { (derzeit #)}}.",
+      "noPassage": "Keine Bibelstelle.",
+      "noMemoryVerse": "Kein Merkvers.",
+      "helping": "Hilft mit",
+      "session": "Termin",
+      "openSession": "Termin öffnen",
+      "created": "Angelegt",
+      "lastChange": "Letzte Änderung",
+      "markedTaught": "Als gehalten markiert"
+    },
+    "editor": {
+      "title": "Titel",
+      "titlePlaceholder": "z. B. Der barmherzige Samariter",
+      "summary": "Zusammenfassung",
+      "summaryPlaceholder": "Die Geschichte in ein, zwei Sätzen",
+      "scripture": "Bibel",
+      "passagePlaceholder": "z. B. Lukas 10,25–37",
+      "memoryVersePlaceholder": "Der Vers mit Bibelstelle",
+      "objectivesPlaceholder": "Was die Kinder verstehen oder können sollen",
+      "teachingPointsHint": "Ein Punkt pro Zeile.",
+      "activitiesHint": "Spiele, Basteln, Lieder. Eine pro Zeile.",
+      "material": "Material {n, number}",
+      "materialPlaceholder": "z. B. Figuren für die Filztafel",
+      "materialLink": "Link für Material {n, number}",
+      "materialLinkPlaceholder": "https:// (optional)",
+      "removeMaterial": "Material {n, number} entfernen",
+      "addMaterial": "Material hinzufügen",
+      "notesLabel": "Notizen für die Diener",
+      "notesPlaceholder": "Wer was mitbringt, was bei der Klasse zu beachten ist",
+      "when": "Wann",
+      "meeting": "Treffen",
+      "otherDate": "Anderes Datum, ohne Treffen",
+      "hint": {
+        "none": "Nicht mit einem Treffen verknüpft. Nutzen Sie das für eine Lektion außerhalb der Regeltermine.",
+        "planned": "Der Termin für dieses Datum wird am {date} angelegt. Die Lektion ist über ihr Datum verknüpft und kann deshalb schon jetzt vorbereitet werden.",
+        "canceled": "Dieses Treffen wurde abgesagt. Wählen Sie ein anderes Datum.",
+        "completed": "Dieses Treffen hat stattgefunden.",
+        "today": "Das Treffen ist heute.",
+        "exists": "Der Termin für dieses Datum ist bereits angelegt. Die Lektion ist mit ihm verknüpft."
+      },
+      "option": {
+        "when": "{day}, {time}",
+        "canceled": "abgesagt",
+        "taken": "hat schon „{title}“"
+      },
+      "helping": "Helfen mit",
+      "statusHint": "Speichern Sie einen Entwurf, während Sie vorbereiten. Markieren Sie die Lektion als bereit, wenn die Vorbereitung fertig ist. Nach dem Treffen markieren Sie sie auf der Seite der Lektion als gehalten.",
+      "saveAsDraft": "Als Entwurf speichern",
+      "saveDraft": "Entwurf speichern"
+    },
+    "actions": {
+      "markReady": "Als bereit markieren",
+      "markTaught": "Als gehalten markieren",
+      "backToDraft": "Zurück zum Entwurf",
+      "notTaughtYet": "Noch nicht gehalten",
+      "deleteDraft": "Entwurf löschen",
+      "archiveTitle": "„{title}“ archivieren?",
+      "archiveDescription": "Archivierte Lektionen verschwinden aus den Listen, bleiben aber im Verlauf. Sie können die Lektion später wiederherstellen.",
+      "archiveHomework": "{count, plural, one {Die veröffentlichte Hausaufgabe der Lektion verschwindet aus dem Elternbereich.} other {Die # veröffentlichten Hausaufgaben der Lektion verschwinden aus dem Elternbereich.}}",
+      "archiveKept": "Was Eltern schon als erledigt gemeldet haben, bleibt erhalten.",
+      "deleteTitle": "„{title}“ löschen?",
+      "deleteDescription": "Der Entwurf und seine Hausaufgaben-Entwürfe werden endgültig entfernt. Nichts davon hat je die Eltern erreicht."
+    },
+    "noAccess": {
+      "prepareTitle": "Sie können hier keine Lektionen vorbereiten",
+      "prepareBody": "Nur die Diener von {stage} und die Dienstleitung können Lektionen dieser Stufe vorbereiten.",
+      "changeTitle": "Sie können diese Lektion nicht ändern",
+      "changeBody": "Nur die Diener von {stage} und die Dienstleitung können Lektionen dieser Stufe ändern.",
+      "archivedTitle": "Diese Lektion ist archiviert",
+      "archivedBody": "Stellen Sie sie zuerst wieder her, um sie zu ändern."
+    }
+  },
+  "settings": {
+    "unknownAccount": "Unbekanntes Konto",
+    "unknownPerson": "Unbekannt",
+    "description": "Konten und Rollen, Elternzugang und die Grundeinstellungen der Gemeinde.",
+    "users": {
+      "title": "Mitarbeiterkonten und Rollen",
+      "descriptionAdmin": "Administratoren vergeben Rollen je Dienst. Die Rolle eines Dieners kann auf eine Stufe beschränkt werden.",
+      "descriptionReadOnly": "Nur Administratoren ändern Rollen. Hier sehen Sie, wer welche Rolle hat.",
+      "addRole": "Rolle",
+      "removeRoleLabel": "Rolle „{role}“ von {name} entfernen",
+      "removeTitle": "„{role}“ von {name} entfernen?",
+      "removeDescription": "Die Person verliert sofort den Zugriff, den diese Rolle gibt. Bisherige Anwesenheitseinträge und Lektionen der Person bleiben erhalten.",
+      "remove": "Rolle entfernen",
+      "assign": {
+        "title": "Rolle an {name} vergeben",
+        "description": "Rollen bestimmen, was jemand sehen und ändern kann. Eine Person kann mehrere haben.",
+        "role": "Rolle",
+        "service": "Dienst",
+        "stage": "Stufe",
+        "wholeService": "Ganzer Dienst",
+        "limitedTo": "Beschränkt auf {stage}: nur Anwesenheit, Lektionen und Hausaufgaben dieser Stufe.",
+        "submit": "Rolle vergeben"
+      }
+    },
+    "parents": {
+      "title": "Elternzugang",
+      "description": "Welche Elternkonten die Hausaufgaben welcher Kinder sehen.",
+      "adminsOnly": "Nur für Administratoren",
+      "adminsOnlyHint": "Eltern werden von den Administratoren der Gemeinde mit Kindern verknüpft.",
+      "give": "Elternzugang erteilen",
+      "giveTitle": "Einem Elternteil Zugang zu einem Kind erteilen",
+      "giveDescription": "Prüfen Sie zuerst die Familie, zum Beispiel persönlich nach der Liturgie. Der Elternteil sieht dann die veröffentlichten Hausaufgaben dieses Kindes.",
+      "parentAccount": "Elternkonto",
+      "child": "Kind",
+      "giveAccess": "Zugang erteilen",
+      "summary": "{count, plural, one {# Verknüpfung} other {# Verknüpfungen}} zwischen Elternkonten und Kindern. Ein Kind kann mehrere Eltern haben, ein Elternteil mehrere Kinder.",
+      "waiting": "Warten auf Freigabe ({count, number})",
+      "asks": "<b>{parent}</b> möchte <b>{child}</b> sehen",
+      "asksWithGroup": "<b>{parent}</b> möchte <b>{child}</b> ({group}) sehen",
+      "requested": "angefragt {when}",
+      "approve": "Freigeben",
+      "decline": "Ablehnen",
+      "parent": "Elternteil",
+      "approved": "Freigegeben",
+      "actions": "Aktionen",
+      "approvedAtBy": "{when} von {name}",
+      "approvedBy": "von {name}",
+      "remove": "Entfernen",
+      "declineTitle": "Anfrage von {name} ablehnen?",
+      "declineDescription": "Der Elternteil sieht nichts über dieses Kind.",
+      "removeTitle": "Zugang von {parent} zu {child} entfernen?",
+      "removeDescription": "Der Elternteil sieht dieses Kind nicht mehr im Elternbereich. Gemeldete Erledigungen bleiben im Verlauf erhalten.",
+      "removeAccess": "Zugang entfernen"
+    },
+    "church": {
+      "title": "Gemeinde",
+      "name": "Name",
+      "timeZone": "Zeitzone",
+      "calendar": "Kalender",
+      "calendarValue": "Datumsangaben mit koptischem Datum, z. B. entspricht {date} dem {coptic}",
+      "language": "Sprache",
+      "languageValue": "Englisch, Deutsch und Arabisch; jede Person wählt ihre Sprache im Kontomenü"
+    },
+    "generator": {
+      "title": "Termingenerator",
+      "description": "Legt die Termine jedes Regeltermins am Vortag an – für heute und morgen – und berührt kein Datum zweimal.",
+      "simulated": "In diesem Prototyp simuliert: Er läuft stündlich nach der Demo-Uhr, während Seiten geladen werden. Der Backend-Job ist noch nicht gebaut.",
+      "noRuns": "Noch keine Läufe.",
+      "ran": "Ausgeführt",
+      "for": "Für",
+      "created": "Angelegt",
+      "existing": "({count, number} schon vorhanden)"
+    },
+    "prototype": {
+      "title": "Prototyp",
+      "data": "Alle Daten sind erfunden und liegen im Speicher des Prototyp-Servers; nichts wird im Backend gespeichert.",
+      "clockFrozen": "Die Demo-Uhr startete am Sonntag, 8. November 2026, um 12:08 und steht dort still (für Screenshots).",
+      "clockRunning": "Die Demo-Uhr startete am Sonntag, 8. November 2026, um 12:08 und läuft von dort in Echtzeit weiter.",
+      "reset": "Demodaten zurücksetzen",
+      "resetTitle": "Demodaten zurücksetzen?",
+      "resetDescription": "Alles, was Sie im Prototyp geändert haben, wird durch die ursprünglichen Demodaten ersetzt, und die Uhr springt zurück auf Sonntag, 8. November, 12:08.",
+      "resetConfirm": "Zurücksetzen",
+      "resetDone": "Demodaten zurückgesetzt."
+    }
+  },
+  "session": {
+    "present": "{count, plural, other {# anwesend}}",
+    "presentOf": "{present, plural, other {#}} von {total, plural, other {#}} anwesend",
+    "notOnRoster": "+{count, plural, other {#}} nicht auf der Liste",
+    "canceled": "Abgesagt",
+    "openRosterScheduled": "Offen für alle, ohne Liste",
+    "openRoster": "Offen für alle",
+    "everyoneHere": "Alle auf der Liste sind da",
+    "notCheckedIn": "{count, plural, other {# noch nicht markiert}}",
+    "everyoneWasPresent": "Alle auf der Liste waren anwesend",
+    "notMarkedPresent": "{count, plural, other {# nicht als anwesend markiert}}",
+    "notTaken": "Die Anwesenheit wurde nicht erfasst",
+    "onRoster": "{count, plural, one {# Person} other {# Personen}} auf der Liste",
+    "createdToday": "Wird heute angelegt",
+    "createdTomorrow": "Wird morgen angelegt",
+    "createdOn": "Wird am {date} angelegt"
+  },
+  "status": {
+    "scheduled": "Angesetzt",
+    "active": "Anwesenheit offen",
+    "completed": "Abgeschlossen",
+    "canceled": "Abgesagt",
+    "planned": "Geplant",
+    "moved": "Verschoben",
+    "oneOff": "Einzeltermin"
+  },
+  "roster": {
+    "cells": "{present, plural, other {#}} von {total, plural, other {#}} anwesend",
+    "cellsExtra": "{present, plural, other {#}} von {total, plural, other {#}} anwesend, dazu {extra, plural, other {#}} nicht auf der Liste"
+  },
+  "table": {
+    "noResults": "Keine Ergebnisse.",
+    "showing": "{start, number}–{end, number} von {total, number}",
+    "page": "Seite {page, number} von {count, number}",
+    "previous": "Vorherige Seite",
+    "next": "Nächste Seite",
+    "sortBy": "Sortieren nach {column}"
+  },
+  "counts": {
+    "stages": "{count, plural, one {# Stufe} other {# Stufen}}",
+    "members": "{count, plural, one {# Mitglied} other {# Mitglieder}}",
+    "people": "{count, plural, one {# Person} other {# Personen}}",
+    "sessions": "{count, plural, one {# Termin} other {# Termine}}",
+    "schedules": "{count, plural, one {# Regeltermin} other {# Regeltermine}}",
+    "children": "{count, plural, one {# Kind} other {# Kinder}}",
+    "parents": "{count, plural, one {# Elternteil} other {# Elternteile}}",
+    "lessons": "{count, plural, one {# Lektion} other {# Lektionen}}",
+    "homework": "{count, plural, one {# Hausaufgabe} other {# Hausaufgaben}}",
+    "servants": "{count, plural, one {# Diener} other {# Diener}}",
+    "days": "{count, plural, one {# Tag} other {# Tage}}",
+    "weeks": "{count, plural, one {# Woche} other {# Wochen}}"
+  },
+  "attendance": {
+    "sessionDetails": "Termindetails",
+    "open": "Anwesenheit öffnen",
+    "take": "Anwesenheit erfassen",
+    "view": "Anwesenheit ansehen",
+    "home": {
+      "description": "{date}. Öffnen Sie das heutige Treffen, haken Sie ab, wer da ist, und schließen Sie die Anwesenheit ab, wenn Sie fertig sind.",
+      "today": "Heute",
+      "empty": "Heute ist keine Anwesenheit zu erfassen",
+      "emptyLink": "Termine erscheinen hier an ihrem Tag. <link>Die nächsten Tage ansehen</link>.",
+      "emptyStaff": "Die Diener und die Dienstleitung erfassen die Anwesenheit ihrer eigenen Gruppen.",
+      "earlier": "Noch offen von früher",
+      "earlierDescription": "Frühere Termine, bei denen die Anwesenheit nie erfasst oder nie abgeschlossen wurde.",
+      "notClosed": "Nicht abgeschlossen",
+      "notTaken": "Nicht erfasst",
+      "recent": "Zuletzt abgeschlossen",
+      "recentEmpty": "Noch nichts abgeschlossen.",
+      "closedAt": "Abgeschlossen {when}",
+      "closed": "Abgeschlossen"
+    },
+    "session": {
+      "canceled": "Dieser Termin wurde abgesagt.",
+      "noAttendance": "Es wird keine Anwesenheit erfasst.",
+      "notOpen": "Die Anwesenheit ist noch nicht geöffnet",
+      "opensOn": "Sie kann am Tag des Termins geöffnet werden, am {date}.",
+      "openWhenStarts": "Öffnen Sie sie, wenn das Treffen beginnt. Danach können Sie sofort Personen als anwesend markieren.",
+      "servantsOpen": "Die Diener dieser Gruppe öffnen sie, wenn das Treffen beginnt."
+    },
+    "summary": {
+      "metaTitle": "Zusammenfassung der Anwesenheit",
+      "crumb": "{group} am {date}",
+      "continue": "Anwesenheit weiter erfassen",
+      "ofRoster": "von {total, number} auf der Liste anwesend",
+      "present": "anwesend",
+      "closedAt": "{when} abgeschlossen",
+      "closedAtBy": "{when} von {name} abgeschlossen",
+      "presentTitle": "Anwesend ({count, number})",
+      "nobodyPresent": "Niemand wurde als anwesend markiert.",
+      "extraTitle": "Anwesend, nicht auf der Liste ({count, number})",
+      "extraDescription": "Gäste oder Mitglieder anderer Gruppen.",
+      "notMarkedTitle": "Nicht als anwesend markiert ({count, number})",
+      "notMarkedNote": "„Nicht als anwesend markiert“ heißt nicht abwesend: Jemand kann da gewesen sein, ohne abgehakt worden zu sein. Diese erste Version erfasst weder Abwesenheiten noch Entschuldigungen.",
+      "everyoneMarked": "Alle auf der Liste wurden als anwesend markiert.",
+      "corrections": "Korrekturen",
+      "correction": "<person>{name}</person> wurde um {time} markiert und {when} entfernt.",
+      "correctionBy": "<person>{name}</person> wurde um {time} markiert und {when} von {by} entfernt.",
+      "correctionReason": "<person>{name}</person> wurde um {time} markiert und {when} entfernt: „{reason}“",
+      "correctionByReason": "<person>{name}</person> wurde um {time} markiert und {when} von {by} entfernt: „{reason}“",
+      "history": "Verlauf",
+      "erasedPresent": "{count, plural, one {Dazu # Person, deren Daten gelöscht wurden: in den Zahlen enthalten, aber nicht mehr namentlich aufgeführt.} other {Dazu # Personen, deren Daten gelöscht wurden: in den Zahlen enthalten, aber nicht mehr namentlich aufgeführt.}}"
+    },
+    "board": {
+      "noGroup": "Keine Gruppe",
+      "present": "Anwesend",
+      "undo": "Rückgängig: {name} nicht anwesend",
+      "mark": "{name} als anwesend markieren",
+      "notMarked": "Nicht markiert",
+      "counter": "<num>{present, plural, other {#}}</num> von {total, plural, other {#}} anwesend",
+      "counterOpen": "<num>{count, plural, other {#}}</num> anwesend",
+      "notOnRoster": "+{count, plural, other {#}} nicht auf der Liste",
+      "find": "Person suchen",
+      "findOnRoster": "Jemanden auf der Liste oder eine andere Person suchen",
+      "tabAll": "Alle ({count, number})",
+      "tabOpen": "Noch nicht ({count, number})",
+      "tabPresent": "Anwesend ({count, number})",
+      "roster": "Liste",
+      "noRosterMatch": "Niemand auf der Liste passt zur Suche. Personen, die nicht auf der Liste stehen, finden Sie weiter unten.",
+      "everyoneMarked": "Alle auf der Liste sind als anwesend markiert.",
+      "nobodyYet": "Noch niemand hier.",
+      "presentNotOnRoster": "Anwesend, nicht auf der Liste",
+      "presentList": "Anwesend",
+      "addSomeone": "Weitere Person hinzufügen",
+      "someoneNotOnRoster": "Jemand, der nicht auf der Liste steht?",
+      "markSomeone": "Jemanden als anwesend markieren",
+      "typeTwoLetters": "Geben Sie oben mindestens zwei Buchstaben eines Namens ein. Auch Gäste und Mitglieder anderer Gruppen können als anwesend markiert werden.",
+      "noOtherMatch": "Sonst passt niemand zu „{query}“. Neue Personen werden unter Mitglieder angelegt.",
+      "notMarkedYet": "{count, plural, one {# Person ist} other {# Personen sind}} noch nicht als anwesend markiert.",
+      "close": "Anwesenheit abschließen",
+      "closeShort": "Abschließen",
+      "viewOnly": "Sie können diese Anwesenheit sehen, erfassen können sie aber nur die Diener dieser Gruppe.",
+      "recent": "Zuletzt markiert",
+      "correctMistake": "Einen Fehler mit Notiz korrigieren",
+      "corrections": "Korrekturen",
+      "removed": "{name} wurde {when} entfernt",
+      "removedReason": "{name} wurde {when} entfernt: {reason}",
+      "confirm": {
+        "title": "Anwesenheit für {group} abschließen?",
+        "description": "Die Liste wird so gespeichert, wie sie jetzt ist. Die Dienstleitung kann sie zur Korrektur wieder öffnen.",
+        "presentOf": "{present, plural, other {#}} von {total, plural, other {#}} auf der Liste als anwesend markiert",
+        "present": "{count, plural, other {# als anwesend markiert}}",
+        "extra": "{count, plural, one {# anwesende Person, die nicht auf der Liste steht} other {# anwesende Personen, die nicht auf der Liste stehen}}",
+        "notMarked": "{count, plural, one {# Person} other {# Personen}} nicht als anwesend markiert. Das ist nicht dasselbe wie abwesend."
+      },
+      "correct": {
+        "title": "Versehentlich markierte Person entfernen",
+        "description": "Die Markierung wird aus der Liste entfernt. Die Korrektur und Ihre Notiz bleiben im Verlauf erhalten.",
+        "note": "Notiz",
+        "placeholder": "z. B. Falschen Namen angetippt",
+        "confirm": "Markierung entfernen",
+        "person": "Person"
+      }
+    },
+    "reopen": {
+      "button": "Zur Korrektur wieder öffnen",
+      "title": "Anwesenheit für {group} wieder öffnen?",
+      "description": "Die Diener können dann wieder Personen markieren oder Markierungen entfernen, bis die Anwesenheit erneut abgeschlossen wird. Das Wiederöffnen wird im Verlauf vermerkt.",
+      "hint": "Zum Beispiel: „Mina war da, wurde aber nicht abgehakt.“",
+      "placeholder": "Was korrigiert werden muss",
+      "confirm": "Wieder öffnen"
+    },
+    "stage": {
+      "metaTitle": "Anwesenheit der Stufe",
+      "title": "Letzte Termine",
+      "description": "Die aktuellen Mitglieder im Vergleich zu den letzten abgeschlossenen Terminen. Ein gefülltes Kästchen bedeutet „als anwesend markiert“, ein leeres „nicht als anwesend markiert“. Striche stehen für Termine, bevor jemand dazukam.",
+      "empty": "Noch keine abgeschlossenen Termine.",
+      "member": "Mitglied",
+      "present": "Anwesend",
+      "presentOf": "{present, plural, other {#}} von {total, plural, other {#}}",
+      "cell": {
+        "present": "Anwesend",
+        "notMarked": "Nicht als anwesend markiert",
+        "notInStage": "Noch nicht in der Stufe"
+      },
+      "cellSr": {
+        "present": "anwesend",
+        "notMarked": "nicht markiert",
+        "notInStage": "noch nicht in der Stufe"
+      },
+      "footnote": "Die Zahlen enthalten auch Personen, die gekommen sind, aber nicht auf der Liste stehen. Abwesenheit wird nicht erfasst: Ein leeres Kästchen bedeutet nur, dass niemand die Person als anwesend markiert hat."
+    }
+  },
+  "members": {
+    "description": "Alle, die teilnehmen, und die Dienste und Stufen, zu denen sie gehören. Die Listen für die Anwesenheit kommen von hier.",
+    "addPerson": "Person hinzufügen",
+    "name": "Name",
+    "belongsTo": "Gehört zu",
+    "lastPresent": "Zuletzt anwesend",
+    "last4Weeks": "Letzte 4 Wochen",
+    "notYet": "Noch nicht",
+    "lastPresentInline": "zuletzt {when}",
+    "noService": "Kein Dienst",
+    "tabs": {
+      "active": "Aktiv ({count, number})",
+      "inactive": "Inaktiv ({count, number})",
+      "all": "Alle"
+    },
+    "search": "Personen suchen",
+    "searchPlaceholder": "Nach Namen suchen",
+    "service": "Dienst",
+    "stage": "Stufe",
+    "allServices": "Alle Dienste",
+    "empty": {
+      "noMatch": "Keine Treffer für „{query}“",
+      "noMatchHint": "Prüfen Sie die Schreibweise oder sehen Sie in den anderen Tabs nach.",
+      "title": "Hier ist niemand",
+      "hint": "Personen, die Sie hinzufügen, erscheinen hier."
+    },
+    "showing": "{start, number}–{end, number} von {total, plural, one {# Person} other {# Personen}}",
+    "fields": {
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "displayName": "Rufname",
+      "displayNameHint": "Wie alle die Person nennen, z. B. „Kiro“ für Kirollos.",
+      "displayNameHintShort": "Wie alle die Person nennen.",
+      "noStage": "Keine Stufe"
+    },
+    "newPerson": {
+      "title": "Person hinzufügen",
+      "description": "Name und Zugehörigkeit. Mehr braucht es für die Anwesenheit nicht.",
+      "duplicateFallback": "Es gibt schon eine Person mit diesem Namen.",
+      "duplicateHint": "Suchen Sie zuerst nach der Person; gleiche Namen sind häufig.",
+      "addAnyway": "Andere Person – trotzdem hinzufügen"
+    },
+    "addMember": {
+      "trigger": "Mitglied hinzufügen",
+      "title": "Mitglied zu {stage} hinzufügen",
+      "searchFirst": "Suchen Sie zuerst: Die Person ist vielleicht schon in einem anderen Dienst erfasst.",
+      "registerNew": "Erfassen Sie eine neue Person. Sie gehört ab heute zu {stage}.",
+      "typeName": "Namen eingeben",
+      "typeTwoLetters": "Geben Sie mindestens zwei Buchstaben ein.",
+      "nobodyFound": "Niemand mit diesem Namen gefunden.",
+      "notInAnyService": "In keinem Dienst",
+      "add": "Hinzufügen",
+      "registerPerson": "Neue Person erfassen"
+    },
+    "membership": {
+      "change": "Zugehörigkeit von {name} ändern",
+      "moveFromToday": "Ab heute verschieben nach",
+      "removeFrom": "Aus {where} entfernen",
+      "removeTitle": "{name} aus {where} entfernen?",
+      "removeDescription": "Die Person steht ab heute nicht mehr auf der Liste. Ihre bisherige Anwesenheit und ihre Hausaufgaben bleiben im Verlauf erhalten.",
+      "remove": "Entfernen"
+    },
+    "sheet": {
+      "member": "Mitglied",
+      "saveName": "Namen speichern",
+      "addTo": "Hinzufügen zu",
+      "add": "Hinzufügen",
+      "serviceNoStage": "{service} (keine Stufe)",
+      "noServiceNow": "Zurzeit in keinem Dienst.",
+      "since": "seit {date}",
+      "earlier": "Früher",
+      "pastPlacement": "{where}, {from} bis {to}",
+      "recentlyPresent": "Zuletzt als anwesend markiert",
+      "notPresentYet": "Noch in keinem Termin als anwesend markiert.",
+      "last4Weeks": "{count, plural, one {# Termin} other {# Termine}} in den letzten vier Wochen. Wer nicht als anwesend markiert ist, war nicht unbedingt abwesend.",
+      "reactivate": "Wieder aktivieren",
+      "markInactive": "Als inaktiv markieren",
+      "inactiveTitle": "{name} als inaktiv markieren?",
+      "inactiveDescription": "Für Personen, die nicht mehr kommen, zum Beispiel nach einem Umzug.",
+      "inactiveConsequences": {
+        "rosters": "Die Person erscheint nicht mehr auf Listen und in der Suche beim Markieren als anwesend.",
+        "history": "Anwesenheit und Zugehörigkeiten der Person bleiben im Verlauf erhalten.",
+        "reactivate": "Sie können die Person jederzeit wieder aktivieren."
+      }
+    }
+  },
+  "homework": {
+    "title": "Hausaufgaben",
+    "newHomework": "Neue Hausaufgabe",
+    "editHomework": "Hausaufgabe bearbeiten",
+    "backToList": "Zurück zu den Hausaufgaben",
+    "notYet": "Noch nicht",
+    "childrenWithoutAccount": "{count, plural, one {# Kind} other {# Kinder}} ohne Elternkonto",
+    "hiddenFromParents": "Für Eltern verborgen",
+    "notVisibleYet": "Für Eltern noch nicht sichtbar",
+    "due": {
+      "none": "Kein Fälligkeitsdatum",
+      "today": "Heute fällig",
+      "tomorrow": "Morgen fällig",
+      "inDays": "Fällig am {weekday}, in {count, plural, one {# Tag} other {# Tagen}}",
+      "yesterday": "War gestern fällig",
+      "past": "War am {date} fällig",
+      "on": "Fällig am {date}"
+    },
+    "list": {
+      "description": "Kleine Aufgaben für zu Hause, passend zu einer Lektion. Die Eltern von {stage} haken sie im Elternbereich ab. Hier sehen Sie, wer sie als erledigt gemeldet hat – keine Noten.",
+      "needsLesson": "Hausaufgaben gehören zu einer Lektion. <link>Bereiten Sie zuerst eine Lektion vor</link>."
+    },
+    "new": {
+      "description": "Eine kleine Aufgabe, die die Kinder zu Hause mit ihren Eltern erledigen. Die Eltern haken sie ab, wenn sie erledigt ist; Noten gibt es nicht.",
+      "noAccessTitle": "Sie können hier keine Hausaufgaben vergeben",
+      "noAccess": "Nur die Diener von {stage} und die Dienstleitung können hier Hausaufgaben vergeben.",
+      "lessonFirstTitle": "Bereiten Sie zuerst eine Lektion vor",
+      "lessonFirst": "Hausaufgaben gehören immer zu einer Lektion.",
+      "newLesson": "Neue Lektion"
+    },
+    "edit": {
+      "title": "„{title}“ bearbeiten",
+      "noAccessTitle": "Sie können diese Hausaufgabe nicht ändern",
+      "noAccess": "Nur die Diener von {stage} und die Dienstleitung können ihre Hausaufgaben ändern.",
+      "archivedTitle": "Diese Hausaufgabe ist archiviert",
+      "archived": "Archivierte Hausaufgaben bleiben, wie sie waren – zusammen mit dem, was Eltern gemeldet haben.",
+      "backToHomework": "Zurück zur Hausaufgabe"
+    },
+    "progress": {
+      "noAccessTitle": "Sie können den Stand dieser Hausaufgabe nicht sehen",
+      "noAccess": "Nur die Diener von {stage} und die Dienstleitung sehen, was Eltern gemeldet haben.",
+      "lessonOn": "<link>{lesson}</link>, {date}",
+      "note": "Eltern melden das von zu Hause aus. „Erledigt“ heißt, dass ein Elternteil es abgehakt hat; es sagt nichts darüber, wie gut das Kind gelernt hat, und es gibt keine Rangliste.",
+      "childrenIn": "Kinder in {stage}",
+      "reportedDone": "Als erledigt gemeldet",
+      "afterDue": "davon {count, number} nach dem Fälligkeitsdatum",
+      "withoutAccount": "Ohne Elternkonto",
+      "cantReportOnline": "Keine Online-Meldung möglich",
+      "draftNote": "Diese Hausaufgabe ist ein Entwurf. Eltern sehen sie noch nicht.",
+      "whatParentsRead": "Was Eltern lesen"
+    },
+    "completion": {
+      "tabAll": "Alle ({count, number})",
+      "tabDone": "Als erledigt gemeldet ({count, number})",
+      "tabOpen": "Noch nicht ({count, number})",
+      "tabNoAccount": "Ohne Elternkonto ({count, number})",
+      "searchLabel": "Kinder suchen",
+      "searchPlaceholder": "Kind suchen",
+      "child": "Kind",
+      "reported": "Gemeldet",
+      "parentAccounts": "Elternkonten",
+      "noMatch": "Kein Kind passt zur Suche.",
+      "empty": "Niemand in dieser Liste.",
+      "leftStage": "Nicht mehr in {stage}; die Meldung bleibt erhalten",
+      "done": "Erledigt",
+      "afterDue": "nach dem Fälligkeitsdatum",
+      "noAccount": "Kein Elternkonto"
+    },
+    "actions": {
+      "publish": "Veröffentlichen",
+      "progress": "Meldungen ansehen",
+      "publishToParents": "Für Eltern veröffentlichen",
+      "unpublish": "Zurück zum Entwurf",
+      "deleteDraft": "Entwurf löschen",
+      "unpublishTitle": "„{title}“ zurücknehmen?",
+      "unpublishText": "Die Hausaufgabe wird wieder ein Entwurf und verschwindet aus dem Elternbereich. Sie können sie später erneut veröffentlichen.",
+      "archiveTitle": "„{title}“ archivieren?",
+      "archiveText": "Archivierte Hausaufgaben verschwinden aus dem Elternbereich und aus den aktuellen Listen.",
+      "archiveKept": "{count, plural, one {Die gemeldete Erledigung bleibt im Verlauf erhalten.} other {Die # gemeldeten Erledigungen bleiben im Verlauf erhalten.}}",
+      "deleteTitle": "„{title}“ löschen?",
+      "deleteText": "Der Entwurf wird endgültig entfernt. Eltern haben ihn nie gesehen.",
+      "restoreTitle": "„{title}“ wiederherstellen?",
+      "restorePublished": "Die Hausaufgabe wird wieder veröffentlicht. Die Eltern der Klasse sehen sie dann wieder.",
+      "restoreDraft": "Die Hausaufgabe kommt als Entwurf zurück. Eltern sehen sie erst, wenn Sie sie veröffentlichen."
+    },
+    "table": {
+      "published": "Veröffentlicht ({count, number})",
+      "drafts": "Entwürfe ({count, number})",
+      "archived": "Archiviert ({count, number})",
+      "homework": "Hausaufgabe",
+      "due": "Fällig",
+      "status": "Status",
+      "reported": "Von Eltern als erledigt gemeldet",
+      "actions": "Aktionen",
+      "empty": {
+        "published": {
+          "title": "Nichts veröffentlicht",
+          "text": "Veröffentlichen Sie Hausaufgaben aus einer Lektion heraus. Die Eltern der Klasse sehen sie sofort."
+        },
+        "draft": {
+          "title": "Keine Entwürfe",
+          "text": "Entwürfe bleiben für Eltern verborgen, bis Sie sie veröffentlichen."
+        },
+        "archived": {
+          "title": "Nichts archiviert",
+          "text": "Archivierte Hausaufgaben behalten, was Eltern gemeldet haben."
+        }
+      }
+    },
+    "editor": {
+      "lesson": "Lektion",
+      "givenWith": "Gehört zur Lektion",
+      "lessonNote": "Eltern sehen die Bibelstelle und den Merkvers der Lektion zusammen mit der Hausaufgabe.",
+      "homework": "Hausaufgabe",
+      "startFrom": "Vorlage:",
+      "templates": {
+        "verse": {
+          "title": "Merkvers auswendig lernen",
+          "text": "Lernen Sie den Merkvers gemeinsam auswendig. Sagen Sie ihn einmal am Tag auf, zum Beispiel vor dem Schlafengehen, dann sitzt er bis nächste Woche.",
+          "textRef": "Lernen Sie den Merkvers ({ref}) gemeinsam auswendig. Sagen Sie ihn einmal am Tag auf, zum Beispiel vor dem Schlafengehen, dann sitzt er bis nächste Woche."
+        },
+        "story": {
+          "title": "Bibelgeschichte lesen",
+          "text": "Lesen Sie die Geschichte gemeinsam. Lassen Sie Ihr Kind sie danach mit eigenen Worten erzählen.",
+          "textPassage": "Lesen Sie {passage} gemeinsam. Lassen Sie Ihr Kind die Geschichte danach mit eigenen Worten erzählen."
+        },
+        "prayer": {
+          "title": "Gemeinsam beten",
+          "text": "Beten Sie diese Woche einmal gemeinsam und danken Sie Gott für eine Sache aus der Lektion."
+        }
+      },
+      "titleLabel": "Titel",
+      "titlePlaceholder": "z. B. Merkvers auswendig lernen",
+      "instructionsLabel": "Was zu tun ist",
+      "instructionsPlaceholder": "Für Eltern geschrieben: was gemeinsam zu tun ist und wie lange es dauert",
+      "instructionsHint": "Fassen Sie sich kurz. Eltern lesen das auf dem Handy.",
+      "dueDate": "Fälligkeitsdatum",
+      "weekAfter": "Eine Woche nach der Lektion ({date})",
+      "clearDue": "Ohne Fälligkeitsdatum",
+      "dueHint": "Nur als Orientierung. Eltern können sie auch danach noch abhaken.",
+      "resources": "Materialien",
+      "resourcesEmpty": "Ein Link zu einer Geschichte, einem Lied oder einer Malvorlage, falls es hilft.",
+      "resource": "Material {n, number}",
+      "resourcePlaceholder": "z. B. Die Geschichte als Video",
+      "resourceLink": "Link für Material {n, number}",
+      "resourceRemove": "Material {n, number} entfernen",
+      "addResource": "Material hinzufügen",
+      "preview": "Vorschau für Eltern",
+      "previewLabel": "Vorschau des Elternbereichs",
+      "visible": "Sichtbar für die Eltern von {count, plural, one {# Kind} other {# Kindern}} in {stage}. Änderungen erscheinen sofort{completions, plural, =0 {} one {; die bereits gemeldete Erledigung bleibt erhalten} other {; die # bereits gemeldeten Erledigungen bleiben erhalten}}.",
+      "hiddenUntilPublished": "Nach der Veröffentlichung sehen die Eltern von {count, plural, one {# Kind} other {# Kindern}} in {stage} sie. Bis dahin bleibt sie verborgen.",
+      "saveDraft": "Entwurf speichern"
+    }
+  },
+  "services": {
+    "description": "Die Dienste der Gemeinde. Jeder Dienst kann in Stufen unterteilt werden, etwa in die Klassen der Sonntagsschule, und hat eigene Regeltermine.",
+    "kind": "Dienst",
+    "new": "Neuer Dienst",
+    "nothingPlanned": "Nichts geplant",
+    "form": {
+      "editTitle": "{name} bearbeiten",
+      "newDescription": "Ein Dienst der Gemeinde, etwa die Sonntagsschule oder das Jugendtreffen. Stufen und Regeltermine können Sie anschließend hinzufügen.",
+      "editDescription": "Änderungen erscheinen überall, wo der Dienst vorkommt, auch bei vergangenen Terminen.",
+      "name": "Name",
+      "namePlaceholder": "z. B. Sonntagsschule",
+      "description": "Beschreibung",
+      "descriptionPlaceholder": "Für wen der Dienst ist und wann er sich trifft",
+      "create": "Dienst anlegen"
+    },
+    "actions": {
+      "editDetails": "Name und Beschreibung bearbeiten",
+      "deleteBlocked": "Hat schon Termine ({count, plural, one {# Termin} other {# Termine}}). Archivieren Sie den Dienst stattdessen."
+    },
+    "archive": {
+      "title": "{name} archivieren?",
+      "description": "Archivierte Dienste werden in den alltäglichen Listen ausgeblendet. Es wird nichts gelöscht.",
+      "schedules": "{count, plural, one {Für seinen aktiven Regeltermin} other {Für seine # aktiven Regeltermine}} werden keine neuen Termine mehr angelegt.",
+      "noSchedules": "Der Dienst hat keine aktiven Regeltermine.",
+      "upcoming": "{count, plural, one {# bereits angelegter Termin für die nächsten Tage bleibt bestehen. Sagen Sie ihn ab, falls er nicht stattfindet.} other {# bereits angelegte Termine für die nächsten Tage bleiben bestehen. Sagen Sie sie ab, falls sie nicht stattfinden.}}",
+      "kept": "Stufen, Mitglieder und bisherige Anwesenheit bleiben erhalten. Sie können den Dienst jederzeit wiederherstellen.",
+      "note": "In diesem Dienst wird gerade Anwesenheit erfasst. Schließen Sie die Anwesenheit der offenen Termine ab, bevor Sie ihn archivieren."
+    },
+    "restore": {
+      "title": "{name} wiederherstellen?",
+      "description": "Der Dienst erscheint wieder in den alltäglichen Listen. Seine Regeltermine bleiben inaktiv, bis Sie sie aktivieren."
+    },
+    "delete": {
+      "title": "{name} löschen?",
+      "description": "Der Dienst hat sich nie getroffen und kann deshalb vollständig entfernt werden.",
+      "removes": "Entfernt den Dienst.",
+      "removesStages": "Entfernt den Dienst und {stages, plural, one {# Stufe} other {# Stufen}}.",
+      "removesSchedules": "Entfernt den Dienst und {schedules, plural, one {# Regeltermin} other {# Regeltermine}}.",
+      "removesAll": "Entfernt den Dienst, {stages, plural, one {# Stufe} other {# Stufen}} und {schedules, plural, one {# Regeltermin} other {# Regeltermine}}.",
+      "members": "{count, plural, one {# Person wird} other {# Personen werden}} dort nicht mehr aufgeführt.",
+      "cantUndo": "Das kann nicht rückgängig gemacht werden."
+    },
+    "table": {
+      "service": "Dienst",
+      "stages": "Stufen",
+      "members": "Mitglieder",
+      "next": "Nächstes Treffen",
+      "attendance": "Anwesenheit, 4 Wo.",
+      "attendanceHint": "Anteil der Liste, der in den letzten vier Wochen als anwesend markiert wurde",
+      "leaders": "Dienstleitung",
+      "actions": "Aktionen",
+      "onAverage": "{count, number} <muted>im Schnitt</muted>",
+      "noSessions": "Keine Termine",
+      "when": "{day}, {time}",
+      "nextAt": "nächstes Mal {when}, {time}",
+      "archivedOn": "Archiviert am {date}",
+      "search": "Dienste durchsuchen",
+      "searchPlaceholder": "Dienste oder Stufen suchen",
+      "tabs": {
+        "active": "Aktiv ({count, number})",
+        "archived": "Archiviert ({count, number})",
+        "all": "Alle ({count, number})"
+      },
+      "noMatch": "Kein Dienst passt zu „{query}“",
+      "noArchived": "Keine archivierten Dienste",
+      "none": "Noch keine Dienste",
+      "checkSpelling": "Prüfen Sie die Schreibweise oder suchen Sie in einem anderen Tab.",
+      "appearHere": "Dienste, die Sie anlegen, erscheinen hier."
+    },
+    "detail": {
+      "archivedOn": "Archiviert am {date}",
+      "archivedNote": "Für diesen Dienst werden keine neuen Termine angelegt. Seine Stufen, Mitglieder und bisherige Anwesenheit bleiben erhalten.",
+      "stats": {
+        "stages": "Stufen",
+        "members": "Mitglieder",
+        "activeSchedules": "Aktive Regeltermine",
+        "attendance": "Anwesenheit, letzte 4 Wochen",
+        "average": "{count, number} im Schnitt"
+      },
+      "stages": {
+        "description": "Gruppen innerhalb des Dienstes in ihrer Anzeigereihenfolge. Öffnen Sie eine Stufe, um ihre Mitglieder, Termine, Lektionen und Hausaufgaben zu sehen.",
+        "manage": "Stufen verwalten",
+        "empty": "Keine Stufen",
+        "emptyDescription": "{name} trifft sich als eine Gruppe. {count, plural, one {Sein einziges Mitglied gehört} other {Seine # Mitglieder gehören}} direkt zum Dienst. Fügen Sie Stufen hinzu, wenn er sich in Klassen oder Niveaus aufteilt.",
+        "addFirst": "Erste Stufe hinzufügen",
+        "next": "Nächster Termin: {day}, {time}",
+        "noAttendance": "Noch keine Anwesenheit erfasst",
+        "archived": "Archiviert: {names}. <link>Stufen verwalten</link>"
+      },
+      "schedules": {
+        "title": "Regeltermine",
+        "description": "Wiederkehrende Treffen. Jeder Termin wird am Vortag automatisch angelegt.",
+        "empty": "Noch keine Regeltermine."
+      },
+      "recent": {
+        "title": "Letzte Anwesenheit",
+        "empty": "Noch keine abgeschlossenen Termine."
+      },
+      "upcoming": {
+        "title": "Demnächst",
+        "empty": "In den nächsten zwei Wochen ist nichts geplant."
+      },
+      "team": {
+        "title": "Dienstleitung und Diener",
+        "manageRoles": "Rollen verwalten",
+        "empty": "In diesem Dienst hat noch niemand eine Rolle.",
+        "giveRole": "<link>Vergeben Sie die Rolle „Dienstleitung“</link> in den Einstellungen."
+      }
+    }
+  },
+  "parent": {
+    "meta": {
+      "title": "Eltern"
+    },
+    "brand": {
+      "forParents": "Für Eltern"
+    },
+    "nav": {
+      "label": "Elternbereich",
+      "home": "Start",
+      "children": "Meine Kinder",
+      "homework": "Hausaufgaben",
+      "account": "Konto"
+    },
+    "menu": {
+      "accountOf": "Konto von {name}"
+    },
+    "home": {
+      "greeting": {
+        "morning": "Guten Morgen, {name}",
+        "afternoon": "Guten Tag, {name}",
+        "evening": "Guten Abend, {name}"
+      },
+      "pendingAccess": "Eine Anfrage, eines Ihrer Kinder sehen zu können, wird noch vom Gemeindebüro geprüft. <link>Details</link>",
+      "noChild": {
+        "title": "Noch kein Kind verknüpft",
+        "description": "Das Gemeindebüro verknüpft Ihr Konto mit Ihren Kindern. Sobald das geschehen ist, erscheinen hier ihre Hausaufgaben."
+      },
+      "toDoFor": "Für {name} zu erledigen",
+      "emptyToDo": "Gerade gibt es nichts zu erledigen. Neue Hausaufgaben erscheinen hier nach der Lektion.",
+      "doneRecently": "Kürzlich erledigt",
+      "howItWorks": {
+        "title": "So funktionieren Hausaufgaben",
+        "afterLesson": "Nach der Lektion geben die Diener von {stage} manchmal eine kleine Aufgabe mit, die Sie zu Hause gemeinsam erledigen können.",
+        "afterLessonNoStage": "Nach der Lektion geben die Diener der Klasse manchmal eine kleine Aufgabe mit, die Sie zu Hause gemeinsam erledigen können.",
+        "tickOff": "Haken Sie die Aufgabe ab, wenn sie erledigt ist. Es gibt keine Noten, und auch nach dem Fälligkeitsdatum dürfen Sie sie noch abhaken."
+      }
+    },
+    "account": {
+      "description": "Ihr Elternkonto bei KHMK Köln.",
+      "name": "Name",
+      "email": "E-Mail",
+      "children": "Kinder",
+      "noneLinked": "Noch keine verknüpft",
+      "waiting": "{count, plural, one {# wartet auf Freigabe} other {# warten auf Freigabe}}",
+      "churchSees": {
+        "title": "Was die Gemeinde sieht",
+        "body": "Die Diener der Klasse Ihres Kindes sehen, ob und wann Sie eine Hausaufgabe abgehakt haben. Sonst sehen sie nichts aus dem Elternbereich, und andere Eltern sehen nichts über Ihre Familie."
+      },
+      "prototype": {
+        "title": "Prototyp",
+        "body": "In diesem Prototyp werden keine E-Mails verschickt. Über das Menü mit Ihrem Namen können Sie den Elternbereich aus Sicht eines anderen Elternteils ansehen oder <link>ein anderes Demokonto wählen</link>."
+      }
+    },
+    "children": {
+      "description": "Die Kinder, die das Gemeindebüro mit Ihrem Konto verknüpft hat. Sie sehen ihre Klasse und die Hausaufgaben, die die Diener veröffentlichen – nichts über andere Familien.",
+      "empty": "Mit Ihrem Konto ist noch kein Kind verknüpft.",
+      "noClass": "Zurzeit in keiner Klasse",
+      "toDo": "{count, plural, other {<num>#</num> offen}}",
+      "nothingToDo": "Nichts zu erledigen",
+      "done": "{count, plural, other {# erledigt}}",
+      "pendingTitle": "Warten auf Freigabe",
+      "pending": "Zugang zu {name}, angefragt am {date}. Das Gemeindebüro prüft jede Anfrage, bevor Sie etwas sehen.",
+      "pendingUnknown": "Zugang zu einem Kind, angefragt am {date}. Das Gemeindebüro prüft jede Anfrage, bevor Sie etwas sehen.",
+      "help": "Fehlt ein Kind, oder stimmt etwas nicht? Sprechen Sie mit den Dienern der Klasse oder mit dem Gemeindebüro. Kinder haben kein eigenes Konto."
+    },
+    "homework": {
+      "description": "Alles, was die Diener von {stage} für {name} aufgegeben haben.",
+      "descriptionNoStage": "Alles, was die Diener der Klasse für {name} aufgegeben haben.",
+      "noChild": "Noch kein Kind verknüpft.",
+      "toDo": "Zu erledigen",
+      "done": "Erledigt",
+      "emptyToDo": "Für {name} gibt es gerade nichts zu erledigen.",
+      "emptyDone": "Noch nichts abgehakt.",
+      "backFor": "Hausaufgaben für {name}"
+    },
+    "switcher": {
+      "label": "Kinder",
+      "noClass": "Keine Klasse",
+      "toDo": "{count, plural, other {# offen}}",
+      "allDone": "alles erledigt"
+    },
+    "task": {
+      "doneByYou": "Erledigt · {when} von Ihnen gemeldet",
+      "doneBy": "Erledigt · {when} von {name} gemeldet",
+      "doneByParent": "Erledigt · {when} von einem Elternteil gemeldet",
+      "done": "Erledigt",
+      "toDo": "Zu erledigen"
+    },
+    "completion": {
+      "markDone": "Als erledigt melden",
+      "hint": "Tippen Sie hier, wenn {name} sie erledigt hat. Sie können das rückgängig machen.",
+      "done": "Erledigt",
+      "byYou": "Von Ihnen {when} gemeldet.",
+      "byName": "Von {name} {when} gemeldet.",
+      "byParent": "Von einem Elternteil {when} gemeldet.",
+      "saving": "Wird gespeichert …",
+      "undo": "Rückgängig machen",
+      "undone": "Für {name} wieder als nicht erledigt markiert."
+    },
+    "view": {
+      "forChild": "Für {name}",
+      "forYourChild": "Für Ihr Kind",
+      "titlePlaceholder": "Titel der Hausaufgabe",
+      "whatToDo": "Was zu tun ist",
+      "instructionsPlaceholder": "Hier erscheint die Anleitung.",
+      "fromLessonLabel": "Aus der Lektion",
+      "fromLesson": "Aus der Lektion „{title}“, {date}",
+      "resources": "Materialien"
+    }
+  },
+  "notFound": {
+    "title": "Diese Seite gibt es nicht",
+    "app": {
+      "description": "Vielleicht wurde sie gelöscht, oder der Link ist falsch.",
+      "action": "Übersicht öffnen"
+    },
+    "root": {
+      "description": "Der Link ist vielleicht falsch oder veraltet.",
+      "openApp": "App öffnen",
+      "parentPortal": "Elternbereich"
+    },
+    "parent": {
+      "title": "Diese Seite ist nicht verfügbar",
+      "description": "Vielleicht haben die Diener die Hausaufgabe zurückgenommen, oder der Link ist nicht für Ihr Konto gedacht.",
+      "action": "Ihre Hausaufgaben ansehen"
+    }
+  },
+  "meetings": {
+    "tabs": {
+      "sessions": "Termine",
+      "schedules": "Regeltermine"
+    },
+    "fields": {
+      "service": "Dienst",
+      "stage": "Stufe",
+      "wholeService": "Ganzer Dienst",
+      "title": "Titel",
+      "name": "Name",
+      "place": "Ort",
+      "placePlaceholder": "z. B. Gemeindesaal",
+      "date": "Datum",
+      "starts": "Beginn",
+      "ends": "Ende",
+      "whoIsExpected": "Wer erwartet wird"
+    },
+    "roster": {
+      "open": "Offen für alle",
+      "size": "Liste: {count, plural, one {# Person} other {# Personen}}"
+    },
+    "filter": {
+      "allServices": "Alle Dienste"
+    },
+    "agenda": {
+      "description": "Die letzte Woche und die nächsten sieben Tage. Regelmäßige Termine kommen aus den Regelterminen und werden automatisch am Vortag angelegt.",
+      "range": "{from} bis {to}",
+      "none": "Keine Treffen.",
+      "count": "{count, plural, one {# Treffen} other {# Treffen}}",
+      "open": "{count, plural, other {# mit offener Anwesenheit}}",
+      "canceled": "{count, plural, other {# abgesagt}}",
+      "planned": "{count, plural, one {# geplant, wird am Vortag angelegt} other {# geplant, werden am Vortag angelegt}}",
+      "emptyTitle": "Keine Treffen an diesem Tag",
+      "emptyFiltered": "Wählen Sie alle Dienste oder einen anderen Tag.",
+      "emptyOtherDay": "Wählen Sie oben einen anderen Tag."
+    },
+    "days": {
+      "label": "Tage",
+      "day": "{date}: {count, plural, =0 {keine Treffen} one {# Treffen} other {# Treffen}}"
+    },
+    "schedules": {
+      "pageTitle": "Regeltermine",
+      "description": "Regeltermine beschreiben Treffen, die sich wiederholen. Aus jedem werden die Termine automatisch am Vortag angelegt.",
+      "statusNav": "Status der Regeltermine",
+      "active": "Aktiv ({count, number})",
+      "inactive": "Inaktiv ({count, number})",
+      "all": "Alle",
+      "emptyTitle": "Noch keine Regeltermine",
+      "emptyDescription": "Legen Sie für jedes Treffen, das sich wiederholt, einen Regeltermin an.",
+      "emptyInactiveTitle": "Keine inaktiven Regeltermine",
+      "emptyInactiveDescription": "Deaktivierte Regeltermine erscheinen hier.",
+      "emptyService": "Keine Regeltermine."
+    },
+    "list": {
+      "next": "Nächster Termin: {when}, {time}",
+      "nextCanceled": "{when}, {time} abgesagt",
+      "nowOpen": "Jetzt: Anwesenheit offen",
+      "noUpcoming": "Kein kommender Termin",
+      "inactive": "Inaktiv",
+      "sessionsSoFar": "Bisher {count, plural, one {# Termin} other {# Termine}}"
+    },
+    "schedule": {
+      "pageTitle": "Regeltermin",
+      "when": "{pattern}, {time}",
+      "archived": "{name} ist archiviert.",
+      "inactiveNote": "Dieser Regeltermin ist inaktiv: Aus ihm werden keine neuen Termine angelegt. Seine bisherigen Termine bleiben im Verlauf.",
+      "restoreService": "{name} ist archiviert. Stellen Sie den Dienst wieder her, bevor Sie den Regeltermin aktivieren.",
+      "restoreStage": "{name} ist archiviert. Stellen Sie die Stufe wieder her, bevor Sie den Regeltermin aktivieren.",
+      "nextTitle": "Nächste Termine",
+      "nextDescription": "Jeder Termin wird automatisch am Vortag angelegt. Sagen Sie einen einzelnen Termin im Voraus ab oder verschieben Sie ihn; die anderen bleiben, wie sie sind.",
+      "nextEmpty": "Keine kommenden Termine.",
+      "nextInactive": "Solange der Regeltermin inaktiv ist, ist nichts geplant.",
+      "pastTitle": "Vergangene Termine",
+      "pastEmpty": "Noch keine Termine.",
+      "repeats": "Wiederholung",
+      "time": "Uhrzeit",
+      "notSet": "Nicht festgelegt",
+      "who": "Wer",
+      "members": "Die Mitglieder von {group} (heute {count, number})",
+      "sessions": "Termine",
+      "generating": "Werden am Vortag angelegt",
+      "notGenerating": "Werden nicht angelegt (inaktiv)",
+      "created": "Angelegt",
+      "updated": "Letzte Änderung"
+    },
+    "actions": {
+      "edit": "Regeltermin bearbeiten",
+      "activate": "Aktivieren",
+      "deactivate": "Deaktivieren",
+      "delete": "Regeltermin löschen",
+      "cantDelete": "Löschen nicht möglich: hat Termine",
+      "deactivateTitle": "„{name}“ deaktivieren?",
+      "deactivateDescription": "Aus ihm werden keine neuen Termine angelegt. Sie können ihn später wieder aktivieren.",
+      "deactivateExisting": "Bereits vorhandene Termine bleiben bestehen, auch die von heute und morgen.",
+      "deactivateHistory": "{count, plural, =0 {Aus ihm wurden noch keine Termine angelegt.} one {Der bisherige Termin und seine Anwesenheit bleiben im Verlauf.} other {Die # bisherigen Termine und ihre Anwesenheit bleiben im Verlauf.}}",
+      "deleteTitle": "„{name}“ löschen?",
+      "deleteDescription": "Aus ihm wurde noch kein Termin angelegt, daher ist sonst nichts betroffen."
+    },
+    "form": {
+      "newButton": "Neuer Regeltermin",
+      "newTitle": "Neuer Regeltermin",
+      "newDescription": "Ein Treffen, das sich wiederholt. Jeder Termin wird automatisch am Vortag angelegt.",
+      "editAlertTitle": "Sie ändern den gesamten Regeltermin",
+      "editAlertDescription": "Ab jetzt angelegte Termine übernehmen die neuen Angaben. Bereits vorhandene Termine (höchstens die von heute und morgen) und vergangene Termine bleiben, wie sie sind. Um einen einzelnen Termin zu ändern, öffnen Sie ihn und bearbeiten Sie ihn dort.",
+      "namePlaceholder": "z. B. Sonntagsklasse",
+      "nameHint": "Wird bei jedem Termin zusammen mit der Stufe angezeigt.",
+      "placePlaceholder": "z. B. Raum 4",
+      "rosterOf": "Die Liste von {group}",
+      "rosterOfService": "Die Liste des Dienstes",
+      "rosterToday": "Heute {count, plural, one {# Person} other {# Personen}}.",
+      "rosterStage": "Mitglieder der Stufe.",
+      "rosterServiceOnly": "Nur Personen im Dienst ohne Stufe; Mitglieder seiner Stufen stehen auf der Liste ihrer Stufe.",
+      "rosterService": "Alle im Dienst.",
+      "rosterHint": "Bei der Anwesenheit sehen Sie, wer noch nicht als anwesend markiert ist.",
+      "openHint": "Keine Liste: Die Anwesenheit ist eine Liste der Personen, die gekommen sind.",
+      "notes": "Notizen",
+      "frequency": "Häufigkeit",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich",
+      "everyWeeks": "{count, plural, one {Jede} other {Alle}} <interval></interval> {count, plural, one {Woche} other {Wochen}}, am",
+      "weeksInterval": "Alle wie viele Wochen",
+      "weekdays": "Wochentage",
+      "monthlyOn": "<week></week> <weekday></weekday> {count, plural, one {jeden} other {alle}} <interval></interval> {count, plural, one {Monat} other {Monate}}",
+      "monthWeek": "Woche im Monat",
+      "weekday": "Wochentag",
+      "monthsInterval": "Alle wie viele Monate",
+      "startsAt": "Beginnt um",
+      "endsAt": "Endet um",
+      "firstDate": "Erster Termin",
+      "lastDate": "Letzter Termin",
+      "lastDateHint": "Lassen Sie das Feld leer, wenn der Regeltermin kein Ende hat.",
+      "preview": "Vorschau",
+      "previewNone": "Im nächsten Jahr keine Termine.",
+      "previewPattern": "{pattern}, {time}.",
+      "previewNext": "Nächste Termine: {dates}.",
+      "dateSeparator": "; ",
+      "firstRightAway": "Der erste Termin wird sofort angelegt.",
+      "firstTomorrow": "Der erste Termin wird morgen angelegt.",
+      "firstOn": "Der erste Termin wird am {date} angelegt.",
+      "save": "Regeltermin speichern",
+      "create": "Regeltermin anlegen"
+    },
+    "oneOff": {
+      "button": "Einzeltermin",
+      "title": "Neuer Einzeltermin",
+      "description": "Ein Treffen, das einmal stattfindet, außerhalb der Regeltermine.",
+      "titlePlaceholder": "z. B. Zusätzliche Probe vor dem Fest",
+      "membersOf": "Die Mitglieder von {group}",
+      "membersOfService": "Die Mitglieder des Dienstes",
+      "onRosterToday": "Heute {count, plural, one {# Person} other {# Personen}} auf der Liste",
+      "openHint": "Keine Liste; jede Person kann als anwesend markiert werden",
+      "hint": "Die Anwesenheit kann am Tag selbst erfasst werden.",
+      "create": "Termin anlegen"
+    },
+    "session": {
+      "pageTitle": "Termin",
+      "crumb": "{group}, {date}",
+      "viewAttendance": "Anwesenheit ansehen",
+      "canceled": "Dieser Termin wurde abgesagt.",
+      "reason": "Grund: {reason}",
+      "noReason": "Es wurde kein Grund angegeben.",
+      "noAttendance": "Für einen abgesagten Termin gibt es keine Anwesenheit.",
+      "notOpenYet": "Die Anwesenheit ist noch nicht geöffnet.",
+      "takenOn": "Die Anwesenheit kann am {date} erfasst werden.",
+      "rosterIs": "{count, plural, one {Auf der Liste steht das eine Mitglied} other {Auf der Liste stehen die # Mitglieder}} von {group} an diesem Tag.",
+      "lesson": "Lektion",
+      "lessonPrepared": "Für dieses Treffen vorbereitet",
+      "lessonCanceled": "Für dieses Treffen vorbereitet, das abgesagt wurde. Verschieben Sie die Lektion auf ein anderes Datum.",
+      "noLesson": "Mit diesem Treffen ist keine Lektion verknüpft.",
+      "stageLessons": "Lektionen von {stage}",
+      "fromSchedule": "Aus dem Regeltermin <link>{name}</link> ({pattern}) angelegt. Änderungen hier betreffen nur diesen Termin; um alle Termine zu ändern, bearbeiten Sie den Regeltermin.",
+      "oneOff": "Ein Einzeltermin, der zu keinem Regeltermin gehört.",
+      "history": "Verlauf"
+    },
+    "dialogs": {
+      "moveDescription": "Nur dieser Termin ändert sich. Der Regeltermin und seine anderen Termine bleiben, wie sie sind.",
+      "move": "Verschieben",
+      "editTitle": "Titel und Ort dieses Termins",
+      "editDescription": "Zum Beispiel ein anderer Raum in dieser Woche. Der Regeltermin wird nicht geändert.",
+      "sessionMenu": "Diesen Termin ändern",
+      "moveSession": "Auf eine andere Zeit verschieben",
+      "editSession": "Titel oder Ort ändern",
+      "cancelSession": "Diesen Termin absagen",
+      "moveTitle": "{group} am {date} verschieben",
+      "cancelTitle": "{group} am {date} absagen?",
+      "cancelSessionDescription": "Mitglieder sehen ihn als abgesagt. Der Regeltermin und seine anderen Termine bleiben, wie sie sind.",
+      "cancelReasonHint": "Wird beim abgesagten Termin angezeigt, z. B. „Gemeindeausflug nach Hamburg“.",
+      "cancelReasonPlaceholder": "Warum er nicht stattfindet",
+      "confirmCancelSession": "Termin absagen",
+      "keepSession": "Termin beibehalten",
+      "dateMenu": "{group} am {date} ändern",
+      "moveDate": "Diesen Termin verschieben",
+      "cancelDate": "Diesen Termin absagen",
+      "cancelDateDescription": "Der Termin wird jetzt angelegt und als abgesagt markiert, damit für dieses Datum nichts mehr erzeugt wird. Der Regeltermin und seine anderen Termine bleiben, wie sie sind.",
+      "keepDate": "Termin beibehalten"
+    },
+    "stage": {
+      "pageTitle": "Termine der Stufe",
+      "schedulesDescription": "Regelmäßige Treffen dieser Stufe. Die zugehörigen Termine werden automatisch am Vortag angelegt.",
+      "noSchedule": "Diese Stufe hat noch keinen Regeltermin.",
+      "upcomingTitle": "Nächste fünf Wochen",
+      "upcomingDescription": "Bereits angelegte Termine und geplante Termine, die am Vortag angelegt werden.",
+      "nothingPlanned": "Nichts geplant."
+    }
+  },
+  "auth": {
+    "footer": {
+      "privacy": "Datenschutzhinweise",
+      "prototype": "Prototyp mit erfundenen Demodaten."
+    },
+    "password": {
+      "show": "Passwort anzeigen",
+      "hide": "Passwort verbergen"
+    },
+    "signIn": {
+      "title": "Anmelden",
+      "intro": "Melden Sie sich mit der E-Mail-Adresse und dem Passwort Ihres Kontos an.",
+      "email": "E-Mail-Adresse",
+      "password": "Passwort",
+      "forgot": "Passwort vergessen?",
+      "submit": "Anmelden",
+      "wrong": "E-Mail-Adresse oder Passwort stimmen nicht.",
+      "disabled": "Mit diesem Konto ist keine Anmeldung mehr möglich. Wenden Sie sich an das Gemeindebüro, wenn Sie das für einen Fehler halten.",
+      "newHere": "Neu hier?",
+      "newHereText": "Eltern und Diener legen ihr Konto einmal an. Das Gemeindebüro prüft jedes neue Konto, bevor es genutzt werden kann.",
+      "register": "Konto anlegen",
+      "prototypeTitle": "Prototyp",
+      "prototypeText": "Alle Demokonten verwenden das Passwort <password></password>. Oder ganz ohne Tippen:",
+      "chooseDemo": "Demokonto auswählen"
+    },
+    "demo": {
+      "title": "Demokonto auswählen",
+      "intro": "Wählen Sie eine Person, um die App mit deren Berechtigungen zu sehen. Die Daten sind erfunden.",
+      "back": "Mit E-Mail-Adresse und Passwort anmelden",
+      "staff": "Mitarbeitende der Gemeinde",
+      "staffHint": "Administratoren, Dienstleitungen und Diener",
+      "parents": "Eltern",
+      "parentsHint": "Der Elternbereich: die Hausaufgaben ihrer Kinder"
+    },
+    "pending": {
+      "title": "Ihr Konto wartet auf Freigabe",
+      "text": "E-Mail-Adresse und Passwort stimmen, aber das Gemeindebüro hat das Konto noch nicht freigegeben. Jedes neue Konto wird von Hand geprüft, weil die App Angaben über Kinder zeigt.",
+      "parents": "Bei Eltern verknüpft das Büro das Konto mit ihren Kindern.",
+      "servants": "Diener erhalten Zugang zu dem Dienst, in dem sie dienen.",
+      "email": "Sie erhalten eine E-Mail, sobald das Konto bereit ist.",
+      "slow": "Dauert es länger als eine Woche? Fragen Sie im Gemeindebüro nach, zum Beispiel nach der Liturgie.",
+      "back": "Zurück zur Anmeldung"
+    },
+    "register": {
+      "title": "Konto anlegen",
+      "intro": "Für Eltern von Kindern in unseren Diensten und für Diener. Das Gemeindebüro prüft jedes neue Konto, bevor es genutzt werden kann.",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail-Adresse",
+      "emailHint": "Damit melden Sie sich an, und dorthin schreibt Ihnen das Gemeindebüro.",
+      "password": "Passwort",
+      "passwordHint": "Mindestens {min, number} Zeichen. Ein kurzer Satz lässt sich gut merken.",
+      "as": "Ich registriere mich als",
+      "asParent": "Elternteil",
+      "asParentHint": "Meine Kinder gehen in die Sonntagsschule oder einen anderen Dienst. Ich möchte ihre Hausaufgaben sehen.",
+      "asServant": "Diener/in",
+      "asServantHint": "Ich diene in einem Dienst der Gemeinde und erfasse Anwesenheit oder bereite Lektionen vor.",
+      "service": "Dienst",
+      "chooseService": "Dienst auswählen",
+      "children": "Ihre Kinder",
+      "childrenHint": "Vor- und Nachnamen und ihre Klassen, zum Beispiel: Mina Hanna, 3. Klasse.",
+      "whereYouServe": "Wo dienen Sie?",
+      "whereYouServeHint": "Ihre Klasse oder Gruppe und seit wann, und wer in der Gemeinde Sie kennt.",
+      "privacy": "Ich habe die <link>Datenschutzhinweise</link> gelesen.",
+      "privacyHint": "Darin steht, was die App über Sie und Ihre Kinder speichert und welche Rechte Sie haben.",
+      "submit": "Konto anlegen",
+      "haveAccount": "Sie haben schon ein Konto? <link>Anmelden</link>",
+      "nextTitle": "Wie es weitergeht",
+      "step1": "Sie legen Ihr Konto an. Nutzen können Sie es noch nicht.",
+      "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Diener erhalten Zugang zu ihrem Dienst.",
+      "step3": "Sie erhalten eine E-Mail und können sich anmelden.",
+      "childrenNoAccounts": "Kinder bekommen kein eigenes Konto. Ihre Eltern sehen die Hausaufgaben."
+    },
+    "registered": {
+      "title": "Vielen Dank für Ihre Registrierung",
+      "text": "Das Gemeindebüro prüft jedes neue Konto von Hand, meist innerhalb weniger Tage. Bis dahin können Sie sich nicht anmelden.",
+      "email": "Sie erhalten eine E-Mail, sobald Ihr Konto bereit ist.",
+      "prototype": "Prototyp: Es wird keine E-Mail verschickt. Ein Administrator gibt das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy.",
+      "back": "Zurück zur Anmeldung"
+    },
+    "forgot": {
+      "title": "Passwort vergessen?",
+      "intro": "Geben Sie die E-Mail-Adresse Ihres Kontos ein. Wir schicken Ihnen einen Link, mit dem Sie ein neues Passwort wählen.",
+      "email": "E-Mail-Adresse",
+      "submit": "Link senden",
+      "back": "Zurück zur Anmeldung",
+      "sent": "Falls es ein Konto für <email></email> gibt, haben wir dorthin einen Link für ein neues Passwort geschickt.",
+      "sentHint": "Der Link gilt eine Stunde. Sehen Sie auch im Spam-Ordner nach.",
+      "prototype": "Prototyp: Es wird keine E-Mail verschickt."
+    }
+  },
+  "privacyNotice": {
+    "title": "Datenschutzhinweise",
+    "back": "Zurück",
+    "version": "Fassung {version}",
+    "draft": "Entwurf für den Prototyp. Die Datenschutzberatung der Gemeinde prüft und ergänzt diesen Text, auch die Stellen in eckigen Klammern, bevor die App genutzt wird.",
+    "intro": "Die App der Koptisch-Orthodoxen Kirche KHMK Köln hilft den Dienern, Treffen, Anwesenheit, Lektionen und Hausaufgaben zu organisieren, und zeigt Eltern die Hausaufgaben ihrer Kinder. Diese Hinweise erklären, welche personenbezogenen Daten die App speichert, wozu, wer sie sieht und welche Rechte Sie haben.",
+    "responsible": {
+      "title": "Verantwortlich",
+      "text": "Koptisch-Orthodoxe Kirche KHMK Köln, [Anschrift des Gemeindebüros]. Fragen zum Datenschutz: [E-Mail-Adresse des Gemeindebüros oder der Datenschutzberatung]."
+    },
+    "data": {
+      "title": "Was die App speichert",
+      "items": {
+        "accounts": "Konten: Name, E-Mail-Adresse, Passwort (nur in einer Form, die sich nicht zurücklesen lässt), Sprache, Rollen und wann Sie diese Hinweise angenommen haben.",
+        "members": "Mitglieder: Vor- und Nachname, ein Rufname und die Dienste und Klassen, zu denen sie gehören, von wann bis wann.",
+        "attendance": "Anwesenheit: wer bei welchem Treffen als anwesend markiert wurde und von wem. Die App erfasst nur Anwesenheit, nie Abwesenheit.",
+        "homework": "Hausaufgaben: welche Hausaufgabe ein Elternteil für welches Kind als erledigt gemeldet hat und wann.",
+        "links": "Elternzugang: welche Elternkonten welche Kinder sehen dürfen.",
+        "registration": "Bei der Registrierung: was Sie über Ihre Kinder oder Ihren Dienst schreiben, bis das Gemeindebüro über Ihr Konto entschieden hat."
+      },
+      "text": "Weitere Daten speichert die App nicht: keine Fotos, keine Anschriften, keine Geburtstage, keine Noten."
+    },
+    "why": {
+      "title": "Wozu",
+      "text": "Für die Dienste der Gemeinde: um zu wissen, wer zu welcher Gruppe gehört, um Treffen vorzubereiten und um für die uns anvertrauten Kinder zu sorgen. Weil die Daten zeigen, dass Menschen zu unserer Kirche gehören, behandeln wir sie alle als besonders schutzwürdig: Die Daten bleiben in der Gemeinde, und nur wer sie braucht, kann sie sehen."
+    },
+    "who": {
+      "title": "Wer sie sieht",
+      "items": {
+        "servants": "Diener sehen die Personen und die Anwesenheit der Gruppen, in denen sie dienen.",
+        "leaders": "Die Dienstleitung sieht ihren ganzen Dienst.",
+        "admins": "Administratoren im Gemeindebüro verwalten Konten, Rollen und den Elternzugang.",
+        "parents": "Eltern sehen nur die veröffentlichten Hausaufgaben ihrer eigenen Kinder: nie Anwesenheit, Notizen oder andere Familien."
+      },
+      "text": "Die App wird bei [Hosting-Anbieter in der EU] im Rahmen eines Auftragsverarbeitungsvertrags betrieben. Daten werden weder verkauft noch weitergegeben."
+    },
+    "howLong": {
+      "title": "Wie lange sie gespeichert werden",
+      "items": {
+        "accounts": "Konten: bis Sie oder das Gemeindebüro sie löschen.",
+        "declined": "Abgelehnte Registrierungen: sofort gelöscht.",
+        "members": "Mitglieder, die nicht mehr kommen: [von der Gemeinde festgelegte Frist], danach gelöscht."
+      },
+      "text": "Wenn Daten gelöscht werden, stimmen die Zahlen früherer Treffen weiterhin, aber niemand kann sehen, wer da war."
+    },
+    "rights": {
+      "title": "Ihre Rechte",
+      "text": "Sie können eine Kopie Ihrer Daten verlangen, sie berichtigen oder löschen lassen, ihre Verarbeitung einschränken lassen oder ihr widersprechen. Außerdem können Sie sich bei einer Datenschutzaufsichtsbehörde beschweren; in Nordrhein-Westfalen ist das die Landesbeauftragte für Datenschutz und Informationsfreiheit (LDI NRW).\n\nIn der App finden Sie in Ihrem Konto den Bereich „Ihre Daten“: Dort laden Sie eine Kopie herunter oder beantragen die Löschung Ihres Kontos. Oder wenden Sie sich an das Gemeindebüro. Wir antworten innerhalb eines Monats."
+    }
+  },
+  "account": {
+    "title": "Ihr Konto",
+    "description": "Ihre Angaben, Sprache, Passwort und die Daten, die die App über Sie speichert.",
+    "details": "Angaben",
+    "name": "Name",
+    "email": "E-Mail-Adresse",
+    "roles": "Rollen",
+    "detailsHint": "Für Änderungen an Name, E-Mail-Adresse oder Rollen wenden Sie sich an einen Administrator.",
+    "preferences": "Sprache und Darstellung",
+    "password": {
+      "title": "Passwort",
+      "text": "Wir schicken Ihnen per E-Mail einen Link, mit dem Sie ein neues Passwort wählen.",
+      "send": "Link senden",
+      "sent": "Wir haben Ihnen einen Link geschickt. (Prototyp: Es wird keine E-Mail verschickt.)"
+    },
+    "data": "Ihre Daten",
+    "dataDescription": "Was die App über Sie speichert, und Ihre Rechte nach der DSGVO."
+  },
+  "accountRequests": {
+    "title": "{count, plural, =0 {Kontoanfragen} other {Kontoanfragen (#)}}",
+    "description": "Personen, die sich selbst registriert haben. Deren Konten können erst genutzt werden, wenn Sie sie freigeben: Verknüpfen Sie die Kinder eines Elternteils oder geben Sie einem Diener eine Rolle.",
+    "empty": "Keine Konten warten auf Freigabe.",
+    "asParent": "Elternteil",
+    "asServant": "Diener/in",
+    "registered": "registriert {when}",
+    "approveButton": "Freigeben…",
+    "declineButton": "Ablehnen",
+    "approve": {
+      "title": "Konto von {name} freigeben",
+      "parentDescription": "Prüfen Sie die Familie zuerst, zum Beispiel persönlich nach der Liturgie. Der Elternteil sieht dann die veröffentlichten Hausaufgaben dieser Kinder.",
+      "servantDescription": "Sprechen Sie zuerst mit der Dienstleitung. Die Rolle bestimmt, was der Diener sehen und tun kann.",
+      "children": "Kinder",
+      "childrenHint": "Kinder, deren Namen {name} angegeben hat, sind schon ausgewählt. Suchen Sie nach weiteren.",
+      "findChild": "Kind nach Namen oder Klasse suchen",
+      "noChildMatches": "Kein Kind passt.",
+      "searchToAdd": "Geben Sie einen Namen ein, um ein Kind zu finden.",
+      "selected": "{count, plural, =0 {Noch kein Kind ausgewählt} one {# Kind ausgewählt} other {# Kinder ausgewählt}}",
+      "role": "Rolle",
+      "service": "Dienst",
+      "chooseService": "Dienst auswählen",
+      "stage": "Stufe",
+      "wholeService": "Der ganze Dienst",
+      "stageHint": "Beschränken Sie die Rolle auf eine Stufe, wenn der Diener nur dort dient.",
+      "submit": "Konto freigeben"
+    },
+    "decline": {
+      "title": "Registrierung von {name} ablehnen?",
+      "description": "Zum Beispiel, wenn die Person der Gemeinde nicht bekannt ist oder kein Konto braucht.",
+      "deleted": "Das Konto und alle Angaben der Person werden gelöscht.",
+      "tell": "Sagen Sie es der Person persönlich oder per E-Mail.",
+      "confirm": "Ablehnen und löschen"
+    }
+  },
+  "privacy": {
+    "subject": {
+      "erasedMemberOf": "Gelöschtes Mitglied aus {group}",
+      "erasedMember": "Gelöschtes Mitglied",
+      "erasedAccount": "Gelöschtes Konto"
+    },
+    "kind": {
+      "erasure": "Löschung",
+      "copy": "Datenkopie"
+    },
+    "due": {
+      "late": "{count, plural, one {# Tag überfällig} other {# Tage überfällig}}",
+      "today": "heute fällig",
+      "left": "{count, plural, one {noch # Tag} other {noch # Tage}}"
+    },
+    "status": {
+      "open": "Offen",
+      "done": "Erledigt",
+      "declined": "Abgelehnt"
+    },
+    "channel": {
+      "app": "In der App",
+      "email": "Per E-Mail",
+      "letter": "Per Brief",
+      "in_person": "Persönlich"
+    },
+    "list": {
+      "title": "Datenschutzanfragen",
+      "description": "Auskunfts- und Löschanfragen zu personenbezogenen Daten (DSGVO). Jede muss innerhalb eines Monats nach Eingang beantwortet werden.",
+      "adminsOnly": "Nur Administratoren bearbeiten Datenschutzanfragen",
+      "adminsOnlyHint": "Wenn jemand Sie nach seinen Daten fragt, geben Sie die Anfrage an das Gemeindebüro weiter.",
+      "open": "{count, plural, =0 {Offen} other {Offen (#)}}",
+      "noneOpen": "Keine offenen Anfragen.",
+      "closed": "Abgeschlossen",
+      "closedDescription": "Als Nachweis aufbewahrt, dass die Gemeinde geantwortet hat. Nach einer Löschung ist auch hier der Name entfernt.",
+      "noneClosed": "Noch nichts abgeschlossen.",
+      "subject": "Betrifft",
+      "kind": "Anfrage",
+      "received": "Eingegangen",
+      "due": "Antwort fällig",
+      "status": "Status",
+      "closedOn": "Abgeschlossen",
+      "requestedBy": "Gestellt von",
+      "closedBy": "{when} von {name}",
+      "erasedCrumb": "Gelöscht",
+      "notice": "Was Menschen über ihre Daten erfahren, steht in den <link>Datenschutzhinweisen</link>."
+    },
+    "summary": {
+      "title": "Datenschutz",
+      "description": "Auskunfts- und Löschanfragen zu personenbezogenen Daten. Jede muss innerhalb eines Monats beantwortet werden.",
+      "all": "Alle Anfragen",
+      "noneOpen": "Keine offenen Anfragen."
+    },
+    "record": {
+      "open": "Anfrage erfassen",
+      "title": "Datenschutzanfrage erfassen",
+      "description": "Für Anfragen per E-Mail, Brief oder persönlich. Prüfen Sie zuerst, wer fragt: Eltern dürfen für ihre Kinder fragen.",
+      "kind": "Was wird verlangt?",
+      "kinds": {
+        "erasure": "Daten löschen",
+        "erasureHint": "DSGVO Art. 17: Mitgliedsdaten oder Konto und alles Zugehörige löschen.",
+        "copy": "Eine Kopie der Daten",
+        "copyHint": "DSGVO Art. 15: alles, was die App über die Person speichert, als Datei."
+      },
+      "about": "Um wen geht es?",
+      "abouts": {
+        "member": "Ein Mitglied",
+        "account": "Ein Konto"
+      },
+      "findMember": "Mitglied nach Namen suchen",
+      "findAccount": "Konto nach Namen oder E-Mail-Adresse suchen",
+      "noMatches": "Niemand passt.",
+      "searchHint": "Geben Sie einen Namen ein.",
+      "aboutHint": "Mitgliedsdaten und Konto eines Dieners gehören zusammen und werden in einer Anfrage bearbeitet.",
+      "requestedBy": "Gestellt von",
+      "requestedByPlaceholder": "z. B. die Mutter, Hoda Farag",
+      "channel": "Eingang",
+      "receivedOn": "Eingegangen am",
+      "note": "Notiz",
+      "noteHint": "Zum Beispiel, wie Sie geprüft haben, wer fragt. Kopieren Sie keine Daten der Person hierher.",
+      "submit": "Anfrage erfassen"
+    },
+    "actions": {
+      "downloadCopy": "Kopie herunterladen",
+      "downloadFirst": "Kopie herunterladen",
+      "decline": "Ablehnen…",
+      "erase": "Daten löschen…",
+      "markSent": "Als verschickt markieren",
+      "eraseTitle": "Daten von {name} löschen?",
+      "eraseDescription": "Das lässt sich nicht rückgängig machen. Wenn die Person auch eine Kopie möchte, laden Sie diese zuerst herunter.",
+      "eraseKeeps": "Frühere Anwesenheitszahlen und die Anfrage selbst bleiben, ohne den Namen.",
+      "clearNotes": "{count, plural, one {Auch die Notiz leeren, die die Person erwähnen könnte} other {Auch die # Notizen leeren, die die Person erwähnen könnten}}",
+      "eraseConfirm": "Daten löschen",
+      "declineTitle": "Diese Anfrage ablehnen?",
+      "declineDescription": "Zum Beispiel, wenn sich nicht klären ließ, wer fragt, oder wenn die Daten gesetzlich aufbewahrt werden müssen. Die Person muss den Grund erfahren und dass sie sich bei der Datenschutzaufsicht beschweren kann.",
+      "declineReason": "Grund",
+      "declinePlaceholder": "z. B. Wir konnten nicht bestätigen, dass der Absender ein Elternteil des Kindes ist.",
+      "declineConfirm": "Anfrage ablehnen",
+      "sentTitle": "Kopie als verschickt markieren?",
+      "sentDescription": "Geben Sie die heruntergeladene Datei sicher weiter, zum Beispiel persönlich oder per verschlüsselter E-Mail. Danach ist die Anfrage abgeschlossen."
+    },
+    "detail": {
+      "requestedBy": "Gestellt von {name}.",
+      "ownAccount": "Diese Anfrage betrifft Ihr eigenes Konto. Ein anderer Administrator muss sie bearbeiten.",
+      "request": "Anfrage",
+      "received": "Eingegangen",
+      "channel": "Eingang",
+      "due": "Antwort fällig",
+      "note": "Notiz",
+      "who": "Um wen es geht",
+      "memberRecord": "Mitgliedsdaten: {name}",
+      "noMemberships": "Keine Mitgliedschaften.",
+      "membershipCurrent": "{group}, seit {from}",
+      "membershipEnded": "{group}, {from} bis {until}",
+      "accountRecord": "Konto: {name}",
+      "erases": "Was die Löschung entfernt",
+      "erasesDescription": "Alles, was die App über die Person speichert.",
+      "keeps": "Was ohne Namen bleibt",
+      "keepsDescription": "Die Aufzeichnungen der Gemeinde behalten ihre Zahlen, nennen aber niemanden mehr.",
+      "mentions": "{count, plural, =0 {Notizen, die die Person erwähnen könnten} other {Notizen, die die Person erwähnen könnten (#)}}",
+      "mentionsDescription": "Freitexte aus den Gruppen der Person, in denen der Vorname vorkommt. Prüfen Sie diese: Manche betreffen vielleicht jemand anderen mit demselben Namen.",
+      "noMentions": "Keine Notiz erwähnt den Namen.",
+      "mentionWhere": "{where} · {group} · {date}",
+      "copy": "Was die Kopie enthält",
+      "copyDescription": "Eine JSON-Datei mit allem, was die App über die Person speichert. Kontaktdaten anderer Personen sind nicht enthalten.",
+      "outcome": "Ergebnis",
+      "erasedOn": "Gelöscht {when}",
+      "sentOn": "Kopie verschickt {when}",
+      "declinedOn": "Abgelehnt {when}",
+      "by": "von {name}",
+      "erasedNote": "Der Name wurde auch aus diesem Protokoll entfernt."
+    },
+    "erase": {
+      "person": "{count, plural, one {Die Mitgliedsdaten} other {# Mitgliedsdatensätze}}",
+      "memberships": "{count, plural, one {# Mitgliedschaft in einer Gruppe} other {# Mitgliedschaften in Gruppen}}",
+      "attendance": "{count, plural, one {# Anwesenheitseintrag} other {# Anwesenheitseinträge}}",
+      "completions": "{count, plural, one {# gemeldete Erledigung} other {# gemeldete Erledigungen}}",
+      "guardianLinks": "{count, plural, one {# Elternverknüpfung} other {# Elternverknüpfungen}}",
+      "account": "{count, plural, one {Das Konto mit seiner Anmeldung} other {# Konten}}",
+      "roles": "{count, plural, one {# Rolle} other {# Rollen}}",
+      "notes": "{count, plural, one {# Notiz mit Erwähnung, geleert} other {# Notizen mit Erwähnung, geleert}}"
+    },
+    "keep": {
+      "sessionTotals": "{count, plural, one {Anwesenheitszahlen von # Treffen} other {Anwesenheitszahlen von # Treffen}}",
+      "recordedMarks": "{count, plural, one {# von der Person erfasster Anwesenheitseintrag} other {# von der Person erfasste Anwesenheitseinträge}}",
+      "reportedCompletions": "{count, plural, one {# von der Person gemeldete Erledigung} other {# von der Person gemeldete Erledigungen}}",
+      "lessons": "{count, plural, one {# vorbereitete Lektion} other {# vorbereitete Lektionen}}",
+      "homework": "{count, plural, one {# angelegte Hausaufgabe} other {# angelegte Hausaufgaben}}",
+      "sessionHistory": "{count, plural, one {# Eintrag im Verlauf von Treffen} other {# Einträge im Verlauf von Treffen}}"
+    },
+    "mention": {
+      "sessionNote": "Notiz zum Treffen",
+      "correctionNote": "Korrekturnotiz",
+      "cancelReason": "Absagegrund",
+      "lessonNote": "Notizen zur Lektion"
+    },
+    "own": {
+      "copyTitle": "Kopie herunterladen",
+      "copyText": "Alles, was die App über Sie speichert, als Datei zum Aufbewahren oder Mitnehmen.",
+      "download": "Herunterladen (JSON)",
+      "deleteTitle": "Konto löschen",
+      "deleteText": "Bitten Sie das Gemeindebüro, Ihr Konto und Ihre gespeicherten Daten zu löschen. Die Anwesenheitszahlen früherer Treffen bleiben, ohne Ihren Namen.",
+      "delete": "Löschung beantragen…",
+      "requested": "Sie haben {when} die Löschung Ihres Kontos und Ihrer Daten beantragt. Das Gemeindebüro antwortet bis {due}.",
+      "confirmTitle": "Löschung von Konto und Daten beantragen?",
+      "confirmText": "Das Gemeindebüro löscht Ihr Konto und Ihre gespeicherten Daten innerhalb eines Monats und gibt Ihnen Bescheid. Bis dahin können Sie die App weiter nutzen.",
+      "noteLabel": "Möchten Sie dem Büro etwas mitteilen?",
+      "noteHint": "Optional. Zum Beispiel, ob auch die Daten Ihrer Kinder gelöscht werden sollen.",
+      "confirm": "Anfrage senden"
+    }
+  }
+}

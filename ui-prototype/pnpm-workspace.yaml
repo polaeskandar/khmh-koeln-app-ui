@@ -1,0 +1,9 @@
+# pnpm settings for the prototype. It is a single package, not a workspace of several.
+
+allowBuilds:
+  # Their install scripts only check for (or build from source) a native binary that pnpm
+  # already installs as an optional dependency for the current platform. @swc/core and
+  # @parcel/watcher come with next-intl, for its message extraction, which we don't use.
+  unrs-resolver: false
+  "@swc/core": false
+  "@parcel/watcher": false

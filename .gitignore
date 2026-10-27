@@ -1,0 +1,12 @@
+# ui-prototype has its own .gitignore for dependencies and build output.
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Local secrets are never committed
+.env.local
+.env.*.local
