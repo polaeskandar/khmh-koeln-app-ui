@@ -142,7 +142,7 @@ export default async function HomeworkProgressPage({
                 <Figure label={t("notYet")} value={counts.notCompleted} />
                 <Figure
                   label={t("progress.withoutAccount")}
-                  value={counts.withoutParentAccount}
+                  value={counts.withoutAccount}
                   hint={t("progress.cantReportOnline")}
                 />
               </div>

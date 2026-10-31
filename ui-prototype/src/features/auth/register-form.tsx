@@ -27,7 +27,7 @@ import { registerAction } from "@/server/actions/auth"
 
 import { PasswordField } from "./password-input"
 
-type As = "parent" | "servant"
+type As = "parent" | "servant" | "member"
 
 export function RegisterForm({
   services,
@@ -58,6 +58,7 @@ export function RegisterForm({
   const errors = submit.fieldErrors
   const kinds: { value: As; title: string; description: string }[] = [
     { value: "parent", title: t("asParent"), description: t("asParentHint") },
+    { value: "member", title: t("asMember"), description: t("asMemberHint") },
     { value: "servant", title: t("asServant"), description: t("asServantHint") },
   ]
 
@@ -115,13 +116,13 @@ export function RegisterForm({
         <RadioGroup
           value={form.as}
           onValueChange={(v) => set("as", v as As)}
-          className="grid gap-3 sm:grid-cols-2"
+          className="grid gap-3"
         >
           {kinds.map((k) => (
             <FieldLabel
               key={k.value}
               className={cn(
-                "flex cursor-pointer items-start gap-3 border p-4 text-sm font-normal tracking-normal normal-case transition-colors hover:bg-muted/50",
+                "flex w-full cursor-pointer items-start gap-3 border p-4 text-sm font-normal tracking-normal normal-case transition-colors hover:bg-muted/50",
                 form.as === k.value && "border-primary bg-primary/5"
               )}
             >
@@ -157,8 +158,20 @@ export function RegisterForm({
           </Field>
         ) : null}
         <TextAreaField
-          label={form.as === "parent" ? t("children") : t("whereYouServe")}
-          description={form.as === "parent" ? t("childrenHint") : t("whereYouServeHint")}
+          label={
+            form.as === "parent"
+              ? t("children")
+              : form.as === "member"
+                ? t("yourGroups")
+                : t("whereYouServe")
+          }
+          description={
+            form.as === "parent"
+              ? t("childrenHint")
+              : form.as === "member"
+                ? t("yourGroupsHint")
+                : t("whereYouServeHint")
+          }
           rows={3}
           value={form.details}
           onChange={(e) => set("details", e.target.value)}

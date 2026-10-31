@@ -489,6 +489,10 @@ export function personalData(s: State, person: Person | undefined, user: User | 
         approvedAt: user.approvedAt,
         privacyNoticeAccepted: { at: user.privacyAcceptedAt, version: user.privacyVersion },
         disabledAt: user.disabledAt,
+        // Member accounts: how the age was checked when the account was linked to the record.
+        memberAgeCheck: user.ageCheck
+          ? { result: user.ageCheck, parentAgreed: user.guardianConsentNote }
+          : null,
         roles: user.roles.map((r) => ({
           role: r.role,
           ...(r.serviceId ? groupOf(r.serviceId, r.stageId) : {}),

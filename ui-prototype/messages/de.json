@@ -30,7 +30,8 @@
     "resetDemoData": "Demodaten zurücksetzen",
     "demoDataReset": "Demodaten auf Sonntag, 8. November, 12:08 zurückgesetzt.",
     "accountMenu": "Kontomenü",
-    "yourAccount": "Ihr Konto"
+    "yourAccount": "Ihr Konto",
+    "openMemberPortal": "Meine Gruppen"
   },
   "prefs": {
     "language": "Sprache",
@@ -215,7 +216,7 @@
     },
     "homework": {
       "titleRequired": "Geben Sie einen Titel ein, z. B. „Merkvers auswendig lernen“.",
-      "instructionsRequired": "Schreiben Sie, was Eltern und Kind tun sollen.",
+      "instructionsRequired": "Schreiben Sie, was zu Hause zu tun ist.",
       "instructionsTooLong": "Höchstens 2.000 Zeichen.",
       "dueBeforeLesson": "Das Fälligkeitsdatum kann nicht vor der Lektion liegen.",
       "changeStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Hausaufgaben ändern.",
@@ -254,7 +255,13 @@
       "alreadyApproved": "Dieses Konto wurde bereits freigegeben.",
       "chooseChild": "Wählen Sie mindestens ein Kind aus.",
       "childNotFound": "Eines der ausgewählten Kinder existiert nicht mehr oder ist inaktiv.",
-      "stageNotInService": "Diese Stufe gehört nicht zum gewählten Dienst."
+      "stageNotInService": "Diese Stufe gehört nicht zum gewählten Dienst.",
+      "groupsRequired": "Schreiben Sie, an welchen Gruppen Sie teilnehmen, damit das Gemeindebüro Ihr Konto mit Ihrem Eintrag verknüpfen kann.",
+      "choosePerson": "Wählen Sie den Mitgliedseintrag, zu dem dieses Konto gehört.",
+      "personNotFound": "Dieser Mitgliedseintrag existiert nicht mehr oder ist inaktiv.",
+      "personHasAccount": "{name} hat bereits ein Konto. Prüfen Sie, ob Sie die richtige Person gewählt haben.",
+      "chooseAge": "Wählen Sie, ob das Mitglied 16 oder älter ist oder unter 16 mit Zustimmung eines Elternteils.",
+      "notLinked": "Dieses Konto ist mit keinem Mitgliedseintrag verknüpft."
     },
     "privacy": {
       "adminOnly": "Nur Administratoren können Datenschutzanfragen bearbeiten.",
@@ -309,14 +316,14 @@
     "archivedTitle": "„{title}“ archiviert.",
     "restoredTitle": "„{title}“ wiederhergestellt.",
     "deletedTitle": "„{title}“ gelöscht.",
-    "homeworkPublishedNew": "Veröffentlicht. Die Eltern der Klasse sehen sie jetzt.",
-    "homeworkDraftSaved": "Als Entwurf gespeichert. Eltern sehen sie noch nicht.",
-    "homeworkSavedPublished": "Gespeichert. Eltern sehen die neue Fassung.",
+    "homeworkPublishedNew": "Veröffentlicht. Eltern und Mitglieder der Klasse sehen sie jetzt.",
+    "homeworkDraftSaved": "Als Entwurf gespeichert. Eltern und Mitglieder sehen sie noch nicht.",
+    "homeworkSavedPublished": "Gespeichert. Eltern und Mitglieder sehen die neue Fassung.",
     "homeworkSavedDraft": "Als Entwurf gespeichert.",
-    "homeworkPublished": "„{title}“ veröffentlicht. Die Eltern der Klasse sehen sie jetzt.",
-    "homeworkUnpublished": "„{title}“ ist wieder ein Entwurf und für Eltern verborgen.",
+    "homeworkPublished": "„{title}“ veröffentlicht. Eltern und Mitglieder der Klasse sehen sie jetzt.",
+    "homeworkUnpublished": "„{title}“ ist wieder ein Entwurf und für Eltern und Mitglieder verborgen.",
     "homeworkArchived": "„{title}“ archiviert. Gemeldete Erledigungen bleiben erhalten.",
-    "homeworkRestoredPublished": "„{title}“ wiederhergestellt. Die Eltern der Klasse sehen sie wieder.",
+    "homeworkRestoredPublished": "„{title}“ wiederhergestellt. Eltern und Mitglieder der Klasse sehen sie wieder.",
     "homeworkRestoredDraft": "„{title}“ als Entwurf wiederhergestellt.",
     "accessGiven": "Zugang erteilt. Der Elternteil sieht die veröffentlichten Hausaufgaben dieses Kindes.",
     "approved": "Freigegeben.",
@@ -328,7 +335,8 @@
     "dataErased": "Daten gelöscht. Die Anfrage bleibt ohne Namen im Protokoll.",
     "copySent": "Als verschickt markiert.",
     "dataRequestDeclined": "Anfrage abgelehnt. Teilen Sie der Person den Grund mit und dass sie sich bei der Datenschutzaufsicht beschweren kann.",
-    "erasureRequested": "Ihre Anfrage ist beim Gemeindebüro eingegangen. Es antwortet innerhalb eines Monats."
+    "erasureRequested": "Ihre Anfrage ist beim Gemeindebüro eingegangen. Es antwortet innerhalb eines Monats.",
+    "memberUnlinked": "Verknüpfung für {name} entfernt."
   },
   "roles": {
     "administrator": "Administrator",
@@ -345,7 +353,9 @@
       "staff": "{role} · {where}{more, plural, =0 {} other { +#}}",
       "parentOf": "Elternteil von {children}",
       "parentWaiting": "Elternteil, wartet auf Zugang",
-      "none": "Noch keine Rolle"
+      "none": "Noch keine Rolle",
+      "memberOf": "Mitglied · {groups}",
+      "member": "Mitglied"
     }
   },
   "dashboard": {
@@ -515,7 +525,7 @@
     "newLesson": "Neue Lektion",
     "editLesson": "Lektion bearbeiten",
     "editTitle": "„{title}“ bearbeiten",
-    "newDescription": "Bereiten Sie die Lektion so früh vor, wie Sie möchten. Eltern sehen nie den Unterrichtsplan, nur die Bibelstelle, den Merkvers und die Hausaufgaben, die Sie veröffentlichen.",
+    "newDescription": "Bereiten Sie die Lektion so früh vor, wie Sie möchten. Eltern und Mitglieder sehen nie den Unterrichtsplan, nur die Bibelstelle, den Merkvers und die Hausaufgaben, die Sie veröffentlichen.",
     "backToLessons": "Zurück zu den Lektionen",
     "backToLesson": "Zurück zur Lektion",
     "completion": "<strong>{completed, number}</strong> von {assigned, number} als erledigt gemeldet",
@@ -525,11 +535,11 @@
       "completed": "Abgeschlossen",
       "taught": "Gehalten",
       "published": "Veröffentlicht",
-      "draftHidden": "Eltern sehen keine Entwürfe",
-      "publishedVisible": "Für die Eltern der Klasse sichtbar"
+      "draftHidden": "Eltern und Mitglieder sehen keine Entwürfe",
+      "publishedVisible": "Für Eltern und Mitglieder der Klasse sichtbar"
     },
     "visibility": {
-      "parents": "Für Eltern sichtbar",
+      "parents": "Für Eltern und Mitglieder sichtbar",
       "servants": "Nur für Diener"
     },
     "meeting": {
@@ -587,12 +597,12 @@
       "noActivities": "Noch keine Aktivitäten.",
       "noMaterials": "Keine Materialien angegeben.",
       "homework": "Hausaufgaben",
-      "homeworkDescription": "Die Eltern von {stage} sehen veröffentlichte Hausaufgaben im Elternbereich und haken sie ab, wenn sie erledigt sind.",
+      "homeworkDescription": "Die Eltern von {stage} und Mitglieder mit eigenem Konto sehen veröffentlichte Hausaufgaben und haken sie ab, wenn sie erledigt sind.",
       "addHomework": "Hausaufgabe hinzufügen",
       "noHomework": "Zu dieser Lektion gibt es keine Hausaufgaben. Fügen Sie eine hinzu, wenn die Kinder zu Hause weiterlernen sollen, zum Beispiel den Merkvers.",
       "archivedHomework": "{count, plural, one {# archivierte Hausaufgabe bleibt} other {# archivierte Hausaufgaben bleiben}} im <link>Hausaufgabenverlauf</link> erhalten.",
-      "sharedWithParents": "Mit Eltern geteilt",
-      "sharedHint": "Wird im Elternbereich neben den veröffentlichten Hausaufgaben dieser Lektion angezeigt{count, plural, =0 {, sobald es welche gibt} other { (derzeit #)}}.",
+      "sharedWithParents": "Mit Eltern und Mitgliedern geteilt",
+      "sharedHint": "Wird neben den veröffentlichten Hausaufgaben dieser Lektion angezeigt{count, plural, =0 {, sobald es welche gibt} other { (derzeit #)}}.",
       "noPassage": "Keine Bibelstelle.",
       "noMemoryVerse": "Kein Merkvers.",
       "helping": "Hilft mit",
@@ -650,10 +660,10 @@
       "deleteDraft": "Entwurf löschen",
       "archiveTitle": "„{title}“ archivieren?",
       "archiveDescription": "Archivierte Lektionen verschwinden aus den Listen, bleiben aber im Verlauf. Sie können die Lektion später wiederherstellen.",
-      "archiveHomework": "{count, plural, one {Die veröffentlichte Hausaufgabe der Lektion verschwindet aus dem Elternbereich.} other {Die # veröffentlichten Hausaufgaben der Lektion verschwinden aus dem Elternbereich.}}",
-      "archiveKept": "Was Eltern schon als erledigt gemeldet haben, bleibt erhalten.",
+      "archiveHomework": "{count, plural, one {Die veröffentlichte Hausaufgabe der Lektion verschwindet für Eltern und Mitglieder.} other {Die # veröffentlichten Hausaufgaben der Lektion verschwinden für Eltern und Mitglieder.}}",
+      "archiveKept": "Was schon als erledigt gemeldet wurde, bleibt erhalten.",
       "deleteTitle": "„{title}“ löschen?",
-      "deleteDescription": "Der Entwurf und seine Hausaufgaben-Entwürfe werden endgültig entfernt. Nichts davon hat je die Eltern erreicht."
+      "deleteDescription": "Der Entwurf und seine Hausaufgaben-Entwürfe werden endgültig entfernt. Nichts davon hat je Eltern oder Mitglieder erreicht."
     },
     "noAccess": {
       "prepareTitle": "Sie können hier keine Lektionen vorbereiten",
@@ -747,6 +757,30 @@
       "resetDescription": "Alles, was Sie im Prototyp geändert haben, wird durch die ursprünglichen Demodaten ersetzt, und die Uhr springt zurück auf Sonntag, 8. November, 12:08.",
       "resetConfirm": "Zurücksetzen",
       "resetDone": "Demodaten zurückgesetzt."
+    },
+    "members": {
+      "title": "Mitgliedskonten",
+      "description": "Konten, die mit dem eigenen Eintrag eines Mitglieds verknüpft sind. Das Mitglied sieht seine Gruppen, die nächsten Treffen und seine Hausaufgaben.",
+      "adminsOnly": "Nur Administratoren verwalten Mitgliedskonten",
+      "adminsOnlyHint": "Die Administratoren der Gemeinde verknüpfen Konten mit Mitgliedseinträgen.",
+      "empty": "Noch keine Mitgliedskonten.",
+      "alsoParent": "Auch Elternteil",
+      "disabled": "Deaktiviert",
+      "record": "Eintrag: <strong>{name}</strong>",
+      "inactive": "inaktiv",
+      "noGroup": "in keiner Gruppe",
+      "sixteenOrOlder": "16 oder älter",
+      "guardianConsent": "Unter 16, mit Zustimmung eines Elternteils",
+      "guardianConsentNote": "Unter 16, mit Zustimmung eines Elternteils: {note}",
+      "linkedByOffice": "Vom Gemeindebüro verknüpft",
+      "approved": "freigegeben {when}",
+      "approvedBy": "freigegeben {when} von {name}",
+      "remove": "Verknüpfung entfernen",
+      "removeTitle": "Verknüpfung mit dem Eintrag von {member} entfernen?",
+      "removeDescription": "Das Konto zeigt die Gruppen, Treffen und Hausaufgaben des Mitglieds nicht mehr.",
+      "removeKept": "Mit dem Konto gemeldete Erledigungen bleiben im Verlauf erhalten.",
+      "removeAgain": "Ein Konto ohne weitere Rolle kommt zurück zu den Kontoanfragen: Sie können es mit dem richtigen Eintrag verknüpfen oder ablehnen.",
+      "removeConfirm": "Verknüpfung entfernen"
     }
   },
   "session": {
@@ -1024,9 +1058,9 @@
     "editHomework": "Hausaufgabe bearbeiten",
     "backToList": "Zurück zu den Hausaufgaben",
     "notYet": "Noch nicht",
-    "childrenWithoutAccount": "{count, plural, one {# Kind} other {# Kinder}} ohne Elternkonto",
-    "hiddenFromParents": "Für Eltern verborgen",
-    "notVisibleYet": "Für Eltern noch nicht sichtbar",
+    "childrenWithoutAccount": "{count, plural, one {# Person} other {# Personen}} ohne Konto",
+    "hiddenFromParents": "Für Eltern und Mitglieder verborgen",
+    "notVisibleYet": "Für Eltern und Mitglieder noch nicht sichtbar",
     "due": {
       "none": "Kein Fälligkeitsdatum",
       "today": "Heute fällig",
@@ -1037,11 +1071,11 @@
       "on": "Fällig am {date}"
     },
     "list": {
-      "description": "Kleine Aufgaben für zu Hause, passend zu einer Lektion. Die Eltern von {stage} haken sie im Elternbereich ab. Hier sehen Sie, wer sie als erledigt gemeldet hat – keine Noten.",
+      "description": "Kleine Aufgaben für zu Hause, passend zu einer Lektion. Die Eltern von {stage} und Mitglieder mit eigenem Konto haken sie ab. Hier sehen Sie, wer sie als erledigt gemeldet hat – keine Noten.",
       "needsLesson": "Hausaufgaben gehören zu einer Lektion. <link>Bereiten Sie zuerst eine Lektion vor</link>."
     },
     "new": {
-      "description": "Eine kleine Aufgabe, die die Kinder zu Hause mit ihren Eltern erledigen. Die Eltern haken sie ab, wenn sie erledigt ist; Noten gibt es nicht.",
+      "description": "Eine kleine Aufgabe für zu Hause. Eltern oder Mitglieder mit eigenem Konto haken sie ab, wenn sie erledigt ist; Noten gibt es nicht.",
       "noAccessTitle": "Sie können hier keine Hausaufgaben vergeben",
       "noAccess": "Nur die Diener von {stage} und die Dienstleitung können hier Hausaufgaben vergeben.",
       "lessonFirstTitle": "Bereiten Sie zuerst eine Lektion vor",
@@ -1053,55 +1087,57 @@
       "noAccessTitle": "Sie können diese Hausaufgabe nicht ändern",
       "noAccess": "Nur die Diener von {stage} und die Dienstleitung können ihre Hausaufgaben ändern.",
       "archivedTitle": "Diese Hausaufgabe ist archiviert",
-      "archived": "Archivierte Hausaufgaben bleiben, wie sie waren – zusammen mit dem, was Eltern gemeldet haben.",
+      "archived": "Archivierte Hausaufgaben bleiben, wie sie waren – zusammen mit dem, was gemeldet wurde.",
       "backToHomework": "Zurück zur Hausaufgabe"
     },
     "progress": {
       "noAccessTitle": "Sie können den Stand dieser Hausaufgabe nicht sehen",
-      "noAccess": "Nur die Diener von {stage} und die Dienstleitung sehen, was Eltern gemeldet haben.",
+      "noAccess": "Nur die Diener von {stage} und die Dienstleitung sehen, was gemeldet wurde.",
       "lessonOn": "<link>{lesson}</link>, {date}",
-      "note": "Eltern melden das von zu Hause aus. „Erledigt“ heißt, dass ein Elternteil es abgehakt hat; es sagt nichts darüber, wie gut das Kind gelernt hat, und es gibt keine Rangliste.",
-      "childrenIn": "Kinder in {stage}",
+      "note": "Eltern oder Mitglieder mit eigenem Konto melden das von zu Hause aus. „Erledigt“ heißt, dass jemand es abgehakt hat; es sagt nichts darüber, wie gut jemand gelernt hat, und es gibt keine Rangliste.",
+      "childrenIn": "In {stage}",
       "reportedDone": "Als erledigt gemeldet",
       "afterDue": "davon {count, number} nach dem Fälligkeitsdatum",
-      "withoutAccount": "Ohne Elternkonto",
+      "withoutAccount": "Ohne Konto",
       "cantReportOnline": "Keine Online-Meldung möglich",
-      "draftNote": "Diese Hausaufgabe ist ein Entwurf. Eltern sehen sie noch nicht.",
-      "whatParentsRead": "Was Eltern lesen"
+      "draftNote": "Diese Hausaufgabe ist ein Entwurf. Eltern und Mitglieder sehen sie noch nicht.",
+      "whatParentsRead": "Was Eltern und Mitglieder lesen"
     },
     "completion": {
       "tabAll": "Alle ({count, number})",
       "tabDone": "Als erledigt gemeldet ({count, number})",
       "tabOpen": "Noch nicht ({count, number})",
-      "tabNoAccount": "Ohne Elternkonto ({count, number})",
-      "searchLabel": "Kinder suchen",
-      "searchPlaceholder": "Kind suchen",
-      "child": "Kind",
+      "tabNoAccount": "Ohne Konto ({count, number})",
+      "searchLabel": "Namen suchen",
+      "searchPlaceholder": "Name suchen",
+      "child": "Name",
       "reported": "Gemeldet",
-      "parentAccounts": "Elternkonten",
-      "noMatch": "Kein Kind passt zur Suche.",
+      "noMatch": "Niemand passt zur Suche.",
       "empty": "Niemand in dieser Liste.",
       "leftStage": "Nicht mehr in {stage}; die Meldung bleibt erhalten",
       "done": "Erledigt",
       "afterDue": "nach dem Fälligkeitsdatum",
-      "noAccount": "Kein Elternkonto"
+      "noAccount": "Kein Konto",
+      "accounts": "Konten",
+      "ownAccount": "Eigenes Konto",
+      "bySelf": "{name} (eigenes Konto)"
     },
     "actions": {
       "publish": "Veröffentlichen",
       "progress": "Meldungen ansehen",
-      "publishToParents": "Für Eltern veröffentlichen",
+      "publishToParents": "Veröffentlichen",
       "unpublish": "Zurück zum Entwurf",
       "deleteDraft": "Entwurf löschen",
       "unpublishTitle": "„{title}“ zurücknehmen?",
-      "unpublishText": "Die Hausaufgabe wird wieder ein Entwurf und verschwindet aus dem Elternbereich. Sie können sie später erneut veröffentlichen.",
+      "unpublishText": "Die Hausaufgabe wird wieder ein Entwurf und verschwindet für Eltern und Mitglieder. Sie können sie später erneut veröffentlichen.",
       "archiveTitle": "„{title}“ archivieren?",
-      "archiveText": "Archivierte Hausaufgaben verschwinden aus dem Elternbereich und aus den aktuellen Listen.",
+      "archiveText": "Archivierte Hausaufgaben verschwinden für Eltern und Mitglieder und aus den aktuellen Listen.",
       "archiveKept": "{count, plural, one {Die gemeldete Erledigung bleibt im Verlauf erhalten.} other {Die # gemeldeten Erledigungen bleiben im Verlauf erhalten.}}",
       "deleteTitle": "„{title}“ löschen?",
-      "deleteText": "Der Entwurf wird endgültig entfernt. Eltern haben ihn nie gesehen.",
+      "deleteText": "Der Entwurf wird endgültig entfernt. Eltern und Mitglieder haben ihn nie gesehen.",
       "restoreTitle": "„{title}“ wiederherstellen?",
-      "restorePublished": "Die Hausaufgabe wird wieder veröffentlicht. Die Eltern der Klasse sehen sie dann wieder.",
-      "restoreDraft": "Die Hausaufgabe kommt als Entwurf zurück. Eltern sehen sie erst, wenn Sie sie veröffentlichen."
+      "restorePublished": "Die Hausaufgabe wird wieder veröffentlicht. Eltern und Mitglieder der Klasse sehen sie dann wieder.",
+      "restoreDraft": "Die Hausaufgabe kommt als Entwurf zurück. Eltern und Mitglieder sehen sie erst, wenn Sie sie veröffentlichen."
     },
     "table": {
       "published": "Veröffentlicht ({count, number})",
@@ -1110,27 +1146,27 @@
       "homework": "Hausaufgabe",
       "due": "Fällig",
       "status": "Status",
-      "reported": "Von Eltern als erledigt gemeldet",
+      "reported": "Als erledigt gemeldet",
       "actions": "Aktionen",
       "empty": {
         "published": {
           "title": "Nichts veröffentlicht",
-          "text": "Veröffentlichen Sie Hausaufgaben aus einer Lektion heraus. Die Eltern der Klasse sehen sie sofort."
+          "text": "Veröffentlichen Sie Hausaufgaben aus einer Lektion heraus. Eltern und Mitglieder der Klasse sehen sie sofort."
         },
         "draft": {
           "title": "Keine Entwürfe",
-          "text": "Entwürfe bleiben für Eltern verborgen, bis Sie sie veröffentlichen."
+          "text": "Entwürfe bleiben für Eltern und Mitglieder verborgen, bis Sie sie veröffentlichen."
         },
         "archived": {
           "title": "Nichts archiviert",
-          "text": "Archivierte Hausaufgaben behalten, was Eltern gemeldet haben."
+          "text": "Archivierte Hausaufgaben behalten, was gemeldet wurde."
         }
       }
     },
     "editor": {
       "lesson": "Lektion",
       "givenWith": "Gehört zur Lektion",
-      "lessonNote": "Eltern sehen die Bibelstelle und den Merkvers der Lektion zusammen mit der Hausaufgabe.",
+      "lessonNote": "Eltern und Mitglieder sehen die Bibelstelle und den Merkvers der Lektion zusammen mit der Hausaufgabe.",
       "homework": "Hausaufgabe",
       "startFrom": "Vorlage:",
       "templates": {
@@ -1152,12 +1188,12 @@
       "titleLabel": "Titel",
       "titlePlaceholder": "z. B. Merkvers auswendig lernen",
       "instructionsLabel": "Was zu tun ist",
-      "instructionsPlaceholder": "Für Eltern geschrieben: was gemeinsam zu tun ist und wie lange es dauert",
-      "instructionsHint": "Fassen Sie sich kurz. Eltern lesen das auf dem Handy.",
+      "instructionsPlaceholder": "Was zu Hause zu tun ist und wie lange es dauert",
+      "instructionsHint": "Fassen Sie sich kurz. Eltern und Mitglieder lesen das auf dem Handy.",
       "dueDate": "Fälligkeitsdatum",
       "weekAfter": "Eine Woche nach der Lektion ({date})",
       "clearDue": "Ohne Fälligkeitsdatum",
-      "dueHint": "Nur als Orientierung. Eltern können sie auch danach noch abhaken.",
+      "dueHint": "Nur als Orientierung. Sie kann auch danach noch abgehakt werden.",
       "resources": "Materialien",
       "resourcesEmpty": "Ein Link zu einer Geschichte, einem Lied oder einer Malvorlage, falls es hilft.",
       "resource": "Material {n, number}",
@@ -1165,10 +1201,10 @@
       "resourceLink": "Link für Material {n, number}",
       "resourceRemove": "Material {n, number} entfernen",
       "addResource": "Material hinzufügen",
-      "preview": "Vorschau für Eltern",
-      "previewLabel": "Vorschau des Elternbereichs",
-      "visible": "Sichtbar für die Eltern von {count, plural, one {# Kind} other {# Kindern}} in {stage}. Änderungen erscheinen sofort{completions, plural, =0 {} one {; die bereits gemeldete Erledigung bleibt erhalten} other {; die # bereits gemeldeten Erledigungen bleiben erhalten}}.",
-      "hiddenUntilPublished": "Nach der Veröffentlichung sehen die Eltern von {count, plural, one {# Kind} other {# Kindern}} in {stage} sie. Bis dahin bleibt sie verborgen.",
+      "preview": "Vorschau",
+      "previewLabel": "Vorschau dessen, was Eltern und Mitglieder sehen",
+      "visible": "Sichtbar für {count, plural, one {# Mitglied} other {# Mitglieder}} von {stage} – über die Eltern oder im eigenen Konto. Änderungen erscheinen sofort{completions, plural, =0 {} one {; die bereits gemeldete Erledigung bleibt erhalten} other {; die # bereits gemeldeten Erledigungen bleiben erhalten}}.",
+      "hiddenUntilPublished": "Nach der Veröffentlichung ist sie für {count, plural, one {# Mitglied} other {# Mitglieder}} von {stage} sichtbar – über die Eltern oder im eigenen Konto. Bis dahin bleibt sie verborgen.",
       "saveDraft": "Entwurf speichern"
     }
   },
@@ -1346,7 +1382,7 @@
       "pendingTitle": "Warten auf Freigabe",
       "pending": "Zugang zu {name}, angefragt am {date}. Das Gemeindebüro prüft jede Anfrage, bevor Sie etwas sehen.",
       "pendingUnknown": "Zugang zu einem Kind, angefragt am {date}. Das Gemeindebüro prüft jede Anfrage, bevor Sie etwas sehen.",
-      "help": "Fehlt ein Kind, oder stimmt etwas nicht? Sprechen Sie mit den Dienern der Klasse oder mit dem Gemeindebüro. Kinder haben kein eigenes Konto."
+      "help": "Fehlt ein Kind, oder stimmt etwas nicht? Sprechen Sie mit den Dienern der Klasse oder mit dem Gemeindebüro. Kinder unter 16 bekommen ein eigenes Konto nur mit Ihrer Zustimmung."
     },
     "homework": {
       "description": "Alles, was die Diener von {stage} für {name} aufgegeben haben.",
@@ -1407,6 +1443,11 @@
     "parent": {
       "title": "Diese Seite ist nicht verfügbar",
       "description": "Vielleicht haben die Diener die Hausaufgabe zurückgenommen, oder der Link ist nicht für Ihr Konto gedacht.",
+      "action": "Ihre Hausaufgaben ansehen"
+    },
+    "member": {
+      "title": "Diese Seite ist nicht verfügbar",
+      "description": "Vielleicht haben die Diener die Hausaufgabe zurückgenommen, oder sie gehört zu einer anderen Gruppe.",
       "action": "Ihre Hausaufgaben ansehen"
     }
   },
@@ -1648,7 +1689,9 @@
       "staff": "Mitarbeitende der Gemeinde",
       "staffHint": "Administratoren, Dienstleitungen und Diener",
       "parents": "Eltern",
-      "parentsHint": "Der Elternbereich: die Hausaufgaben ihrer Kinder"
+      "parentsHint": "Der Elternbereich: die Hausaufgaben ihrer Kinder",
+      "members": "Mitglieder",
+      "membersHint": "Der Mitgliederbereich: eigene Gruppen und Hausaufgaben"
     },
     "pending": {
       "title": "Ihr Konto wartet auf Freigabe",
@@ -1657,11 +1700,12 @@
       "servants": "Diener erhalten Zugang zu dem Dienst, in dem sie dienen.",
       "email": "Sie erhalten eine E-Mail, sobald das Konto bereit ist.",
       "slow": "Dauert es länger als eine Woche? Fragen Sie im Gemeindebüro nach, zum Beispiel nach der Liturgie.",
-      "back": "Zurück zur Anmeldung"
+      "back": "Zurück zur Anmeldung",
+      "members": "Bei Mitgliedern verknüpft es das Konto mit ihrem eigenen Eintrag in den Gruppen der Gemeinde."
     },
     "register": {
       "title": "Konto anlegen",
-      "intro": "Für Eltern von Kindern in unseren Diensten und für Diener. Das Gemeindebüro prüft jedes neue Konto, bevor es genutzt werden kann.",
+      "intro": "Für Eltern, für Mitglieder unserer Dienste und für Diener. Das Gemeindebüro prüft jedes neue Konto, bevor es genutzt werden kann.",
       "firstName": "Vorname",
       "lastName": "Nachname",
       "email": "E-Mail-Adresse",
@@ -1685,9 +1729,13 @@
       "haveAccount": "Sie haben schon ein Konto? <link>Anmelden</link>",
       "nextTitle": "Wie es weitergeht",
       "step1": "Sie legen Ihr Konto an. Nutzen können Sie es noch nicht.",
-      "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Diener erhalten Zugang zu ihrem Dienst.",
+      "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Mitglieder mit ihrem eigenen Eintrag, Diener erhalten Zugang zu ihrem Dienst.",
       "step3": "Sie erhalten eine E-Mail und können sich anmelden.",
-      "childrenNoAccounts": "Kinder bekommen kein eigenes Konto. Ihre Eltern sehen die Hausaufgaben."
+      "childrenNoAccounts": "Kinder unter 16 bekommen ein eigenes Konto nur mit Zustimmung eines Elternteils. Bis dahin sehen ihre Eltern die Hausaufgaben.",
+      "asMember": "Mitglied",
+      "asMemberHint": "Ich nehme selbst an einem Dienst teil, zum Beispiel am Jugendtreffen oder am Koptischkurs, und möchte meine Gruppen und Hausaufgaben sehen.",
+      "yourGroups": "Ihre Gruppen",
+      "yourGroupsHint": "Die Dienste oder Klassen, an denen Sie teilnehmen, zum Beispiel: Jugendtreffen, Diakonenschule. Unter 16? Dann muss ein Elternteil oder eine erziehungsberechtigte Person zustimmen; das Gemeindebüro fragt nach."
     },
     "registered": {
       "title": "Vielen Dank für Ihre Registrierung",
@@ -1712,7 +1760,7 @@
     "back": "Zurück",
     "version": "Fassung {version}",
     "draft": "Entwurf für den Prototyp. Die Datenschutzberatung der Gemeinde prüft und ergänzt diesen Text, auch die Stellen in eckigen Klammern, bevor die App genutzt wird.",
-    "intro": "Die App der Koptisch-Orthodoxen Kirche KHMK Köln hilft den Dienern, Treffen, Anwesenheit, Lektionen und Hausaufgaben zu organisieren, und zeigt Eltern die Hausaufgaben ihrer Kinder. Diese Hinweise erklären, welche personenbezogenen Daten die App speichert, wozu, wer sie sieht und welche Rechte Sie haben.",
+    "intro": "Die App der Koptisch-Orthodoxen Kirche KHMK Köln hilft den Dienern, Treffen, Anwesenheit, Lektionen und Hausaufgaben zu organisieren, zeigt Eltern die Hausaufgaben ihrer Kinder und Mitgliedern ihre eigenen Gruppen und Hausaufgaben. Diese Hinweise erklären, welche personenbezogenen Daten die App speichert, wozu, wer sie sieht und welche Rechte Sie haben.",
     "responsible": {
       "title": "Verantwortlich",
       "text": "Koptisch-Orthodoxe Kirche KHMK Köln, [Anschrift des Gemeindebüros]. Fragen zum Datenschutz: [E-Mail-Adresse des Gemeindebüros oder der Datenschutzberatung]."
@@ -1723,9 +1771,10 @@
         "accounts": "Konten: Name, E-Mail-Adresse, Passwort (nur in einer Form, die sich nicht zurücklesen lässt), Sprache, Rollen und wann Sie diese Hinweise angenommen haben.",
         "members": "Mitglieder: Vor- und Nachname, ein Rufname und die Dienste und Klassen, zu denen sie gehören, von wann bis wann.",
         "attendance": "Anwesenheit: wer bei welchem Treffen als anwesend markiert wurde und von wem. Die App erfasst nur Anwesenheit, nie Abwesenheit.",
-        "homework": "Hausaufgaben: welche Hausaufgabe ein Elternteil für welches Kind als erledigt gemeldet hat und wann.",
+        "homework": "Hausaufgaben: welche Hausaufgabe für wen als erledigt gemeldet wurde, von welchem Konto und wann.",
         "links": "Elternzugang: welche Elternkonten welche Kinder sehen dürfen.",
-        "registration": "Bei der Registrierung: was Sie über Ihre Kinder oder Ihren Dienst schreiben, bis das Gemeindebüro über Ihr Konto entschieden hat."
+        "registration": "Bei der Registrierung: was Sie über Ihre Kinder oder Ihren Dienst schreiben, bis das Gemeindebüro über Ihr Konto entschieden hat.",
+        "memberAccounts": "Mitgliedskonten: zu welchem Mitgliedseintrag ein Konto gehört und, bei Mitgliedern unter 16, dass und wie ein Elternteil oder eine erziehungsberechtigte Person zugestimmt hat."
       },
       "text": "Weitere Daten speichert die App nicht: keine Fotos, keine Anschriften, keine Geburtstage, keine Noten."
     },
@@ -1739,7 +1788,8 @@
         "servants": "Diener sehen die Personen und die Anwesenheit der Gruppen, in denen sie dienen.",
         "leaders": "Die Dienstleitung sieht ihren ganzen Dienst.",
         "admins": "Administratoren im Gemeindebüro verwalten Konten, Rollen und den Elternzugang.",
-        "parents": "Eltern sehen nur die veröffentlichten Hausaufgaben ihrer eigenen Kinder: nie Anwesenheit, Notizen oder andere Familien."
+        "parents": "Eltern sehen nur die veröffentlichten Hausaufgaben ihrer eigenen Kinder: nie Anwesenheit, Notizen oder andere Familien.",
+        "members": "Mitglieder mit eigenem Konto sehen ihre eigenen Gruppen, Termine und Diener, die Bibelstelle und den Merkvers ihrer Lektionen und ihre Hausaufgaben: nie Anwesenheit, Notizen oder andere Mitglieder."
       },
       "text": "Die App wird bei [Hosting-Anbieter in der EU] im Rahmen eines Auftragsverarbeitungsvertrags betrieben. Daten werden weder verkauft noch weitergegeben."
     },
@@ -1800,7 +1850,24 @@
       "stage": "Stufe",
       "wholeService": "Der ganze Dienst",
       "stageHint": "Beschränken Sie die Rolle auf eine Stufe, wenn der Diener nur dort dient.",
-      "submit": "Konto freigeben"
+      "submit": "Konto freigeben",
+      "memberDescription": "Verknüpfen Sie das Konto mit dem eigenen Eintrag des Mitglieds. Dann sieht es seine Gruppen, die nächsten Treffen und seine Hausaufgaben. Prüfen Sie zuerst, wem das Konto gehört.",
+      "memberRecord": "Mitgliedseintrag",
+      "memberRecordHint": "Wählen Sie den Eintrag von {name}. Achten Sie auf die Gruppen: Verschiedene Personen können gleich heißen.",
+      "sameName": "{count, plural, other {# Personen heißen {name}.}} Achten Sie auf die Gruppen, um die richtige zu wählen.",
+      "findMember": "Mitglied nach Namen oder Gruppe suchen",
+      "noMemberMatches": "Kein Mitglied gefunden.",
+      "searchMember": "Suchen Sie nach dem Namen des Mitglieds.",
+      "noGroup": "In keiner Gruppe",
+      "hasAccount": "Hat ein Konto",
+      "age": "Alter",
+      "ageHint": "Unter 16 muss ein Elternteil oder eine erziehungsberechtigte Person zustimmen, bevor ein Mitglied ein eigenes Konto bekommt.",
+      "ageCheck": {
+        "sixteenOrOlder": "16 oder älter",
+        "guardianConsent": "Unter 16, ein Elternteil oder eine erziehungsberechtigte Person hat zugestimmt"
+      },
+      "consentNote": "Wie wurde zugestimmt? (optional)",
+      "consentNotePlaceholder": "Zum Beispiel: Seine Mutter hat am 8. November persönlich zugestimmt."
     },
     "decline": {
       "title": "Registrierung von {name} ablehnen?",
@@ -1808,7 +1875,8 @@
       "deleted": "Das Konto und alle Angaben der Person werden gelöscht.",
       "tell": "Sagen Sie es der Person persönlich oder per E-Mail.",
       "confirm": "Ablehnen und löschen"
-    }
+    },
+    "asMember": "Mitglied"
   },
   "privacy": {
     "subject": {
@@ -1979,6 +2047,71 @@
       "noteLabel": "Möchten Sie dem Büro etwas mitteilen?",
       "noteHint": "Optional. Zum Beispiel, ob auch die Daten Ihrer Kinder gelöscht werden sollen.",
       "confirm": "Anfrage senden"
+    }
+  },
+  "member": {
+    "meta": {
+      "title": "Mitglieder"
+    },
+    "brand": {
+      "forMembers": "Für Mitglieder"
+    },
+    "nav": {
+      "label": "Mitgliederbereich",
+      "home": "Start",
+      "homework": "Hausaufgaben",
+      "account": "Konto"
+    },
+    "menu": {
+      "accountOf": "Konto von {name}"
+    },
+    "home": {
+      "toDo": "Zu erledigen",
+      "emptyToDo": "Gerade gibt es nichts zu erledigen. Neue Hausaufgaben erscheinen hier nach der Lektion.",
+      "doneRecently": "Kürzlich erledigt",
+      "nextMeetings": "Nächste Treffen",
+      "nextMeetingsHint": "Die nächsten zwei Wochen in Ihren Gruppen.",
+      "yourGroups": "Ihre Gruppen",
+      "noGroups": "Sie sind derzeit in keiner Gruppe. Sprechen Sie mit den Dienern oder dem Gemeindebüro.",
+      "whatYouSee": "Sie sehen Ihre eigenen Gruppen, wann und wo sie sich treffen, Ihre Diener, die Bibelstelle und den Merkvers der Lektionen und Ihre Hausaufgaben. Anwesenheit und die Notizen der Diener bleiben bei den Dienern.",
+      "notLinked": {
+        "title": "Ihr Konto ist noch nicht verknüpft",
+        "description": "Das Gemeindebüro verknüpft Ihr Konto mit Ihrem Eintrag in den Gruppen der Gemeinde. Dann erscheinen hier Ihre Gruppen, die nächsten Treffen und Ihre Hausaufgaben."
+      }
+    },
+    "meetings": {
+      "empty": "In den nächsten zwei Wochen keine Treffen.",
+      "canceled": "Abgesagt",
+      "moved": "Verschoben"
+    },
+    "groups": {
+      "noSchedule": "Derzeit keine regelmäßigen Treffen.",
+      "servants": "Diener:",
+      "lastLesson": "Letzte Lektion: „{title}“, {date}"
+    },
+    "homework": {
+      "description": "Alles, was Ihnen die Diener Ihrer Gruppen aufgegeben haben.",
+      "notLinked": "Ihr Konto ist noch nicht mit Ihrem Eintrag verknüpft. Das erledigt das Gemeindebüro.",
+      "toDo": "Zu erledigen",
+      "done": "Erledigt",
+      "emptyToDo": "Gerade gibt es nichts zu erledigen.",
+      "emptyDone": "Noch nichts abgehakt.",
+      "forYou": "Für Sie"
+    },
+    "completion": {
+      "hint": "Tippen Sie, wenn Sie es erledigt haben. Sie können es rückgängig machen.",
+      "undone": "Als nicht erledigt markiert."
+    },
+    "account": {
+      "description": "Ihr Mitgliedskonto bei KHMK Köln.",
+      "groups": "Gruppen",
+      "noGroups": "Derzeit in keiner Gruppe",
+      "notLinked": "Noch nicht mit Ihrem Eintrag verknüpft",
+      "churchSees": {
+        "title": "Was die Gemeinde sieht",
+        "body": "Die Diener Ihrer Gruppen sehen, ob und wann Sie eine Hausaufgabe abgehakt haben. Andere Mitglieder sehen in diesem Bereich nichts über Sie."
+      },
+      "prototype": "In diesem Prototyp werden keine E-Mails verschickt. Über das Menü mit Ihrem Namen können Sie den Bereich aus Sicht einer anderen Person ansehen oder <link>ein anderes Demokonto wählen</link>."
     }
   }
 }

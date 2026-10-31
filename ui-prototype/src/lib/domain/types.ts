@@ -154,9 +154,15 @@ export type Language = "en" | "de" | "ar"
 
 /** What someone wrote when registering, for the administrator who approves the account. */
 export type Registration = {
-  /** Who they say they are; the administrator decides the actual roles and links. */
-  as: "parent" | "servant"
-  /** Parents: their children's names and classes. Servants: where and since when they serve. */
+  /**
+   * Who they say they are; the administrator decides the actual roles and links. Members take
+   * part in a service themselves (a youth, an adult in the Coptic course) and see their own groups.
+   */
+  as: "parent" | "servant" | "member"
+  /**
+   * Parents: their children's names and classes. Servants: where and since when they serve.
+   * Members: the groups they take part in.
+   */
   details: string
   /** Servants: the service they say they serve in. */
   serviceId: Uuid | null
@@ -167,10 +173,20 @@ export type Registration = {
  * administrator (approvedAt null) and can't be used until then; accounts the
  * office creates are approved at once. Declined registrations are deleted.
  */
+/**
+ * How an administrator checked a member's age when linking a member account to the member's
+ * record: 16 or older, or under 16 with the agreement of a parent or guardian (DSGVO Art. 8).
+ */
+export type AgeCheck = "sixteenOrOlder" | "guardianConsent"
+
 export type User = {
   id: Uuid
   email: string
   displayName: string
+  /**
+   * The member record this account belongs to. It opens the member portal (the person's own
+   * groups and homework), so only an administrator sets it, when approving a member account.
+   */
   personId: Uuid | null
   roles: RoleAssignment[]
   /** Prototype only: a salted scrypt hash. Null until the person chooses a password (invitation). */
@@ -183,6 +199,10 @@ export type User = {
   privacyVersion: string | null
   approvedAt: Instant | null
   approvedBy: Uuid | null
+  /** Member accounts: the age check of the approval. Null for every other account. */
+  ageCheck: AgeCheck | null
+  /** Under 16: how the parent or guardian agreed, as the administrator noted it. */
+  guardianConsentNote: string | null
   disabledAt: Instant | null
   createdAt: Instant
 }
@@ -289,9 +309,10 @@ export type HomeworkAssignment = {
 }
 
 /**
- * A parent's report that a child completed an assignment. "Not completed" is
- * the absence of a current row. Undo keeps the row and sets undoneAt, so the
- * history stays; at most one current row per child and assignment.
+ * A report that a child or member completed an assignment, made by an approved
+ * parent or by the member's own account. "Not completed" is the absence of a
+ * current row. Undo keeps the row and sets undoneAt, so the history stays; at
+ * most one current row per person and assignment, whoever reported it.
  */
 export type HomeworkCompletion = {
   id: Uuid

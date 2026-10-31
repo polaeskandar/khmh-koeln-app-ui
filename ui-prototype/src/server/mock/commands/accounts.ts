@@ -4,7 +4,7 @@ import { msg } from "@/i18n/message"
 import { isAdministrator } from "@/lib/domain/policy"
 import { PRIVACY_VERSION } from "@/lib/domain/privacy"
 import { toInstant } from "@/lib/domain/time"
-import type { GuardianRelationship, Language, User, Uuid } from "@/lib/domain/types"
+import type { AgeCheck, GuardianRelationship, Language, User, Uuid } from "@/lib/domain/types"
 import { forbidden, ruleViolation } from "@/server/errors"
 
 import { nowMs } from "../clock"
@@ -19,8 +19,10 @@ import type { State } from "../state"
  *
  * Anyone can register, but a new account can't be used until an
  * administrator approves it: for a parent by linking their children, for a
- * servant by giving them a role. Declined registrations are deleted, with
- * everything the person entered (data minimisation, DSGVO Art. 5(1)(c)).
+ * servant by giving them a role, for a member by linking the account to their
+ * own member record (under 16 only with a parent's or guardian's agreement).
+ * Declined registrations are deleted, with everything the person entered
+ * (data minimisation, DSGVO Art. 5(1)(c)).
  */
 
 export type RegistrationInput = {
@@ -28,7 +30,7 @@ export type RegistrationInput = {
   lastName: string
   email: string
   password: string
-  as: "parent" | "servant"
+  as: "parent" | "servant" | "member"
   details: string
   serviceId?: Uuid | null
   language: Language
@@ -62,7 +64,9 @@ export function register(s: State, input: RegistrationInput): User {
       "details",
       input.as === "parent"
         ? msg("errors.accounts.childrenRequired")
-        : msg("errors.accounts.serviceDetailsRequired")
+        : input.as === "servant"
+          ? msg("errors.accounts.serviceDetailsRequired")
+          : msg("errors.accounts.groupsRequired")
     )
   } else if (details.length > 1000)
     v.add("details", msg("errors.validation.tooLong", { max: 1000 }))
@@ -89,6 +93,8 @@ export function register(s: State, input: RegistrationInput): User {
     privacyVersion: PRIVACY_VERSION,
     approvedAt: null,
     approvedBy: null,
+    ageCheck: null,
+    guardianConsentNote: null,
     disabledAt: null,
     createdAt: toInstant(ms),
   }
@@ -120,6 +126,19 @@ export type ApprovalInput =
       /** Servants only: narrows the role to one stage. */
       stageId?: Uuid | null
     }
+  | {
+      as: "member"
+      /** The member record the account belongs to. */
+      personId: Uuid | null
+      /** 16 or older, or under 16 with a parent's or guardian's agreement. */
+      ageCheck: AgeCheck | null
+      /** Under 16: how the parent or guardian agreed (in person, by letter, …). */
+      guardianConsentNote?: string | null
+    }
+
+/** The account linked to a member record, if any: a record belongs to at most one account. */
+export const accountOfPerson = (s: State, personId: Uuid) =>
+  s.users.find((u) => u.personId === personId)
 
 function pendingAccount(s: State, actor: User, userId: Uuid): User {
   if (!isAdministrator(actor)) throw forbidden(msg("errors.accounts.adminOnly"))
@@ -128,12 +147,36 @@ function pendingAccount(s: State, actor: User, userId: Uuid): User {
   return user
 }
 
-/** Approves a registration: links the children or gives the role, then the account can be used. */
+/**
+ * Approves a registration: links the children, gives the role or links the member record, then
+ * the account can be used.
+ */
 export function approveAccount(s: State, actor: User, userId: Uuid, input: ApprovalInput): User {
   const user = pendingAccount(s, actor, userId)
   const ms = nowMs()
   const v = new Violations()
-  if (input.as === "parent") {
+  if (input.as === "member") {
+    const person = input.personId ? personOf(s, input.personId) : undefined
+    if (!input.personId) v.add("personId", msg("errors.accounts.choosePerson"))
+    else if (!person || person.status !== "active") {
+      v.add("personId", msg("errors.accounts.personNotFound"))
+    } else if (accountOfPerson(s, person.id)) {
+      v.add(
+        "personId",
+        msg("errors.accounts.personHasAccount", { name: `${person.firstName} ${person.lastName}` })
+      )
+    }
+    if (!input.ageCheck) v.add("ageCheck", msg("errors.accounts.chooseAge"))
+    const note = (input.guardianConsentNote ?? "").trim()
+    if (input.ageCheck === "guardianConsent" && note.length > 200) {
+      v.add("guardianConsentNote", msg("errors.validation.tooLong", { max: 200 }))
+    }
+    v.throwIfAny()
+    user.roles = []
+    user.personId = person!.id
+    user.ageCheck = input.ageCheck
+    user.guardianConsentNote = input.ageCheck === "guardianConsent" && note ? note : null
+  } else if (input.as === "parent") {
     const children = [...new Set(input.childIds)].map((id) => personOf(s, id))
     if (children.length === 0) v.add("childIds", msg("errors.accounts.chooseChild"))
     if (children.some((c) => !c || c.status !== "active")) {
@@ -170,6 +213,27 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
   user.approvedBy = actor.id
   // The registration text was only needed for this decision.
   user.registration = null
+  return user
+}
+
+/**
+ * Removes the link between an account and its member record, for example when the office linked
+ * the wrong person. Reports the account made stay in the history. An account with another role
+ * (a parent) keeps it; an account that only had the link goes back to the account requests, so
+ * an administrator links it to the right record or declines it.
+ */
+export function unlinkMember(s: State, actor: User, userId: Uuid): User {
+  if (!isAdministrator(actor)) throw forbidden(msg("errors.accounts.adminOnly"))
+  const user = found(userOf(s, userId), "user")
+  if (!user.personId) throw ruleViolation(msg("errors.accounts.notLinked"))
+  user.personId = null
+  user.ageCheck = null
+  user.guardianConsentNote = null
+  if (user.roles.length === 0) {
+    user.approvedAt = null
+    user.approvedBy = null
+    user.registration = { as: "member", details: "", serviceId: null }
+  }
   return user
 }
 

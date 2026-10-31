@@ -9,13 +9,15 @@ import { DueLine } from "../homework/homework-bits"
 import { isolate } from "@/lib/bidi"
 
 /**
- * One homework task as a parent reads it (P04). The same component renders the
- * servant's preview in the homework editor, so what servants check is exactly
- * what parents get: title, instructions, due date, the lesson's passage and
- * memory verse, and resources. Never the lesson plan or servant notes.
+ * One homework task as a parent reads it (P04), or a member with an account of
+ * their own. The same component renders the servant's preview in the homework
+ * editor, so what servants check is exactly what parents and members get:
+ * title, instructions, due date, the lesson's passage and memory verse, and
+ * resources. Never the lesson plan or servant notes.
  */
 export function ParentHomeworkView({
   child,
+  forText,
   title,
   instructions,
   dueDate,
@@ -29,6 +31,8 @@ export function ParentHomeworkView({
 }: {
   /** `name: null` reads "For your child", for the servants' preview. */
   child: { name: string | null; stage: string | null }
+  /** Replaces "For {name}", e.g. "For you" in the member portal. */
+  forText?: string
   title: string
   instructions: string
   dueDate: LocalDate | null
@@ -54,7 +58,8 @@ export function ParentHomeworkView({
     <article className={cn("flex flex-col", compact ? "gap-4" : "gap-6")}>
       <header className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">
-          {child.name === null ? t("forYourChild") : t("forChild", { name: child.name })}
+          {forText ??
+            (child.name === null ? t("forYourChild") : t("forChild", { name: child.name }))}
           {/* Isolated, so a Latin class name keeps its place after the child's name in Arabic. */}
           {child.stage ? (
             <>

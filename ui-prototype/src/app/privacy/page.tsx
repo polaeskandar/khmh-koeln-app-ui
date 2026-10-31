@@ -17,6 +17,7 @@ const SECTIONS = [
     items: [
       "data.items.accounts",
       "data.items.members",
+      "data.items.memberAccounts",
       "data.items.attendance",
       "data.items.homework",
       "data.items.links",
@@ -26,7 +27,13 @@ const SECTIONS = [
   { key: "why", items: [] },
   {
     key: "who",
-    items: ["who.items.servants", "who.items.leaders", "who.items.admins", "who.items.parents"],
+    items: [
+      "who.items.servants",
+      "who.items.leaders",
+      "who.items.admins",
+      "who.items.parents",
+      "who.items.members",
+    ],
   },
   {
     key: "howLong",

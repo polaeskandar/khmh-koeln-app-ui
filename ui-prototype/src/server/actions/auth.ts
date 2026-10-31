@@ -8,9 +8,9 @@ import { z } from "zod"
 
 import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS } from "@/i18n/config"
 import { msg } from "@/i18n/message"
-import { isStaff } from "@/lib/domain/policy"
 import { authenticate, register } from "@/server/mock/commands/accounts"
 import { openState } from "@/server/mock/runtime"
+import { homeOf } from "@/server/request"
 import { PERSONA_COOKIE } from "@/server/viewer"
 
 import { runPublic, text } from "./run"
@@ -45,7 +45,7 @@ export async function signInAction(input: {
     store.set(LOCALE_COOKIE, result.user.language, LOCALE_COOKIE_OPTIONS)
   }
   revalidatePath("/", "layout")
-  redirect(isStaff(result.user) ? "/" : "/parent")
+  redirect(homeOf(result.user))
 }
 
 const registration = z.object({
@@ -53,7 +53,7 @@ const registration = z.object({
   lastName: text,
   email: z.string().max(300),
   password: z.string().max(300),
-  as: z.enum(["parent", "servant"]),
+  as: z.enum(["parent", "servant", "member"]),
   details: text,
   serviceId: z.uuid().nullable().optional(),
   acceptPrivacy: z.boolean(),

@@ -126,10 +126,10 @@ export function HomeworkTable({
                           completed={hw.counts.completed}
                           assigned={hw.counts.assigned}
                         />
-                        {hw.counts.withoutParentAccount > 0 ? (
+                        {hw.counts.withoutAccount > 0 ? (
                           <span className="text-xs text-muted-foreground">
                             {t("childrenWithoutAccount", {
-                              count: hw.counts.withoutParentAccount,
+                              count: hw.counts.withoutAccount,
                             })}
                           </span>
                         ) : null}

@@ -59,7 +59,7 @@ export type ParentTask = {
 
 const childName = (p: Person) => p.displayName ?? p.firstName
 
-function tasksFor(s: State, child: Person, today: LocalDate, viewerId: Uuid): ParentTask[] {
+export function tasksFor(s: State, child: Person, today: LocalDate, viewerId: Uuid): ParentTask[] {
   const stageIds = new Set(currentStagesOf(s, child.id, today).map((x) => x.stageId))
   return s.homework
     .filter((h) => h.status === "published")
@@ -89,7 +89,7 @@ function tasksFor(s: State, child: Person, today: LocalDate, viewerId: Uuid): Pa
 }
 
 /** Open tasks first, soonest due date first; then the rest by publication. */
-function sortTasks(tasks: ParentTask[]) {
+export function sortTasks(tasks: ParentTask[]) {
   return [...tasks].sort(
     (a, b) =>
       Number(a.done) - Number(b.done) ||

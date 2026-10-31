@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useInlineEnd } from "@/i18n/direction"
-import type { ViewerInfo } from "@/lib/view-models"
+import { hasMemberPortal, type ViewerInfo } from "@/lib/view-models"
 import { signOutAction } from "@/server/actions/auth"
 import { resetDemoDataAction, switchPersonaAction } from "@/server/actions/prototype"
 
@@ -182,11 +182,24 @@ export function PersonaMenuContent({
   const [, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname()
-  const inPortal = pathname.startsWith("/parent")
+  // The staff app, the parent portal or the member portal: an account can have several.
+  const area = pathname.startsWith("/parent")
+    ? "parent"
+    : pathname.startsWith("/member")
+      ? "member"
+      : "staff"
+  const homeOf = (p: ViewerInfo) => (p.isStaff ? "/" : p.isParent ? "/parent" : "/member")
+  const otherAreas = [
+    area !== "staff" && viewer.isStaff ? { href: "/", label: t("openStaffApp") } : null,
+    area !== "parent" && viewer.isParent ? { href: "/parent", label: t("openParentPortal") } : null,
+    area !== "member" && hasMemberPortal(viewer)
+      ? { href: "/member", label: t("openMemberPortal") }
+      : null,
+  ].filter((x) => x !== null)
   return (
     <>
-      {/* The parent portal's menu has its own link to the account page. */}
-      {inPortal ? null : (
+      {/* The portals' menus have their own link to the account page. */}
+      {area !== "staff" ? null : (
         <DropdownMenuItem asChild>
           <Link href="/account">
             <CircleUserRound />
@@ -208,9 +221,14 @@ export function PersonaMenuContent({
             const next = personas.find((p) => p.id === id)
             if (!next) return
             toast.success(t("nowViewingAs", { name: next.name, role: next.roleSummary }))
-            // Parents only have the portal; staff who are not parents only have the staff app.
-            if (!next.isStaff && !inPortal) router.push("/parent")
-            else if (!next.isParent && inPortal) router.push("/")
+            // Stay in the same area when the new persona has it, otherwise go to their own start.
+            const keeps =
+              area === "staff"
+                ? next.isStaff
+                : area === "parent"
+                  ? next.isParent
+                  : hasMemberPortal(next)
+            if (!keeps) router.push(homeOf(next))
           })
         }
       >
@@ -226,14 +244,14 @@ export function PersonaMenuContent({
         </DropdownMenuGroup>
       </DropdownMenuRadioGroup>
       <DropdownMenuSeparator />
-      {viewer.isStaff && viewer.isParent ? (
-        <DropdownMenuItem asChild>
-          <Link href={inPortal ? "/" : "/parent"}>
+      {otherAreas.map((a) => (
+        <DropdownMenuItem key={a.href} asChild>
+          <Link href={a.href}>
             <House />
-            {inPortal ? t("openStaffApp") : t("openParentPortal")}
+            {a.label}
           </Link>
         </DropdownMenuItem>
-      ) : null}
+      ))}
       <DropdownMenuItem onSelect={() => startTransition(() => signOutAction())}>
         <LogOut />
         {t("signOut")}

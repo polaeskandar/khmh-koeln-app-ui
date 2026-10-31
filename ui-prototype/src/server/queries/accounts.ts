@@ -5,7 +5,14 @@ import { getLocale, getTranslations } from "next-intl/server"
 import { can, isActiveAccount, isStaff } from "@/lib/domain/policy"
 import { formatFor } from "@/lib/format"
 import { today as clockToday } from "@/server/mock/clock"
-import { currentStagesOf, isArchived, serviceOf, stageOf, stagesOf } from "@/server/mock/selectors"
+import {
+  currentGroupNames,
+  currentStagesOf,
+  isArchived,
+  serviceOf,
+  stageOf,
+  stagesOf,
+} from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import { openState } from "@/server/mock/runtime"
 import type { Context } from "@/server/viewer"
@@ -30,6 +37,25 @@ function linkableChildren(s: State) {
       const stage = placement ? stageOf(s, placement.stageId) : undefined
       return stage ? [{ id: p.id, name: `${p.firstName} ${p.lastName}`, group: stage.name }] : []
     })
+    .sort((a, b) => a.name.localeCompare(b.name, "de"))
+}
+
+/**
+ * Member records an account can be linked to: active people with the groups they are in today,
+ * and whether a record already has an account (a record belongs to at most one account).
+ */
+function linkableMembers(s: State) {
+  const today = clockToday()
+  const linked = new Set(s.users.map((u) => u.personId).filter(Boolean))
+  return s.persons
+    .filter((p) => p.status === "active")
+    .map((p) => ({
+      id: p.id,
+      name: `${p.firstName} ${p.lastName}`,
+      displayName: p.displayName,
+      groups: currentGroupNames(s, p.id, today),
+      hasAccount: linked.has(p.id),
+    }))
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
 
@@ -61,6 +87,7 @@ export async function getAccountRequests(ctx: Context) {
   return {
     requests,
     children: linkableChildren(s),
+    members: linkableMembers(s),
     services: servicesWithStages(s),
     today: clockToday(),
   }

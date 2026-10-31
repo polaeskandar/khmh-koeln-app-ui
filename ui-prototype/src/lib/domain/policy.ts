@@ -10,7 +10,9 @@ import type { GuardianRelationship, Role, RoleAssignment, User, Uuid } from "./t
  * optionally narrowed to one stage (Daniel serves Sunday School · 3rd Class).
  * A stage-scoped role covers that stage only; service-wide things need a
  * service-wide role. Parents have no service roles at all: what they see
- * follows only from approved guardian relationships.
+ * follows only from approved guardian relationships. Members have no role
+ * either: their account is linked to their own member record, and they see
+ * only their own groups and homework.
  */
 export type Permission =
   // Global
@@ -51,18 +53,28 @@ export function isAdministrator(user: User): boolean {
   return user.roles.some((r) => r.role === "administrator")
 }
 
-/** Staff: anyone with an administrator, leader or servant role. Only staff see the church app. */
 /** An account people can sign in with: approved by an administrator and not disabled. */
 export function isActiveAccount(user: User): boolean {
   return user.approvedAt !== null && user.disabledAt === null
 }
 
+/** Staff: anyone with an administrator, leader or servant role. Only staff see the church app. */
 export function isStaff(user: User): boolean {
   return user.roles.some((r) => r.role !== "parent")
 }
 
 export function isParent(user: User): boolean {
   return user.roles.some((r) => r.role === "parent")
+}
+
+/**
+ * Member: the account belongs to a member record (someone on a service's roster), so it opens
+ * the member portal with that person's own groups and homework. Only an administrator links an
+ * account to a record. Staff and parents can be members too: a servant in the Bible Study, a
+ * mother in the Coptic course.
+ */
+export function isMember(user: User): boolean {
+  return user.personId !== null
 }
 
 /** Does the assignment cover the target? A stage-scoped role covers only its own stage. */
@@ -118,4 +130,14 @@ export function isGuardianOf(
   return relationships.some(
     (g) => g.userId === user.id && g.personId === personId && g.status === "approved"
   )
+}
+
+/** Can the user report this person's homework? An approved parent, or the member's own account. */
+export function canReportFor(
+  user: User,
+  personId: Uuid,
+  relationships: GuardianRelationship[]
+): boolean {
+  if (user.disabledAt) return false
+  return user.personId === personId || isGuardianOf(user, personId, relationships)
 }

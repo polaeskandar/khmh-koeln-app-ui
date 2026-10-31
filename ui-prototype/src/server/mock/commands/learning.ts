@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fullName } from "@/lib/domain/names"
-import { can, isAdministrator, isGuardianOf } from "@/lib/domain/policy"
+import { can, canReportFor, isAdministrator } from "@/lib/domain/policy"
 import { addDays, isValidLocalDate, toInstant } from "@/lib/domain/time"
 import type {
   GuardianRelationship,
@@ -412,11 +412,12 @@ export function deleteHomework(s: State, actor: User, id: Uuid): HomeworkAssignm
   return hw
 }
 
-// ------------------------------------------------------- parent completion
+// ------------------------------------------------- completion by parents and members
 
-function parentAccess(s: State, actor: User, assignmentId: Uuid, personId: Uuid) {
+/** Reports come from an approved parent of the person, or from the member's own account. */
+function reportAccess(s: State, actor: User, assignmentId: Uuid, personId: Uuid) {
   const person = found(personOf(s, personId), "person")
-  if (!isGuardianOf(actor, person.id, s.guardians)) {
+  if (!canReportFor(actor, person.id, s.guardians)) {
     throw forbidden(msg("errors.homework.ownChildrenOnly"))
   }
   const hw = found(homeworkOf(s, assignmentId), "homework")
@@ -438,7 +439,7 @@ export function completeHomework(
   assignmentId: Uuid,
   personId: Uuid
 ): HomeworkCompletion {
-  const { hw, person } = parentAccess(s, actor, assignmentId, personId)
+  const { hw, person } = reportAccess(s, actor, assignmentId, personId)
   const existing = currentCompletion(s, hw.id, person.id)
   if (existing) return existing
   const ms = nowMs()
@@ -462,7 +463,7 @@ export function undoCompletion(
   assignmentId: Uuid,
   personId: Uuid
 ): HomeworkCompletion | null {
-  const { hw, person } = parentAccess(s, actor, assignmentId, personId)
+  const { hw, person } = reportAccess(s, actor, assignmentId, personId)
   const existing = currentCompletion(s, hw.id, person.id)
   if (!existing) return null
   existing.undoneAt = toInstant(nowMs())

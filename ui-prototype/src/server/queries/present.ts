@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fullName, initials, preferredName } from "@/lib/domain/names"
-import { can, isAdministrator, isStaff } from "@/lib/domain/policy"
+import { can, isAdministrator, isMember, isStaff } from "@/lib/domain/policy"
 import { nextOccurrence } from "@/lib/domain/recurrence"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type {
@@ -29,7 +29,9 @@ import { today } from "@/server/mock/clock"
 import { occurrenceOn } from "@/server/mock/generator"
 import {
   childrenOf,
+  currentGroupNames,
   isArchived,
+  personOf,
   rosterOn,
   serviceOf,
   sessionCounts,
@@ -224,6 +226,9 @@ export function viewerInfo(ctx: Context, viewer: User): ViewerInfo {
   }))
   const admin = isAdministrator(viewer)
   const children = childrenOf(s, viewer.id)
+  const member = personOf(s, viewer.personId)
+  // The groups the member portal shows: none while the record is inactive.
+  const groups = member?.status === "active" ? currentGroupNames(s, member.id, today()) : []
   const staffRoles = roles.filter((r) => r.role === "service_leader" || r.role === "servant")
   const first = staffRoles[0]
   const roleSummary = admin
@@ -240,7 +245,11 @@ export function viewerInfo(ctx: Context, viewer: User): ViewerInfo {
           })
         : roles.some((r) => r.role === "parent")
           ? t("roles.summary.parentWaiting")
-          : t("roles.summary.none")
+          : member
+            ? groups.length > 0
+              ? t("roles.summary.memberOf", { groups: f.list(groups) })
+              : t("roles.summary.member")
+            : t("roles.summary.none")
   return {
     ...userRef(viewer)!,
     email: viewer.email,
@@ -250,6 +259,8 @@ export function viewerInfo(ctx: Context, viewer: User): ViewerInfo {
     isStaff: isStaff(viewer),
     // Has a parent account, even while access to a child is still waiting for approval.
     isParent: roles.some((r) => r.role === "parent"),
+    isMember: isMember(viewer),
+    memberGroups: groups.length,
   }
 }
 

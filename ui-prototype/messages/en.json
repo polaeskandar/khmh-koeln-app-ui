@@ -30,7 +30,8 @@
     "resetDemoData": "Reset demo data",
     "demoDataReset": "Demo data reset to Sunday 8 November, 12:08.",
     "accountMenu": "Account menu",
-    "yourAccount": "Your account"
+    "yourAccount": "Your account",
+    "openMemberPortal": "My groups"
   },
   "prefs": {
     "language": "Language",
@@ -215,7 +216,7 @@
     },
     "homework": {
       "titleRequired": "Enter a title, e.g. “Learn the memory verse”.",
-      "instructionsRequired": "Write what the parent and child should do.",
+      "instructionsRequired": "Write what to do at home.",
       "instructionsTooLong": "Use at most 2,000 characters.",
       "dueBeforeLesson": "The due date can’t be before the lesson.",
       "changeStageOnly": "Only servants of this stage and service leaders can change its homework.",
@@ -254,7 +255,13 @@
       "alreadyApproved": "This account has already been approved.",
       "chooseChild": "Choose at least one child.",
       "childNotFound": "One of the chosen children no longer exists or is inactive.",
-      "stageNotInService": "This stage doesn’t belong to the chosen service."
+      "stageNotInService": "This stage doesn’t belong to the chosen service.",
+      "groupsRequired": "Write which groups you take part in, so the church office can link your account to your record.",
+      "choosePerson": "Choose the member record this account belongs to.",
+      "personNotFound": "This member record no longer exists or is inactive.",
+      "personHasAccount": "{name} already has an account. Check that you chose the right person.",
+      "chooseAge": "Choose whether the member is 16 or older, or under 16 with a parent’s agreement.",
+      "notLinked": "This account isn’t linked to a member record."
     },
     "privacy": {
       "adminOnly": "Only administrators can handle data protection requests.",
@@ -309,14 +316,14 @@
     "archivedTitle": "Archived “{title}”.",
     "restoredTitle": "Restored “{title}”.",
     "deletedTitle": "Deleted “{title}”.",
-    "homeworkPublishedNew": "Published. Parents of the class can see it now.",
-    "homeworkDraftSaved": "Saved as a draft. Parents can’t see it yet.",
-    "homeworkSavedPublished": "Saved. Parents see the new version.",
+    "homeworkPublishedNew": "Published. Parents and members of the class can see it now.",
+    "homeworkDraftSaved": "Saved as a draft. Parents and members can’t see it yet.",
+    "homeworkSavedPublished": "Saved. Parents and members see the new version.",
     "homeworkSavedDraft": "Saved as a draft.",
-    "homeworkPublished": "Published “{title}”. Parents of the class can see it now.",
-    "homeworkUnpublished": "“{title}” is a draft again and hidden from parents.",
+    "homeworkPublished": "Published “{title}”. Parents and members of the class can see it now.",
+    "homeworkUnpublished": "“{title}” is a draft again and hidden from parents and members.",
     "homeworkArchived": "Archived “{title}”. Reported completions are kept.",
-    "homeworkRestoredPublished": "Restored “{title}”. Parents of the class see it again.",
+    "homeworkRestoredPublished": "Restored “{title}”. Parents and members of the class see it again.",
     "homeworkRestoredDraft": "Restored “{title}” as a draft.",
     "accessGiven": "Access given. The parent sees this child’s published homework.",
     "approved": "Approved.",
@@ -328,7 +335,8 @@
     "dataErased": "Data erased. The request stays in the log, without the name.",
     "copySent": "Marked as sent.",
     "dataRequestDeclined": "Request declined. Tell the person why, and that they can complain to the data protection authority.",
-    "erasureRequested": "Your request was sent to the church office. It will answer within one month."
+    "erasureRequested": "Your request was sent to the church office. It will answer within one month.",
+    "memberUnlinked": "Link removed for {name}."
   },
   "roles": {
     "administrator": "Administrator",
@@ -345,7 +353,9 @@
       "staff": "{role} · {where}{more, plural, =0 {} other { +#}}",
       "parentOf": "Parent of {children}",
       "parentWaiting": "Parent, waiting for access",
-      "none": "No role yet"
+      "none": "No role yet",
+      "memberOf": "Member · {groups}",
+      "member": "Member"
     }
   },
   "dashboard": {
@@ -515,7 +525,7 @@
     "newLesson": "New lesson",
     "editLesson": "Edit lesson",
     "editTitle": "Edit “{title}”",
-    "newDescription": "Prepare it as far ahead as you like. Parents never see the lesson plan, only the passage, the memory verse and the homework you publish.",
+    "newDescription": "Prepare it as far ahead as you like. Parents and members never see the lesson plan, only the passage, the memory verse and the homework you publish.",
     "backToLessons": "Back to lessons",
     "backToLesson": "Back to the lesson",
     "completion": "<strong>{completed, number}</strong> of {assigned, number} reported done",
@@ -525,11 +535,11 @@
       "completed": "Completed",
       "taught": "Taught",
       "published": "Published",
-      "draftHidden": "Parents can’t see drafts",
-      "publishedVisible": "Visible to parents of the class"
+      "draftHidden": "Parents and members can’t see drafts",
+      "publishedVisible": "Visible to parents and members of the class"
     },
     "visibility": {
-      "parents": "Parents see this",
+      "parents": "Parents and members see this",
       "servants": "Servants only"
     },
     "meeting": {
@@ -587,12 +597,12 @@
       "noActivities": "No activities yet.",
       "noMaterials": "No materials listed.",
       "homework": "Homework",
-      "homeworkDescription": "Parents of {stage} see published homework in their portal and tick it off when it is done.",
+      "homeworkDescription": "Parents of {stage}, and members with their own account, see published homework and tick it off when it is done.",
       "addHomework": "Add homework",
       "noHomework": "No homework for this lesson. Add one if the children should continue at home, for example learning the memory verse.",
       "archivedHomework": "{count, plural, one {# archived homework task} other {# archived homework tasks}} kept in the <link>homework history</link>.",
-      "sharedWithParents": "Shared with parents",
-      "sharedHint": "Shown in the parent portal next to this lesson’s published homework{count, plural, =0 {, once there is some} other { (# now)}}.",
+      "sharedWithParents": "Shared with parents and members",
+      "sharedHint": "Shown next to this lesson’s published homework{count, plural, =0 {, once there is some} other { (# now)}}.",
       "noPassage": "No passage.",
       "noMemoryVerse": "No memory verse.",
       "helping": "Helping",
@@ -650,10 +660,10 @@
       "deleteDraft": "Delete draft",
       "archiveTitle": "Archive “{title}”?",
       "archiveDescription": "Archived lessons leave the lists but stay in the history. You can restore it later.",
-      "archiveHomework": "{count, plural, one {Its # published homework task disappears from the parent portal.} other {Its # published homework tasks disappear from the parent portal.}}",
-      "archiveKept": "What parents already reported as done is kept.",
+      "archiveHomework": "{count, plural, one {Its # published homework task disappears for parents and members.} other {Its # published homework tasks disappear for parents and members.}}",
+      "archiveKept": "What was already reported as done is kept.",
       "deleteTitle": "Delete “{title}”?",
-      "deleteDescription": "The draft and its draft homework are removed for good. Nothing of it ever reached parents."
+      "deleteDescription": "The draft and its draft homework are removed for good. Nothing of it ever reached parents or members."
     },
     "noAccess": {
       "prepareTitle": "You can’t prepare lessons here",
@@ -747,6 +757,30 @@
       "resetDescription": "Everything you changed in the prototype is replaced by the original demo data, and the clock goes back to Sunday 8 November, 12:08.",
       "resetConfirm": "Reset",
       "resetDone": "Demo data reset."
+    },
+    "members": {
+      "title": "Member accounts",
+      "description": "Accounts linked to a member’s own record. The member sees their groups, the next meetings and their homework.",
+      "adminsOnly": "Only administrators manage member accounts",
+      "adminsOnlyHint": "Linking an account to a member’s record is done by the church’s administrators.",
+      "empty": "No member accounts yet.",
+      "alsoParent": "Also a parent",
+      "disabled": "Disabled",
+      "record": "Record: <strong>{name}</strong>",
+      "inactive": "inactive",
+      "noGroup": "not in a group",
+      "sixteenOrOlder": "16 or older",
+      "guardianConsent": "Under 16, a parent agreed",
+      "guardianConsentNote": "Under 16, a parent agreed: {note}",
+      "linkedByOffice": "Linked by the church office",
+      "approved": "approved {when}",
+      "approvedBy": "approved {when} by {name}",
+      "remove": "Remove link",
+      "removeTitle": "Remove the link to {member}’s record?",
+      "removeDescription": "The account no longer shows the member’s groups, meetings and homework.",
+      "removeKept": "Homework reports made with the account stay in the history.",
+      "removeAgain": "An account without another role goes back to the account requests, so you can link it to the right record or decline it.",
+      "removeConfirm": "Remove link"
     }
   },
   "session": {
@@ -1024,9 +1058,9 @@
     "editHomework": "Edit homework",
     "backToList": "Back to homework",
     "notYet": "Not yet",
-    "childrenWithoutAccount": "{count, plural, one {# child} other {# children}} without a parent account",
-    "hiddenFromParents": "Hidden from parents",
-    "notVisibleYet": "Not visible to parents yet",
+    "childrenWithoutAccount": "{count, plural, one {# person} other {# people}} without an account",
+    "hiddenFromParents": "Hidden from parents and members",
+    "notVisibleYet": "Not visible to parents and members yet",
     "due": {
       "none": "No due date",
       "today": "Due today",
@@ -1037,11 +1071,11 @@
       "on": "Due {date}"
     },
     "list": {
-      "description": "Small tasks for home, given with a lesson. Parents of {stage} tick them off in their portal. It shows who reported it done, not grades.",
+      "description": "Small tasks for home, given with a lesson. Parents of {stage}, and members with their own account, tick them off. It shows who reported it done, not grades.",
       "needsLesson": "Homework belongs to a lesson. <link>Prepare a lesson</link> first."
     },
     "new": {
-      "description": "A small task for the children to do at home with their parents. Parents tick it off when it’s done; there are no grades.",
+      "description": "A small task to do at home. Parents, or members with their own account, tick it off when it’s done; there are no grades.",
       "noAccessTitle": "You can’t assign homework here",
       "noAccess": "Only the servants of {stage} and the service leaders can assign its homework.",
       "lessonFirstTitle": "Prepare a lesson first",
@@ -1053,55 +1087,57 @@
       "noAccessTitle": "You can’t change this homework",
       "noAccess": "Only the servants of {stage} and the service leaders can change its homework.",
       "archivedTitle": "This homework is archived",
-      "archived": "Archived homework stays as it was, together with what parents reported.",
+      "archived": "Archived homework stays as it was, together with what was reported.",
       "backToHomework": "Back to the homework"
     },
     "progress": {
       "noAccessTitle": "You can’t see this progress",
-      "noAccess": "Only the servants of {stage} and the service leaders see what parents reported.",
+      "noAccess": "Only the servants of {stage} and the service leaders see what was reported.",
       "lessonOn": "<link>{lesson}</link>, {date}",
-      "note": "Parents report this at home. “Done” means a parent ticked it off; it says nothing about how well the child learned, and nobody is ranked.",
-      "childrenIn": "Children in {stage}",
+      "note": "Parents, or members with their own account, report this at home. “Done” means someone ticked it off; it says nothing about how well anyone learned, and nobody is ranked.",
+      "childrenIn": "In {stage}",
       "reportedDone": "Reported done",
       "afterDue": "{count, number} after the due date",
-      "withoutAccount": "Without a parent account",
+      "withoutAccount": "Without an account",
       "cantReportOnline": "Can’t report online",
-      "draftNote": "This homework is a draft. Parents can’t see it yet.",
-      "whatParentsRead": "What parents read"
+      "draftNote": "This homework is a draft. Parents and members can’t see it yet.",
+      "whatParentsRead": "What parents and members read"
     },
     "completion": {
       "tabAll": "All ({count, number})",
       "tabDone": "Reported done ({count, number})",
       "tabOpen": "Not yet ({count, number})",
-      "tabNoAccount": "No parent account ({count, number})",
-      "searchLabel": "Search children",
-      "searchPlaceholder": "Search a child",
-      "child": "Child",
+      "tabNoAccount": "No account ({count, number})",
+      "searchLabel": "Search names",
+      "searchPlaceholder": "Search a name",
+      "child": "Name",
       "reported": "Reported",
-      "parentAccounts": "Parent accounts",
-      "noMatch": "No child matches the search.",
+      "noMatch": "No one matches the search.",
       "empty": "Nobody in this list.",
       "leftStage": "No longer in {stage}; the report is kept",
       "done": "Done",
       "afterDue": "after the due date",
-      "noAccount": "No parent account"
+      "noAccount": "No account",
+      "accounts": "Accounts",
+      "ownAccount": "Own account",
+      "bySelf": "{name} (own account)"
     },
     "actions": {
       "publish": "Publish",
       "progress": "Who reported it done",
-      "publishToParents": "Publish to parents",
+      "publishToParents": "Publish",
       "unpublish": "Back to draft",
       "deleteDraft": "Delete draft",
       "unpublishTitle": "Take “{title}” back?",
-      "unpublishText": "It becomes a draft again and disappears from the parent portal. You can publish it again later.",
+      "unpublishText": "It becomes a draft again and disappears for parents and members. You can publish it again later.",
       "archiveTitle": "Archive “{title}”?",
-      "archiveText": "Archived homework leaves the parent portal and the open lists.",
-      "archiveKept": "{count, plural, one {The # completion parents reported is kept in the history.} other {The # completions parents reported are kept in the history.}}",
+      "archiveText": "Archived homework disappears for parents and members, and from the open lists.",
+      "archiveKept": "{count, plural, one {The # reported completion is kept in the history.} other {The # reported completions are kept in the history.}}",
       "deleteTitle": "Delete “{title}”?",
-      "deleteText": "The draft is removed for good. Parents never saw it.",
+      "deleteText": "The draft is removed for good. Parents and members never saw it.",
       "restoreTitle": "Restore “{title}”?",
-      "restorePublished": "It comes back published. Parents of the class will see it again.",
-      "restoreDraft": "It comes back as a draft. Parents won’t see it until you publish it."
+      "restorePublished": "It comes back published. Parents and members of the class will see it again.",
+      "restoreDraft": "It comes back as a draft. Parents and members won’t see it until you publish it."
     },
     "table": {
       "published": "Published ({count, number})",
@@ -1110,27 +1146,27 @@
       "homework": "Homework",
       "due": "Due",
       "status": "Status",
-      "reported": "Reported done by parents",
+      "reported": "Reported done",
       "actions": "Actions",
       "empty": {
         "published": {
           "title": "Nothing published",
-          "text": "Publish homework from a lesson. Parents of the class see it right away."
+          "text": "Publish homework from a lesson. Parents and members of the class see it right away."
         },
         "draft": {
           "title": "No drafts",
-          "text": "Drafts stay hidden from parents until you publish them."
+          "text": "Drafts stay hidden from parents and members until you publish them."
         },
         "archived": {
           "title": "Nothing archived",
-          "text": "Archived homework keeps what parents reported."
+          "text": "Archived homework keeps what was reported."
         }
       }
     },
     "editor": {
       "lesson": "Lesson",
       "givenWith": "Given with the lesson",
-      "lessonNote": "Parents see the lesson’s passage and memory verse with the homework.",
+      "lessonNote": "Parents and members see the lesson’s passage and memory verse with the homework.",
       "homework": "Homework",
       "startFrom": "Start from:",
       "templates": {
@@ -1152,12 +1188,12 @@
       "titleLabel": "Title",
       "titlePlaceholder": "e.g. Learn the memory verse",
       "instructionsLabel": "What to do",
-      "instructionsPlaceholder": "Written for parents: what to do together, and how long it takes",
-      "instructionsHint": "Keep it short. Parents read this on their phone.",
+      "instructionsPlaceholder": "What to do at home, and how long it takes",
+      "instructionsHint": "Keep it short. Parents and members read this on their phone.",
       "dueDate": "Due date",
       "weekAfter": "One week after the lesson ({date})",
       "clearDue": "No due date",
-      "dueHint": "A gentle guide. Parents can still tick it off afterwards.",
+      "dueHint": "A gentle guide. It can still be ticked off afterwards.",
       "resources": "Resources",
       "resourcesEmpty": "A link to a story, a song or a colouring page, if it helps.",
       "resource": "Resource {n, number}",
@@ -1165,10 +1201,10 @@
       "resourceLink": "Link for resource {n, number}",
       "resourceRemove": "Remove resource {n, number}",
       "addResource": "Add resource",
-      "preview": "Parent preview",
-      "previewLabel": "Preview of the parent portal",
-      "visible": "Visible to the parents of {count, plural, one {# child} other {# children}} in {stage}. Changes show right away{completions, plural, =0 {} one {; the # completion already reported stays} other {; the # completions already reported stay}}.",
-      "hiddenUntilPublished": "Once published, the parents of {count, plural, one {# child} other {# children}} in {stage} see it. Until then it stays hidden.",
+      "preview": "Preview",
+      "previewLabel": "Preview of what parents and members see",
+      "visible": "Visible for {count, plural, one {# member} other {# members}} of {stage}, through their parents or in their own account. Changes show right away{completions, plural, =0 {} one {; the # completion already reported stays} other {; the # completions already reported stay}}.",
+      "hiddenUntilPublished": "Once published, it is visible for {count, plural, one {# member} other {# members}} of {stage}, through their parents or in their own account. Until then it stays hidden.",
       "saveDraft": "Save draft"
     }
   },
@@ -1346,7 +1382,7 @@
       "pendingTitle": "Waiting for approval",
       "pending": "Access to {name}, requested {date}. The church office checks every request before you see anything.",
       "pendingUnknown": "Access to a child, requested {date}. The church office checks every request before you see anything.",
-      "help": "Missing a child, or something isn’t right? Talk to the servants of the class or the church office. Children don’t have accounts of their own."
+      "help": "Missing a child, or something isn’t right? Talk to the servants of the class or the church office. Children under 16 get an account of their own only with your agreement."
     },
     "homework": {
       "description": "Everything the servants of {stage} gave {name}.",
@@ -1407,6 +1443,11 @@
     "parent": {
       "title": "This page isn’t available",
       "description": "The homework may have been taken back by the servants, or the link is not meant for your account.",
+      "action": "See your homework"
+    },
+    "member": {
+      "title": "This page isn’t available",
+      "description": "The homework may have been taken back by the servants, or it belongs to another group.",
       "action": "See your homework"
     }
   },
@@ -1648,7 +1689,9 @@
       "staff": "Church staff",
       "staffHint": "Administrators, service leaders and servants",
       "parents": "Parents",
-      "parentsHint": "The parent portal: their children’s homework"
+      "parentsHint": "The parent portal: their children’s homework",
+      "members": "Members",
+      "membersHint": "The member portal: their own groups and homework"
     },
     "pending": {
       "title": "Your account is waiting for approval",
@@ -1657,11 +1700,12 @@
       "servants": "For servants, it gives access to the service they serve in.",
       "email": "You’ll get an email as soon as the account is ready.",
       "slow": "Taking longer than a week? Ask in the church office, for example after the liturgy.",
-      "back": "Back to sign-in"
+      "back": "Back to sign-in",
+      "members": "For members, it links the account to their own record in the church’s groups."
     },
     "register": {
       "title": "Create an account",
-      "intro": "For parents of children in our services and for servants. The church office checks every new account before it can be used.",
+      "intro": "For parents, for members of our services and for servants. The church office checks every new account before it can be used.",
       "firstName": "First name",
       "lastName": "Last name",
       "email": "Email address",
@@ -1685,9 +1729,13 @@
       "haveAccount": "Already have an account? <link>Sign in</link>",
       "nextTitle": "What happens next",
       "step1": "You create your account. You can’t use it yet.",
-      "step2": "The church office checks your details: parents are linked to their children, servants get access to their service.",
+      "step2": "The church office checks your details: parents are linked to their children, members to their own record, servants get access to their service.",
       "step3": "You get an email and can sign in.",
-      "childrenNoAccounts": "Children don’t get accounts. Their parents see their homework."
+      "childrenNoAccounts": "Children under 16 get an account of their own only with a parent’s agreement. Until then, their parents see their homework.",
+      "asMember": "Member",
+      "asMemberHint": "I take part in a service myself, for example the Youth Meeting or the Coptic course, and want to see my groups and homework.",
+      "yourGroups": "Your groups",
+      "yourGroupsHint": "The services or classes you take part in, for example: Youth Meeting, Deacons’ School. Under 16? A parent or guardian has to agree; the church office will ask them."
     },
     "registered": {
       "title": "Thank you for registering",
@@ -1712,7 +1760,7 @@
     "back": "Back",
     "version": "Version {version}",
     "draft": "Draft for the prototype. The church’s data protection adviser checks and completes this text, including the parts in brackets, before the app is used.",
-    "intro": "The app of the Coptic Orthodox Church KHMK Köln helps servants organise meetings, attendance, lessons and homework, and shows parents their children’s homework. This notice explains which personal data the app stores, why, who can see it, and what rights you have.",
+    "intro": "The app of the Coptic Orthodox Church KHMK Köln helps servants organise meetings, attendance, lessons and homework, shows parents their children’s homework, and shows members their own groups and homework. This notice explains which personal data the app stores, why, who can see it, and what rights you have.",
     "responsible": {
       "title": "Who is responsible",
       "text": "Coptic Orthodox Church KHMK Köln, [address of the church office]. Questions about data protection: [email address of the church office or the data protection adviser]."
@@ -1723,9 +1771,10 @@
         "accounts": "Accounts: name, email address, password (only in a form that can’t be read back), language, roles, and when you accepted this notice.",
         "members": "Members: first and last name, a preferred name, and the services and classes they belong to, from when to when.",
         "attendance": "Attendance: who was marked present at which meeting, and by whom. The app records presence only, never absence.",
-        "homework": "Homework: which homework a parent reported as done for which child, and when.",
+        "homework": "Homework: which homework was reported as done for whom, by which account, and when.",
         "links": "Parent access: which parent accounts may see which children.",
-        "registration": "When you register: what you write about your children or your service, until the church office has decided on your account."
+        "registration": "When you register: what you write about your children or your service, until the church office has decided on your account.",
+        "memberAccounts": "Member accounts: which member record an account belongs to, and for members under 16, that and how a parent or guardian agreed."
       },
       "text": "The app stores nothing else: no photos, no addresses, no birthdays, no grades."
     },
@@ -1739,7 +1788,8 @@
         "servants": "Servants see the people and attendance of the groups they serve in.",
         "leaders": "Service leaders see their whole service.",
         "admins": "Administrators in the church office manage accounts, roles and parent access.",
-        "parents": "Parents see only their own children’s published homework: never attendance, notes or other families."
+        "parents": "Parents see only their own children’s published homework: never attendance, notes or other families.",
+        "members": "Members with their own account see their own groups, meeting times and servants, the passage and memory verse of their lessons, and their homework: never attendance, notes or other members."
       },
       "text": "The app is hosted by [hosting provider in the EU] under a data processing agreement. No data is sold or passed on."
     },
@@ -1800,7 +1850,24 @@
       "stage": "Stage",
       "wholeService": "The whole service",
       "stageHint": "Narrow the role to one stage if the servant only serves there.",
-      "submit": "Approve account"
+      "submit": "Approve account",
+      "memberDescription": "Link the account to the member’s own record. Then they see their groups, the next meetings and their homework. Check first who the account belongs to.",
+      "memberRecord": "Member record",
+      "memberRecordHint": "Choose the record of {name}. Check the groups: different people can have the same name.",
+      "sameName": "{count, plural, other {# people are called {name}.}} Check the groups to choose the right one.",
+      "findMember": "Find a member by name or group",
+      "noMemberMatches": "No member matches.",
+      "searchMember": "Search for the member’s name.",
+      "noGroup": "Not in a group",
+      "hasAccount": "Has an account",
+      "age": "Age",
+      "ageHint": "Under 16, a parent or guardian has to agree before a member gets an account of their own.",
+      "ageCheck": {
+        "sixteenOrOlder": "16 or older",
+        "guardianConsent": "Under 16, and a parent or guardian agreed"
+      },
+      "consentNote": "How did they agree? (optional)",
+      "consentNotePlaceholder": "For example: his mother agreed in person on 8 November."
     },
     "decline": {
       "title": "Decline {name}’s registration?",
@@ -1808,7 +1875,8 @@
       "deleted": "The account and everything the person entered are deleted.",
       "tell": "Let them know, in person or by email.",
       "confirm": "Decline and delete"
-    }
+    },
+    "asMember": "Member"
   },
   "privacy": {
     "subject": {
@@ -1979,6 +2047,71 @@
       "noteLabel": "Anything the office should know?",
       "noteHint": "Optional. For example, whether your children’s data should be deleted too.",
       "confirm": "Send request"
+    }
+  },
+  "member": {
+    "meta": {
+      "title": "Members"
+    },
+    "brand": {
+      "forMembers": "For members"
+    },
+    "nav": {
+      "label": "Member portal",
+      "home": "Home",
+      "homework": "Homework",
+      "account": "Account"
+    },
+    "menu": {
+      "accountOf": "Account of {name}"
+    },
+    "home": {
+      "toDo": "To do",
+      "emptyToDo": "Nothing to do right now. New homework appears here after the lesson.",
+      "doneRecently": "Done recently",
+      "nextMeetings": "Next meetings",
+      "nextMeetingsHint": "The next two weeks in your groups.",
+      "yourGroups": "Your groups",
+      "noGroups": "You aren’t in any group at the moment. Talk to the servants or the church office.",
+      "whatYouSee": "You see your own groups, when and where they meet, your servants, the passage and memory verse of the lessons, and your homework. Attendance and the servants’ notes stay with the servants.",
+      "notLinked": {
+        "title": "Your account isn’t linked yet",
+        "description": "The church office links your account to your record in the church’s groups. Then your groups, the next meetings and your homework appear here."
+      }
+    },
+    "meetings": {
+      "empty": "No meetings in the next two weeks.",
+      "canceled": "Canceled",
+      "moved": "Moved"
+    },
+    "groups": {
+      "noSchedule": "No regular meetings at the moment.",
+      "servants": "Servants:",
+      "lastLesson": "Last lesson: “{title}”, {date}"
+    },
+    "homework": {
+      "description": "Everything the servants of your groups gave you.",
+      "notLinked": "Your account isn’t linked to your record yet. The church office does this.",
+      "toDo": "To do",
+      "done": "Done",
+      "emptyToDo": "Nothing to do right now.",
+      "emptyDone": "Nothing ticked off yet.",
+      "forYou": "For you"
+    },
+    "completion": {
+      "hint": "Tap when you’ve done it. You can undo it.",
+      "undone": "Marked as not done."
+    },
+    "account": {
+      "description": "Your member account at KHMK Köln.",
+      "groups": "Groups",
+      "noGroups": "Not in a group at the moment",
+      "notLinked": "Not linked to your record yet",
+      "churchSees": {
+        "title": "What the church sees",
+        "body": "The servants of your groups see whether you ticked off a homework task and when. Other members see nothing about you in this portal."
+      },
+      "prototype": "No emails are sent in this prototype. Use the menu with your name to view the portal as someone else, or <link>choose another demo account</link>."
     }
   }
 }

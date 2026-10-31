@@ -1,9 +1,10 @@
 import "server-only"
 
-import { can } from "@/lib/domain/policy"
+import { can, isStaff } from "@/lib/domain/policy"
 import { CHURCH_TIME_ZONE } from "@/lib/domain/time"
 import { today as clockToday } from "@/server/mock/clock"
 import {
+  currentGroupNames,
   currentStagesOf,
   isArchived,
   personOf,
@@ -80,6 +81,43 @@ function parentAccess(s: State, t: Translator) {
   }
 }
 
+/**
+ * Member accounts, for administrators only: accounts linked to a member record that are not
+ * staff accounts (a servant's record link is part of their staff account). Parents whose own
+ * record is linked are listed too, since the link is what opens the member portal.
+ */
+function memberAccounts(s: State) {
+  const today = clockToday()
+  return s.users
+    .filter((u) => u.personId !== null && !isStaff(u))
+    .flatMap((u) => {
+      const person = personOf(s, u.personId)
+      if (!person) return []
+      return [
+        {
+          id: u.id,
+          name: u.displayName,
+          email: u.email,
+          disabled: u.disabledAt !== null,
+          member: {
+            id: person.id,
+            name: `${person.firstName} ${person.lastName}`,
+            groups: currentGroupNames(s, person.id, today),
+            inactive: person.status !== "active",
+          },
+          isParent: u.roles.some((r) => r.role === "parent"),
+          ageCheck: u.ageCheck,
+          guardianConsentNote: u.guardianConsentNote,
+          approvedAt: u.approvedAt,
+          approvedBy: userRef(userOf(s, u.approvedBy))?.name ?? null,
+        },
+      ]
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "de"))
+}
+
+export type MemberAccount = ReturnType<typeof memberAccounts>[number]
+
 export async function getSettings(ctx: Context) {
   const { state: s, viewer } = ctx
   const canManageUsers = can(viewer, "MANAGE_USERS")
@@ -109,6 +147,7 @@ export async function getSettings(ctx: Context) {
       .sort((a, b) => a.name.localeCompare(b.name, "de"))
       .map((x) => ({ ...serviceRef(s, x), stages: stagesOf(s, x.id).map((st) => stageRef(st)!) })),
     parentAccess: canManageUsers ? parentAccess(s, ctx.t) : null,
+    memberAccounts: canManageUsers ? memberAccounts(s) : null,
     church: { name: "KHMK Köln", timeZone: CHURCH_TIME_ZONE },
     generatorRuns: [...s.generatorRuns].reverse().slice(0, 6),
     seededAt: s.seededAt,

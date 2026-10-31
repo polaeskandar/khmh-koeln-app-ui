@@ -58,14 +58,27 @@ export function ChildSwitcher({
   )
 }
 
-/** A homework task in the parent's list. Opens the task; the tick happens there. */
-export function TaskCard({ task, today }: { task: ParentTask; today: LocalDate }) {
+/** Where a task card leads: the parent portal's task page, or the member portal's. */
+export type TaskHref = (task: ParentTask) => string
+
+const parentTaskHref: TaskHref = (task) => `/parent/homework/${task.id}?child=${task.childId}`
+
+/** A homework task in the parent's (or member's) list. Opens the task; the tick happens there. */
+export function TaskCard({
+  task,
+  today,
+  href = parentTaskHref,
+}: {
+  task: ParentTask
+  today: LocalDate
+  href?: TaskHref
+}) {
   const t = useTranslations("parent.task")
   const f = useFormat()
   const when = task.done ? f.atLabel(task.completedAt!, today) : ""
   return (
     <Link
-      href={`/parent/homework/${task.id}?child=${task.childId}`}
+      href={href(task)}
       className={cn(
         "flex items-center gap-4 border p-4 transition-colors hover:bg-muted/60",
         task.done && "bg-muted/30"
@@ -112,11 +125,13 @@ export function TaskList({
   tasks,
   today,
   empty,
+  href,
 }: {
   title: string
   tasks: ParentTask[]
   today: LocalDate
   empty?: React.ReactNode
+  href?: TaskHref
 }) {
   return (
     <section className="flex flex-col gap-3" aria-label={title}>
@@ -134,7 +149,7 @@ export function TaskList({
         <ul className="flex flex-col gap-2">
           {tasks.map((t) => (
             <li key={`${t.childId}-${t.id}`}>
-              <TaskCard task={t} today={today} />
+              <TaskCard task={t} today={today} href={href} />
             </li>
           ))}
         </ul>

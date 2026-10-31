@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Walks through the prototype like its users do and saves the screenshots in
- * ../ui-mockups/admin and ../ui-mockups/parent. It also checks the end-to-end
- * scenario of the lesson, homework and parent portal brief:
+ * ../ui-mockups (admin, parent, member, auth, languages, dark). It also checks
+ * the end-to-end scenario of the lesson, homework and parent portal brief:
  *
  *   1. A servant (Daniel, 3rd Class) opens Sunday School › 3rd Class › Lessons,
  *      prepares "The Good Samaritan" for Sunday 15 November and publishes two
@@ -14,8 +14,10 @@
  * Then it takes the MVP screens. An administrator deletes a service that
  * never met and creates a new one. Then someone registers, waits for approval
  * and is approved; the main screens are taken again in German, Arabic and dark
- * mode; and at the very end a family's request to erase a child's data is
- * recorded and carried out.
+ * mode; and a family's request to erase a child's data is recorded and carried
+ * out. At the end come the member accounts: Nevine (Bible Study and the Coptic
+ * course) ticks off her own homework, and Mina, a youth who shares his name
+ * with a child in 3rd Class, registers and is linked to the right record.
  *
  * It starts its own production server with a fresh in-memory data set and the
  * demo clock frozen at Sunday 8 November 2026, 12:08, so every run produces
@@ -35,6 +37,7 @@ const out = {
   auth: path.resolve(app, "../ui-mockups/auth"),
   languages: path.resolve(app, "../ui-mockups/languages"),
   dark: path.resolve(app, "../ui-mockups/dark"),
+  member: path.resolve(app, "../ui-mockups/member"),
 }
 const PORT = Number(process.env.SCREENSHOT_PORT ?? 3210)
 const BASE = `http://localhost:${PORT}`
@@ -265,7 +268,7 @@ async function servantPreparesTheLesson() {
     await page.getByRole("button", { name: template, exact: true }).click()
     await page.getByRole("button", { name: /^One week after the lesson/ }).click()
     if (template === "Learn the memory verse") await shot(page, "admin", "homework-editor")
-    await clickAndWait(page, page.getByRole("button", { name: "Publish to parents" }), lessonUrl)
+    await clickAndWait(page, page.getByRole("button", { name: "Publish", exact: true }), lessonUrl)
   }
   check(
     (await text(page, "Published", { exact: true }).count()) >= 2,
@@ -394,10 +397,10 @@ async function servantManagesHomework(page, stageUrl, lessonUrl) {
   confirm = page.getByRole("alertdialog")
   await confirm.waitFor()
   check(
-    await text(confirm, /Parents of the class will see it again/)
+    await text(confirm, /Parents and members of the class will see it again/)
       .first()
       .isVisible(),
-    "restoring published homework warns that parents see it again"
+    "restoring published homework warns that parents and members see it again"
   )
   await shot(page, "admin", "dialog-restore-homework", { full: false })
   await confirm.getByRole("button", { name: "Restore" }).click()
@@ -763,6 +766,178 @@ async function dataProtection() {
   await shot(parent, "parent", "account")
 }
 
+// ------------------------------------------------------------ member portal
+
+/**
+ * People on a roster can have an account of their own. Nevine (Bible Study and
+ * the Coptic course, Level 1) sees her groups, the next meetings and her
+ * homework and ticks it off herself; Irene, who leads the course, sees that she
+ * reported it with her own account. Then Mina, a youth who shares his name with
+ * a child in 3rd Class, registers as a member, and the administrator links the
+ * account to his record, with his mother's agreement because he is under 16.
+ */
+async function memberPortal() {
+  console.log("Member portal: Nevine's homework, Mina registers as a member")
+  for (const locale of ["de", "ar"]) {
+    const page = await signIn("Nevine Boulos", desktop, { locale })
+    await shot(page, "languages", `${locale}-09-member-home`)
+  }
+  const arabicMember = await signIn("Nevine Boulos", phone, { locale: "ar", dark: true })
+  await shot(arabicMember, "dark", "06-member-home-arabic-mobile", { full: false })
+
+  const nevine = await signIn("Nevine Boulos")
+  check(nevine.url().endsWith("/member"), "a member lands in the member portal")
+  check(await text(nevine, "Level 1 class").first().isVisible(), "the next meetings of her groups")
+  check(await text(nevine, "Canceled").first().isVisible(), "a canceled meeting says so")
+  check(
+    (await text(nevine, /autumn bazaar/).count()) === 0,
+    "the servants' cancel reason stays with the servants"
+  )
+  await shot(nevine, "member", "member-home")
+  const phoneMember = await signIn("Nevine Boulos", phone)
+  await shot(phoneMember, "member", "member-home-mobile", { full: false })
+
+  await clickAndWait(
+    nevine,
+    nevine.getByRole("link", { name: "Homework", exact: true }).first(),
+    /\/member\/homework$/
+  )
+  await shot(nevine, "member", "homework-list")
+  await clickAndWait(
+    nevine,
+    nevine.getByRole("link", { name: /Write the first eight letters/ }),
+    /\/member\/homework\/[0-9a-f-]+$/
+  )
+  check(
+    await text(nevine, "The Coptic alphabet (chart)").first().isVisible(),
+    "the task shows its resources"
+  )
+  await shot(nevine, "member", "homework-details")
+  await nevine.getByRole("button", { name: "Mark as done" }).click()
+  await nevine
+    .getByRole("status")
+    .getByText(/You reported it today at 12:08/)
+    .waitFor()
+  await shot(nevine, "member", "homework-completed")
+  await go(nevine, "/member/account")
+  await shot(nevine, "member", "account")
+
+  // Irene leads the Coptic course: Nevine reported it herself.
+  const irene = await signIn("Irene Wahba")
+  await clickAndWait(
+    irene,
+    irene.getByRole("link", { name: "Services", exact: true }).first(),
+    /\/services$/
+  )
+  await clickAndWait(
+    irene,
+    irene.getByRole("link", { name: "Coptic Language Course", exact: true }).first(),
+    /\/services\/[^/]+$/
+  )
+  await clickAndWait(
+    irene,
+    irene
+      .locator("a[href*='/stages/']")
+      .filter({ hasText: /^Level 1/ })
+      .first(),
+    /\/stages\/[^/]+$/
+  )
+  await go(irene, `${irene.url().replace(BASE, "")}/homework`)
+  await clickAndWait(
+    irene,
+    irene.getByRole("link", { name: "Write the first eight letters" }),
+    /\/homework\/[0-9a-f-]+$/
+  )
+  const row = irene.getByRole("row", { name: /Nevine Boulos/ })
+  check(await text(row, "Done", { exact: true }).first().isVisible(), "Nevine is reported done")
+  check(
+    await text(row, /own account/)
+      .first()
+      .isVisible(),
+    "she reported it with her own account"
+  )
+  await shot(irene, "admin", "homework-progress-own-accounts")
+
+  // Hoda is a parent and in the Coptic course herself: her menu leads to her groups.
+  const hoda = await signIn("Hoda Farag")
+  await hoda.getByRole("button", { name: "Account of Hoda Farag" }).click()
+  await hoda.getByRole("menu").waitFor()
+  await shot(hoda, "parent", "menu-my-groups", { full: false })
+  await clickAndWait(hoda, hoda.getByRole("menuitem", { name: "My groups" }), /\/member$/)
+  await shot(hoda, "member", "member-home-parent")
+
+  // Mina registers as a member.
+  const visitor = await openBrowser("visitor")
+  await go(visitor, "/register")
+  await label(visitor, "First name").fill("Mina")
+  await label(visitor, "Last name").fill("Hanna")
+  await label(visitor, "Email address").fill("mina.hanna.youth@example.org")
+  await label(visitor, "Password", { exact: true }).fill("friday nights at church")
+  await visitor.getByRole("radio", { name: /^Member/ }).click()
+  await label(visitor, "Your groups").fill("Youth Meeting on Fridays and the Deacons’ School")
+  await label(visitor, /I have read the privacy notice/).check()
+  await shot(visitor, "auth", "07-register-as-member")
+  await clickAndWait(
+    visitor,
+    visitor.getByRole("button", { name: "Create account" }),
+    /\/register\/done$/
+  )
+
+  // Two people are called Mina Hanna: the administrator picks the youth, who is 15.
+  const admin = await signIn("Mariam Fahmy")
+  await go(admin, "/settings")
+  const request = admin
+    .locator("section[aria-labelledby='account-requests'] li")
+    .filter({ hasText: "Mina Hanna" })
+  check(await text(request, "Member", { exact: true }).first().isVisible(), "a member request")
+  await request.getByRole("button", { name: "Approve…" }).click()
+  const dialog = admin.getByRole("dialog")
+  await dialog.waitFor()
+  check(
+    await text(dialog, /2 people are called Mina Hanna/)
+      .first()
+      .isVisible(),
+    "the dialog warns that two records have the name"
+  )
+  check(
+    !(await dialog
+      .getByRole("radio", { name: /Mina Hanna/ })
+      .first()
+      .isChecked()),
+    "no record is chosen when the name is not unique"
+  )
+  await dialog.getByRole("radio", { name: /Mina Hanna.*Youth Meeting/ }).click()
+  await dialog.getByRole("radio", { name: /^Under 16/ }).click()
+  await dialog
+    .getByLabel(/How did they agree/)
+    .fill("His mother agreed in person after the liturgy on 8 November.")
+  await shot(admin, "admin", "dialog-approve-member", { full: false })
+  await dialog.getByRole("button", { name: "Approve account" }).click()
+  await dialog.waitFor({ state: "detached" })
+  await settle(admin)
+
+  await go(visitor, "/sign-in")
+  await label(visitor, "Email address").fill("mina.hanna.youth@example.org")
+  await label(visitor, "Password", { exact: true }).fill("friday nights at church")
+  await clickAndWait(visitor, visitor.getByRole("button", { name: "Sign in" }), /\/member$/)
+  check(await text(visitor, "Advanced").first().isVisible(), "Mina sees his Deacons’ School class")
+  check((await text(visitor, /3rd Class/).count()) === 0, "nothing of the other Mina's class")
+  await shot(visitor, "member", "member-home-youth")
+
+  await go(admin, "/settings")
+  const members = admin.locator("section[aria-labelledby='members']")
+  check(await text(members, "Mina Hanna").first().isVisible(), "Mina is listed as a member account")
+  await shot(admin, "admin", "member-accounts", { locator: members })
+  await members
+    .locator("li")
+    .filter({ hasText: "Mina Hanna" })
+    .getByRole("button", { name: "Remove link" })
+    .click()
+  await admin.getByRole("alertdialog").waitFor()
+  await shot(admin, "admin", "dialog-remove-member-link", { full: false })
+  await admin.keyboard.press("Escape")
+}
+
 // --------------------------------------------------------------------- run
 
 try {
@@ -780,6 +955,7 @@ try {
   await registrationAndApproval()
   await languagesAndDarkMode(urls)
   await dataProtection()
+  await memberPortal()
   if (problems.length) {
     console.error(`\nThe browser reported ${problems.length} problem(s):\n${problems.join("\n")}`)
     process.exitCode = 1

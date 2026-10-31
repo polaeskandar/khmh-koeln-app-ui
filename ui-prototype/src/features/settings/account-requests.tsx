@@ -3,8 +3,10 @@
 /**
  * Account requests (administrators only): people who registered themselves.
  * Their accounts can't be used until an administrator approves them — a
- * parent by linking their children, a servant by giving them a role.
- * Declining deletes the account and everything the person entered.
+ * parent by linking their children, a servant by giving them a role, a member
+ * by linking the account to their own member record (under 16 only with a
+ * parent's or guardian's agreement). Declining deletes the account and
+ * everything the person entered.
  */
 import { useId, useMemo, useState } from "react"
 import { Check, Search, UserRoundCheck, X } from "lucide-react"
@@ -34,6 +36,7 @@ import {
   FieldSet,
 } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { Textarea } from "@/components/ui/textarea"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
@@ -45,6 +48,7 @@ import { approveAccountAction, declineAccountAction } from "@/server/actions/acc
 import type { AccountRequests as Data } from "@/server/queries/accounts"
 
 type Request = Data["requests"][number]
+type AgeCheck = "sixteenOrOlder" | "guardianConsent"
 
 const initialsOf = (name: string) =>
   name
@@ -135,6 +139,156 @@ function ParentApproval({
   )
 }
 
+/** The member record with exactly the registered name, if there is one and only one without an account. */
+function suggestedMember(request: Request, members: Data["members"]): string {
+  const same = members.filter((m) => m.name.toLowerCase() === request.name.toLowerCase())
+  return same.length === 1 && !same[0].hasAccount ? same[0].id : ""
+}
+
+function MemberApproval({
+  request,
+  candidates,
+  personId,
+  onPersonChange,
+  ageCheck,
+  onAgeCheckChange,
+  note,
+  onNoteChange,
+  errors,
+}: {
+  request: Request
+  candidates: Data["members"]
+  personId: string
+  onPersonChange: (id: string) => void
+  ageCheck: AgeCheck | null
+  onAgeCheckChange: (value: AgeCheck) => void
+  note: string
+  onNoteChange: (value: string) => void
+  errors: Record<string, string | undefined>
+}) {
+  const t = useTranslations("accountRequests.approve")
+  const noteId = useId()
+  const [query, setQuery] = useState(request.name)
+  const q = query.trim()
+  const sameName = candidates.filter((c) => c.name.toLowerCase() === request.name.toLowerCase())
+  const visible = useMemo(() => {
+    const matching = q
+      ? candidates.filter((c) => {
+          const [firstName = "", ...rest] = c.name.split(" ")
+          return (
+            matchesQuery({ firstName, lastName: rest.join(" "), displayName: c.displayName }, q) ||
+            c.groups.some((g) => g.toLowerCase().includes(q.toLowerCase()))
+          )
+        })
+      : candidates.filter((c) => c.id === personId)
+    return matching.slice(0, 30)
+  }, [candidates, q, personId])
+  return (
+    <FieldGroup>
+      <FieldSet data-invalid={errors.personId ? true : undefined}>
+        <FieldLegend variant="label">{t("memberRecord")}</FieldLegend>
+        <FieldDescription>
+          {sameName.length > 1
+            ? t("sameName", { count: sameName.length, name: request.name })
+            : t("memberRecordHint", { name: request.name })}
+        </FieldDescription>
+        <InputGroup>
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
+            aria-label={t("findMember")}
+            placeholder={t("findMember")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </InputGroup>
+        <RadioGroup
+          value={personId}
+          onValueChange={onPersonChange}
+          className="flex max-h-56 flex-col gap-0 overflow-y-auto border"
+          aria-label={t("memberRecord")}
+        >
+          {visible.length === 0 ? (
+            <p className="p-3 text-sm text-muted-foreground">
+              {q ? t("noMemberMatches") : t("searchMember")}
+            </p>
+          ) : (
+            visible.map((c) => {
+              const id = `member-${request.id}-${c.id}`
+              return (
+                <div
+                  key={c.id}
+                  className="flex items-center gap-3 border-b px-3 py-2 last:border-b-0"
+                >
+                  <RadioGroupItem id={id} value={c.id} disabled={c.hasAccount} />
+                  <label
+                    htmlFor={id}
+                    className={cn(
+                      "flex min-w-0 flex-1 cursor-pointer flex-col text-sm",
+                      c.hasAccount && "cursor-not-allowed opacity-60"
+                    )}
+                  >
+                    <span className="truncate">{c.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {[
+                        c.groups.length > 0 ? c.groups.join(", ") : t("noGroup"),
+                        c.hasAccount ? t("hasAccount") : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </label>
+                </div>
+              )
+            })
+          )}
+        </RadioGroup>
+        {errors.personId ? <FieldError>{errors.personId}</FieldError> : null}
+      </FieldSet>
+      <FieldSet data-invalid={errors.ageCheck ? true : undefined}>
+        <FieldLegend variant="label">{t("age")}</FieldLegend>
+        <FieldDescription>{t("ageHint")}</FieldDescription>
+        <RadioGroup
+          value={ageCheck ?? ""}
+          onValueChange={(v) => onAgeCheckChange(v as AgeCheck)}
+          className="grid gap-2"
+        >
+          {(["sixteenOrOlder", "guardianConsent"] as const).map((value) => (
+            <FieldLabel
+              key={value}
+              className={cn(
+                "flex w-full cursor-pointer items-start gap-3 border p-3 text-sm font-normal tracking-normal normal-case",
+                ageCheck === value && "border-primary bg-primary/5"
+              )}
+            >
+              <RadioGroupItem value={value} className="mt-0.5" />
+              <span>{t(`ageCheck.${value}`)}</span>
+            </FieldLabel>
+          ))}
+        </RadioGroup>
+        {errors.ageCheck ? <FieldError>{errors.ageCheck}</FieldError> : null}
+      </FieldSet>
+      {ageCheck === "guardianConsent" ? (
+        <Field data-invalid={errors.guardianConsentNote ? true : undefined}>
+          <FieldLabel htmlFor={noteId}>{t("consentNote")}</FieldLabel>
+          <Textarea
+            id={noteId}
+            rows={2}
+            dir="auto"
+            value={note}
+            placeholder={t("consentNotePlaceholder")}
+            onChange={(e) => onNoteChange(e.target.value)}
+          />
+          {errors.guardianConsentNote ? (
+            <FieldError>{errors.guardianConsentNote}</FieldError>
+          ) : null}
+        </Field>
+      ) : null}
+    </FieldGroup>
+  )
+}
+
 function ApproveDialog({
   request,
   data,
@@ -151,6 +305,9 @@ function ApproveDialog({
   const tc = useTranslations("common")
   const ids = { service: useId(), stage: useId() }
   const [childIds, setChildIds] = useState(() => suggestedChildren(request, data.children))
+  const [personId, setPersonId] = useState(() => suggestedMember(request, data.members))
+  const [ageCheck, setAgeCheck] = useState<AgeCheck | null>(null)
+  const [note, setNote] = useState("")
   const [role, setRole] = useState<"servant" | "service_leader">("servant")
   const [serviceId, setServiceId] = useState(request.service?.id ?? "")
   const [stageId, setStageId] = useState("")
@@ -164,15 +321,21 @@ function ApproveDialog({
         <DialogHeader>
           <DialogTitle>{t("title", { name: request.name })}</DialogTitle>
           <DialogDescription>
-            {request.as === "parent" ? t("parentDescription") : t("servantDescription")}
+            {request.as === "parent"
+              ? t("parentDescription")
+              : request.as === "member"
+                ? t("memberDescription")
+                : t("servantDescription")}
           </DialogDescription>
         </DialogHeader>
-        <blockquote
-          dir="auto"
-          className="border-s-2 ps-3 text-sm whitespace-pre-line text-muted-foreground"
-        >
-          {request.details}
-        </blockquote>
+        {request.details ? (
+          <blockquote
+            dir="auto"
+            className="border-s-2 ps-3 text-sm whitespace-pre-line text-muted-foreground"
+          >
+            {request.details}
+          </blockquote>
+        ) : null}
         <form
           id={`approve-${request.id}`}
           onSubmit={(e) => {
@@ -181,12 +344,19 @@ function ApproveDialog({
               request.id,
               request.as === "parent"
                 ? { as: "parent", childIds }
-                : {
-                    as: "servant",
-                    role,
-                    serviceId,
-                    stageId: role === "servant" && stageId ? stageId : null,
-                  }
+                : request.as === "member"
+                  ? {
+                      as: "member",
+                      personId: personId || null,
+                      ageCheck,
+                      guardianConsentNote: ageCheck === "guardianConsent" ? note : null,
+                    }
+                  : {
+                      as: "servant",
+                      role,
+                      serviceId,
+                      stageId: role === "servant" && stageId ? stageId : null,
+                    }
             )
           }}
         >
@@ -197,6 +367,18 @@ function ApproveDialog({
               selected={childIds}
               onChange={setChildIds}
               error={errors.childIds}
+            />
+          ) : request.as === "member" ? (
+            <MemberApproval
+              request={request}
+              candidates={data.members}
+              personId={personId}
+              onPersonChange={setPersonId}
+              ageCheck={ageCheck}
+              onAgeCheckChange={setAgeCheck}
+              note={note}
+              onNoteChange={setNote}
+              errors={errors}
             />
           ) : (
             <FieldGroup>
@@ -277,7 +459,12 @@ function ApproveDialog({
             type="submit"
             form={`approve-${request.id}`}
             disabled={
-              approve.pending || (request.as === "parent" ? childIds.length === 0 : !serviceId)
+              approve.pending ||
+              (request.as === "parent"
+                ? childIds.length === 0
+                : request.as === "member"
+                  ? !personId || !ageCheck
+                  : !serviceId)
             }
           >
             {approve.pending ? <Spinner data-icon="inline-start" /> : null}
@@ -316,7 +503,11 @@ export function AccountRequests({ data }: { data: Data }) {
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="font-medium">{r.name}</span>
                   <Badge variant="outline">
-                    {r.as === "parent" ? t("asParent") : t("asServant")}
+                    {r.as === "parent"
+                      ? t("asParent")
+                      : r.as === "member"
+                        ? t("asMember")
+                        : t("asServant")}
                   </Badge>
                   {r.service ? (
                     <span className="text-xs text-muted-foreground">{r.service.name}</span>
@@ -327,12 +518,14 @@ export function AccountRequests({ data }: { data: Data }) {
                   {t("registered", { when: f.atLabel(r.registeredAt, data.today) })}
                   {r.language ? <> · {LOCALE_NAMES[r.language]}</> : null}
                 </p>
-                <blockquote
-                  dir="auto"
-                  className="max-w-prose border-s-2 ps-3 text-sm whitespace-pre-line"
-                >
-                  {r.details}
-                </blockquote>
+                {r.details ? (
+                  <blockquote
+                    dir="auto"
+                    className="max-w-prose border-s-2 ps-3 text-sm whitespace-pre-line"
+                  >
+                    {r.details}
+                  </blockquote>
+                ) : null}
               </div>
             </div>
             <div className="flex shrink-0 gap-2 md:pt-0.5">

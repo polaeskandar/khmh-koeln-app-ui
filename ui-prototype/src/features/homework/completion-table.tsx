@@ -2,8 +2,9 @@
 
 /**
  * Who reported a homework task as done (S06). Alphabetical on purpose: no
- * ranking, no scores. "Reported done" is what a parent ticked, not verified
- * learning, and a report after the due date is just that, not a penalty.
+ * ranking, no scores. "Reported done" is what a parent, or a member with an
+ * account of their own, ticked off, not verified learning, and a report after
+ * the due date is just that, not a penalty.
  */
 import { useMemo, useState } from "react"
 import { CircleCheck, CircleDashed, Search, UserRoundX, X } from "lucide-react"
@@ -33,6 +34,10 @@ import type { HomeworkProgress } from "@/server/queries/learning"
 
 type Filter = "all" | "done" | "open" | "no-account"
 
+/** Nobody can report it in the app: no parent account and no account of their own. */
+const withoutAccount = (r: HomeworkProgress["rows"][number]) =>
+  r.parentAccounts === 0 && !r.ownAccount
+
 export function CompletionTable({
   rows,
   today,
@@ -52,7 +57,7 @@ export function CompletionTable({
     all: rows.length,
     done: rows.filter((r) => r.status === "completed").length,
     open: rows.filter((r) => r.status === "not-completed").length,
-    "no-account": rows.filter((r) => r.parentAccounts === 0).length,
+    "no-account": rows.filter(withoutAccount).length,
   }
   const visible = useMemo(
     () =>
@@ -61,7 +66,7 @@ export function CompletionTable({
           (filter === "all" ||
             (filter === "done" && r.status === "completed") ||
             (filter === "open" && r.status === "not-completed") ||
-            (filter === "no-account" && r.parentAccounts === 0)) &&
+            (filter === "no-account" && withoutAccount(r))) &&
           (query.trim() === "" || matchesQuery(r.person, query))
       ),
     [rows, filter, query]
@@ -114,7 +119,7 @@ export function CompletionTable({
             <TableRow className="hover:bg-transparent">
               <TableHead className="ps-4">{t("completion.child")}</TableHead>
               <TableHead className="w-72">{t("completion.reported")}</TableHead>
-              <TableHead className="w-48 pe-4">{t("completion.parentAccounts")}</TableHead>
+              <TableHead className="w-48 pe-4">{t("completion.accounts")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -153,7 +158,9 @@ export function CompletionTable({
                         <span className="text-xs text-muted-foreground">
                           {[
                             f.instantLabel(r.completedAt!, today),
-                            r.completedBy,
+                            r.completedBy && r.reportedBySelf
+                              ? t("completion.bySelf", { name: r.completedBy })
+                              : r.completedBy,
                             r.late ? t("completion.afterDue") : null,
                           ]
                             .filter(Boolean)
@@ -167,8 +174,13 @@ export function CompletionTable({
                     )}
                   </TableCell>
                   <TableCell className="pe-4 text-sm">
-                    {r.parentAccounts > 0 ? (
-                      tn("parents", { count: r.parentAccounts })
+                    {!withoutAccount(r) ? (
+                      [
+                        r.ownAccount ? t("completion.ownAccount") : null,
+                        r.parentAccounts > 0 ? tn("parents", { count: r.parentAccounts }) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")
                     ) : (
                       <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                         <UserRoundX className="size-3.5" aria-hidden="true" />

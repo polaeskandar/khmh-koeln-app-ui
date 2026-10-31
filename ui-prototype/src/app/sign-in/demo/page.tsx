@@ -37,29 +37,41 @@ function Account({ p }: { p: ViewerInfo }) {
 
 async function Accounts() {
   const [t, accounts] = await Promise.all([getTranslations("auth.demo"), getDemoAccounts()])
-  const groups = [
-    { title: t("staff"), hint: t("staffHint"), items: accounts.filter((p) => p.isStaff) },
-    {
-      title: t("parents"),
-      hint: t("parentsHint"),
-      items: accounts.filter((p) => !p.isStaff && p.isParent),
-    },
-  ]
+  const staff = {
+    title: t("staff"),
+    hint: t("staffHint"),
+    items: accounts.filter((p) => p.isStaff),
+  }
+  const parents = {
+    title: t("parents"),
+    hint: t("parentsHint"),
+    items: accounts.filter((p) => !p.isStaff && p.isParent),
+  }
+  const members = {
+    title: t("members"),
+    hint: t("membersHint"),
+    items: accounts.filter((p) => !p.isStaff && !p.isParent && p.isMember),
+  }
+  const group = (g: typeof staff) => (
+    <section key={g.title} className="flex flex-col gap-3" aria-label={g.title}>
+      <div className="flex flex-col gap-0.5">
+        <h2 className="font-heading text-base font-semibold tracking-tight">{g.title}</h2>
+        <p className="text-xs text-muted-foreground">{g.hint}</p>
+      </div>
+      <ul className="flex flex-col gap-2">
+        {g.items.map((p) => (
+          <Account key={p.id} p={p} />
+        ))}
+      </ul>
+    </section>
+  )
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      {groups.map((g) => (
-        <section key={g.title} className="flex flex-col gap-3" aria-label={g.title}>
-          <div className="flex flex-col gap-0.5">
-            <h2 className="font-heading text-base font-semibold tracking-tight">{g.title}</h2>
-            <p className="text-xs text-muted-foreground">{g.hint}</p>
-          </div>
-          <ul className="flex flex-col gap-2">
-            {g.items.map((p) => (
-              <Account key={p.id} p={p} />
-            ))}
-          </ul>
-        </section>
-      ))}
+      {group(staff)}
+      <div className="flex flex-col gap-8">
+        {group(parents)}
+        {members.items.length > 0 ? group(members) : null}
+      </div>
     </div>
   )
 }

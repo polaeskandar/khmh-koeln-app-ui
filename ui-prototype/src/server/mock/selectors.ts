@@ -225,6 +225,26 @@ export function currentStagesOf(
     .map((m) => ({ serviceId: m.serviceId, stageId: m.stageId! }))
 }
 
+/**
+ * The names of the groups someone is in today: the stage, or the service for its own roster
+ * (Youth Meeting), in active services and stages.
+ */
+export function currentGroupNames(s: State, personId: Uuid, date: LocalDate): string[] {
+  return s.memberships
+    .filter((m) => m.personId === personId && isCurrentOn(m, date))
+    .flatMap((m) => {
+      const service = serviceOf(s, m.serviceId)
+      const stage = stageOf(s, m.stageId)
+      if (!service || isArchived(service) || (stage && isArchived(stage))) return []
+      return [stage?.name ?? service.name]
+    })
+}
+
+/** The member's own account, if the office linked one to the record and it can be used. */
+export function ownAccountOf(s: State, personId: Uuid): User | undefined {
+  return s.users.find((u) => u.personId === personId && u.approvedAt !== null && !u.disabledAt)
+}
+
 /** Parent accounts linked to a child (approved). */
 export function guardiansOf(s: State, personId: Uuid): User[] {
   const ids = new Set(

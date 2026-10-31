@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table"
 import { AccountRequests } from "@/features/settings/account-requests"
 import { DataProtectionSummary } from "@/features/settings/data-protection-summary"
+import { MemberAccounts } from "@/features/settings/member-accounts"
 import { ParentAccess } from "@/features/settings/parent-access"
 import { ResetDemoButton } from "@/features/settings/reset-demo"
 import { UsersRoles } from "@/features/settings/users-roles"
@@ -72,6 +73,14 @@ export default async function SettingsPage() {
             <ParentAccess access={d.parentAccess} today={d.today} />
           ) : (
             <NoAccess title={t("parents.adminsOnly")}>{t("parents.adminsOnlyHint")}</NoAccess>
+          )}
+        </Section>
+
+        <Section id="members" title={t("members.title")} description={t("members.description")}>
+          {d.memberAccounts ? (
+            <MemberAccounts accounts={d.memberAccounts} today={d.today} />
+          ) : (
+            <NoAccess title={t("members.adminsOnly")}>{t("members.adminsOnlyHint")}</NoAccess>
           )}
         </Section>
 

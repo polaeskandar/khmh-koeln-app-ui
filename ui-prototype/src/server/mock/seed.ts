@@ -545,6 +545,8 @@ export function seed(): State {
     privacyVersion: PRIVACY_VERSION,
     approvedAt: toInstant(createdMs),
     approvedBy: user.mariam?.id ?? null,
+    ageCheck: null,
+    guardianConsentNote: null,
     createdAt: toInstant(createdMs),
   })
   const addUser = (key: UserKey, roles: RoleSpec[], disabled?: LocalDate) => {
@@ -1569,6 +1571,8 @@ export function seed(): State {
       privacyVersion: PRIVACY_VERSION,
       approvedAt: null,
       approvedBy: null,
+      ageCheck: null,
+      guardianConsentNote: null,
       disabledAt: null,
       createdAt: toInstant(ms),
     }
@@ -1660,6 +1664,137 @@ export function seed(): State {
     closedAt: null,
     closedBy: null,
   })
+
+  // --------------------------------------------------------- member accounts
+  // Added after everything else, so the random ids and names above stay as they were.
+  //
+  // Members can have an account of their own: it is linked to their member record and shows
+  // their groups, the next meetings and their homework. Nevine (Bible Study, Coptic Language
+  // Course › Level 1) registered as a member in October, and Mariam linked the account to her
+  // record. Hoda, Nabil, Samir and Nadia are parents whose accounts the office linked to their
+  // own records, so they see their own groups too.
+  const nevine = adults[9]
+  const nevineRegistered = at("2026-10-19", "20:40")
+  state.users.push({
+    id: id(nevineRegistered),
+    email: "nevine.boulos@example.org",
+    displayName: `${nevine.firstName} ${nevine.lastName}`,
+    personId: nevine.id,
+    roles: [],
+    passwordHash: demoPasswordHash(),
+    language: null,
+    registration: null,
+    privacyAcceptedAt: toInstant(nevineRegistered),
+    privacyVersion: PRIVACY_VERSION,
+    approvedAt: toInstant(at("2026-10-20", "09:15")),
+    approvedBy: user.mariam.id,
+    ageCheck: "sixteenOrOlder",
+    guardianConsentNote: null,
+    disabledAt: null,
+    createdAt: toInstant(nevineRegistered),
+  })
+  const nevineAccount = state.users[state.users.length - 1]
+
+  // Coptic Language Course › Level 1 (Mondays): adults and children learn together, so homework
+  // goes to members with their own account as much as to parents.
+  const copticLesson = (
+    teachingDate: LocalDate,
+    title: string,
+    status: Lesson["status"],
+    spec: LessonSpec,
+    created: [LocalDate, LocalTime]
+  ): Lesson => {
+    const createdMs = at(...created)
+    const lesson: Lesson = {
+      id: id(createdMs),
+      serviceId: service.coptic.id,
+      stageId: stage.level1.id,
+      scheduleId: schedule["coptic-1"].id,
+      sessionId: null,
+      teachingDate,
+      title,
+      summary: spec.summary ?? null,
+      passage: spec.passage ?? null,
+      objectives: spec.objectives ?? null,
+      teachingPoints: spec.teachingPoints ?? null,
+      memoryVerse: spec.memoryVerse ?? null,
+      activities: spec.activities ?? null,
+      materials: spec.materials ?? [],
+      notes: spec.notes ?? null,
+      status,
+      responsibleId: user.irene.id,
+      collaboratorIds: [user.youssef.id],
+      completedAt: status === "completed" ? toInstant(at(teachingDate, "19:10")) : null,
+      archivedAt: null,
+      createdAt: toInstant(createdMs),
+      updatedAt: toInstant(createdMs + 86_400_000),
+    }
+    state.lessons.push(lesson)
+    return lesson
+  }
+  const greeting = copticLesson(
+    "2026-10-26",
+    "The Easter greeting",
+    "completed",
+    {
+      summary: "How Copts greet each other from Easter to Pentecost, and how to answer.",
+      passage: "Luke 24:1–12",
+      memoryVerse: "Pikhristos aftonf! Khen oumethmi aftonf! (Christ is risen! Truly He is risen!)",
+      objectives: "Everyone can say the Easter greeting and answer it.",
+      activities: "Greet each other around the table, then read the greeting from the board.",
+      materials: [{ label: "Greeting card to take home", url: null }],
+    },
+    ["2026-10-22", "21:00"]
+  )
+  const sayGreeting = addHomework(
+    greeting,
+    "Say the Easter greeting at home",
+    "Say the greeting with someone at home every day this week: one says “Pikhristos aftonf!”, the other answers “Khen oumethmi aftonf!”. It takes a minute.",
+    "2026-11-02",
+    "irene",
+    ["2026-10-26", "19:20"]
+  )
+  complete(sayGreeting, nevine, nevineAccount, at("2026-10-29", "20:15"))
+  complete(sayGreeting, adults[1], user.hoda, at("2026-10-31", "10:05"))
+  const letters = copticLesson(
+    "2026-11-02",
+    "The first eight letters",
+    "completed",
+    {
+      summary: "Alpha to Eta: how the letters look and how they sound.",
+      objectives: "Recognise, say and write the first eight letters of the Coptic alphabet.",
+      activities: "Trace each letter, then find it in a line of the Agpeya.",
+      materials: [{ label: "Worksheet: letters 1 to 8", url: null }],
+    },
+    ["2026-10-29", "20:30"]
+  )
+  addHomework(
+    letters,
+    "Write the first eight letters",
+    "Write each of the first eight letters three times and say its name aloud. It takes about 15 minutes. Bring the sheet next Monday.",
+    "2026-11-09",
+    "irene",
+    ["2026-11-02", "19:25"],
+    [{ label: "The Coptic alphabet (chart)", url: "https://example.org/coptic-alphabet" }]
+  )
+  const words = copticLesson(
+    "2026-11-09",
+    "Reading short words",
+    "ready",
+    {
+      summary: "Putting the first letters together: reading short words from the liturgy.",
+      objectives: "Read five short words aloud.",
+    },
+    ["2026-11-05", "21:10"]
+  )
+  addHomework(
+    words,
+    "Read five short words",
+    "Read the five words on the card aloud, twice a day. Tick it off when you can read them without help.",
+    "2026-11-16",
+    "irene",
+    null
+  )
 
   return state
 }

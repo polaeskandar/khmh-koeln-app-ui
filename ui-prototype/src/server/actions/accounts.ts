@@ -3,7 +3,7 @@
 import { z } from "zod"
 
 import { msg } from "@/i18n/message"
-import { approveAccount, declineAccount } from "@/server/mock/commands/accounts"
+import { approveAccount, declineAccount, unlinkMember } from "@/server/mock/commands/accounts"
 
 import { id, optionalId, run } from "./run"
 
@@ -15,9 +15,15 @@ const approval = z.discriminatedUnion("as", [
     serviceId: id,
     stageId: optionalId.optional(),
   }),
+  z.object({
+    as: z.literal("member"),
+    personId: optionalId,
+    ageCheck: z.enum(["sixteenOrOlder", "guardianConsent"]).nullable(),
+    guardianConsentNote: z.string().max(1000).nullable().optional(),
+  }),
 ])
 
-/** Approves a registration: links the children or gives the role. */
+/** Approves a registration: links the children, gives the role or links the member record. */
 export async function approveAccountAction(userId: string, input: z.input<typeof approval>) {
   return run(
     ({ state, viewer }) =>
@@ -31,5 +37,13 @@ export async function declineAccountAction(userId: string) {
   return run(
     ({ state, viewer }) => declineAccount(state, viewer, id.parse(userId)).displayName,
     (name) => msg("toast.accountDeclined", { name })
+  )
+}
+
+/** Removes the link between a member account and its member record (administrators). */
+export async function unlinkMemberAction(userId: string) {
+  return run(
+    ({ state, viewer }) => unlinkMember(state, viewer, id.parse(userId)).displayName,
+    (name) => msg("toast.memberUnlinked", { name })
   )
 }

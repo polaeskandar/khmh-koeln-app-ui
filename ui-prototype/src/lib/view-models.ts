@@ -157,6 +157,20 @@ export type ViewerInfo = {
   isStaff: boolean
   /** Has approved access to at least one child in the parent portal. */
   isParent: boolean
+  /** The account is linked to the person's own member record: the member portal shows their groups. */
+  isMember: boolean
+  /**
+   * The groups the linked record is in today. Staff and parents get a link to the member portal
+   * only when there is at least one: a servant's own record is often in no group.
+   */
+  memberGroups: number
+}
+
+/** Does the account have the member portal? Its start page for members, a link for others in a group. */
+export function hasMemberPortal(
+  v: Pick<ViewerInfo, "isMember" | "memberGroups" | "isStaff" | "isParent">
+) {
+  return v.isMember && (v.memberGroups > 0 || (!v.isStaff && !v.isParent))
 }
 
 /** Chronological, then by service, then in the stages' display order. */

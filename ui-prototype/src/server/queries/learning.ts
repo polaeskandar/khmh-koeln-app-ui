@@ -12,6 +12,7 @@ import {
   homeworkOf,
   isArchived,
   lessonOf,
+  ownAccountOf,
   rosterOn,
   scheduleOf,
   serviceOf,
@@ -84,27 +85,30 @@ export type HomeworkCounts = {
   completed: number
   notCompleted: number
   late: number
-  withoutParentAccount: number
+  /** Not reported yet, and nobody can report it in the app: no parent account and no own account. */
+  withoutAccount: number
 }
 
 function homeworkCounts(s: State, hw: HomeworkAssignment, date: LocalDate): HomeworkCounts {
   const audience = homeworkAudience(s, hw, date).filter((a) => a.inStage)
   let completed = 0
   let late = 0
-  let withoutParentAccount = 0
+  let withoutAccount = 0
   for (const { person } of audience) {
     const c = currentCompletion(s, hw.id, person.id)
     if (c) {
       completed++
       if (hw.dueDate && localDateOf(c.completedAt) > hw.dueDate) late++
-    } else if (guardiansOf(s, person.id).length === 0) withoutParentAccount++
+    } else if (guardiansOf(s, person.id).length === 0 && !ownAccountOf(s, person.id)) {
+      withoutAccount++
+    }
   }
   return {
     assigned: audience.length,
     completed,
     notCompleted: audience.length - completed,
     late,
-    withoutParentAccount,
+    withoutAccount,
   }
 }
 
@@ -354,7 +358,10 @@ export async function getHomeworkEditor(
 
 export type HomeworkEditor = NonNullable<Awaited<ReturnType<typeof getHomeworkEditor>>>
 
-/** S06: who reported the homework as completed. Parent-reported, not verified learning. */
+/**
+ * S06: who reported the homework as completed. Reported by a parent or by the member's own
+ * account, not verified learning.
+ */
 export async function getHomeworkProgress(
   ctx: Context,
   serviceId: Uuid,
@@ -380,8 +387,12 @@ export async function getHomeworkProgress(
         status: c ? ("completed" as const) : ("not-completed" as const),
         completedAt: c?.completedAt ?? null,
         completedBy: by ? by.displayName : null,
+        /** Reported with the member's own account rather than by a parent. */
+        reportedBySelf: !!by && by.personId === person.id,
         late: !!(c && hw.dueDate && localDateOf(c.completedAt) > hw.dueDate),
         parentAccounts: parents.length,
+        /** The member has an account of their own and can report it themselves. */
+        ownAccount: !!ownAccountOf(s, person.id),
       }
     })
     .sort(

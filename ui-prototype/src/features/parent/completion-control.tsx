@@ -1,7 +1,8 @@
 "use client"
 
 /**
- * Mark a homework task as done for one child, or undo it (P04 → P05).
+ * Mark a homework task as done for one child, or undo it (P04 → P05). In the
+ * member portal (`self`), members tick off their own homework the same way.
  * The tick shows at once (optimistic) and is confirmed by the server, which
  * treats a second tap as the same report. Undo is always possible and keeps
  * the history. Wording stays plain: no scores, no "late".
@@ -27,16 +28,20 @@ export function CompletionControl({
   homeworkId,
   childId,
   childName,
+  self = false,
   today,
   initial,
 }: {
   homeworkId: string
   childId: string
   childName: string
+  /** The member reports their own homework: "Tap when you have done it." */
+  self?: boolean
   today: LocalDate
   initial: Done
 }) {
   const t = useTranslations("parent.completion")
+  const tm = useTranslations("member.completion")
   const f = useFormat()
   const [state, setState] = useOptimistic(initial)
 
@@ -52,7 +57,7 @@ export function CompletionControl({
       setState({ done: false, completedAt: null, completedByYou: false, completedBy: null })
       const r = await undoCompletionAction(homeworkId, childId)
       if (!r.ok) toast.error(r.problem.detail ?? r.problem.title)
-      else toast(t("undone", { name: childName }))
+      else toast(self ? tm("undone") : t("undone", { name: childName }))
     })
 
   if (!state.done) {
@@ -62,7 +67,9 @@ export function CompletionControl({
           <Check data-icon="inline-start" />
           {t("markDone")}
         </Button>
-        <p className="text-xs text-muted-foreground">{t("hint", { name: childName })}</p>
+        <p className="text-xs text-muted-foreground">
+          {self ? tm("hint") : t("hint", { name: childName })}
+        </p>
       </div>
     )
   }

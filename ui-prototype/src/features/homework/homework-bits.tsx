@@ -103,9 +103,9 @@ export function HomeworkListItem({
         {hw.counts ? (
           <span className="flex flex-1 flex-col gap-1">
             <CompletionMeter completed={hw.counts.completed} assigned={hw.counts.assigned} />
-            {hw.counts.withoutParentAccount > 0 ? (
+            {hw.counts.withoutAccount > 0 ? (
               <span className="text-xs text-muted-foreground">
-                {t("childrenWithoutAccount", { count: hw.counts.withoutParentAccount })}
+                {t("childrenWithoutAccount", { count: hw.counts.withoutAccount })}
               </span>
             ) : null}
           </span>

@@ -5,8 +5,9 @@ Screenshots of the clickable prototype in [`../ui-prototype`](../ui-prototype), 
 Sunday 8 November 2026 at 12:08. All names and data are fictional.
 
 Desktop screenshots are 1440 px wide at 2×, phone screenshots 390 × 844 at 3×. `admin/` holds the staff app,
-`parent/` the parent portal, `auth/` the pages before signing in, `languages/` the main screens in German and
-Arabic (right to left), and `dark/` a few screens in dark mode. To regenerate them, see the prototype's README.
+`parent/` the parent portal, `member/` the member portal (planned after the launch), `auth/` the pages before
+signing in, `languages/` the main screens in German and Arabic (right to left), and `dark/` a few screens in
+dark mode. To regenerate them, see the prototype's README.
 
 ## Staff app
 
@@ -25,8 +26,9 @@ only administrators create, archive and delete services, while a service leader 
 | 08 Attendance summary | [08-attendance-summary](admin/08-attendance-summary.png) | `/attendance/:session/summary` |
 | 09 Members | [09-member-management](admin/09-member-management.png) | `/members` |
 | 10 Attendance on the phone | [10-mobile-attendance](admin/10-mobile-attendance.png) | `/attendance/:session` at phone width |
-| Settings: account requests | [account-requests](admin/account-requests.png), [approve a parent](admin/dialog-approve-account.png) | `/settings` |
+| Settings: account requests | [account-requests](admin/account-requests.png), [approve a parent](admin/dialog-approve-account.png), [approve a member](admin/dialog-approve-member.png) | `/settings` |
 | Settings: parent access | [parent-access](admin/parent-access.png) | `/settings` |
+| Settings: member accounts | [member-accounts](admin/member-accounts.png), [remove a link](admin/dialog-remove-member-link.png) | `/settings` |
 | Data protection requests | [data-requests](admin/data-requests.png), [record a request](admin/dialog-record-data-request.png) | `/settings/data-requests` |
 | A request to erase data | [review](admin/data-request-review.png), [erase](admin/dialog-erase-data.png), [done](admin/data-request-done.png) | `/settings/data-requests/:request` |
 | Your account | [account](admin/account.png) | `/account` |
@@ -35,7 +37,7 @@ only administrators create, archive and delete services, while a service leader 
 | S03 Lesson | [lesson-details](admin/lesson-details.png) | `…/lessons/:lesson` |
 | S04 Homework | [homework-management](admin/homework-management.png), [actions](admin/menu-homework-actions.png), [archive](admin/dialog-archive-homework.png), [restore](admin/dialog-restore-homework.png), [delete a draft](admin/dialog-delete-homework.png) | `…/stages/:stage/homework` |
 | S05 Homework editor | [homework-editor](admin/homework-editor.png), [edit](admin/homework-edit.png) | `…/homework/new?lesson=:lesson`, `…/homework/:homework/edit` |
-| S06 Homework progress | [homework-completion-overview](admin/homework-completion-overview.png) | `…/homework/:homework` |
+| S06 Homework progress | [homework-completion-overview](admin/homework-completion-overview.png), [members with their own account](admin/homework-progress-own-accounts.png) | `…/homework/:homework` |
 
 ## Parent portal
 
@@ -48,16 +50,33 @@ only administrators create, archive and delete services, while a service leader 
 | P05 Task reported done | [homework-completed](parent/homework-completed.png) | the same page after "Mark as done" |
 | P06 Home on the phone | [parent-dashboard-mobile](parent/parent-dashboard-mobile.png) | `/parent` at phone width |
 | P07 Account and data | [account](parent/account.png) | `/parent/account` |
+| P08 Menu with "My groups" | [menu-my-groups](parent/menu-my-groups.png) | the account menu, for a parent whose own record is in a group |
+
+## Member portal
+
+For people on a roster with an account of their own: a youth, an adult in the Coptic course, an older child
+whose parents agreed. An administrator links the account to the member's record. Members see their groups,
+when and where they meet, their servants, the last lesson's passage and memory verse, and the homework of
+their stages, which they tick off themselves. Planned after the launch.
+
+| Screen | Screenshot | Route in the prototype |
+| --- | --- | --- |
+| M01 Home | [member-home](member/member-home.png), [a youth without homework](member/member-home-youth.png), [a parent in the Coptic course](member/member-home-parent.png) | `/member` |
+| M02 Homework | [homework-list](member/homework-list.png) | `/member/homework` |
+| M03 Homework task | [homework-details](member/homework-details.png) | `/member/homework/:homework` |
+| M04 Task reported done | [homework-completed](member/homework-completed.png) | the same page after "Mark as done" |
+| M05 Home on the phone | [member-home-mobile](member/member-home-mobile.png) | `/member` at phone width |
+| M06 Account and data | [account](member/account.png) | `/member/account` |
 
 ## Signing in and registering
 
-New accounts wait for an administrator: parents are linked to their children, servants get a role. Until
-then the email and password only lead to the waiting page.
+New accounts wait for an administrator: parents are linked to their children, members to their own record,
+servants get a role. Until then the email and password only lead to the waiting page.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
 | Sign in | [01-sign-in](auth/01-sign-in.png) | `/sign-in` (demo accounts: `/sign-in/demo`) |
-| Register | [02-register](auth/02-register.png) | `/register` |
+| Register | [02-register](auth/02-register.png), [as a member](auth/07-register-as-member.png) | `/register` |
 | Registered | [03-registered](auth/03-registered.png) | `/register/done` |
 | Waiting for approval | [04-waiting-for-approval](auth/04-waiting-for-approval.png) | `/sign-in/pending` |
 | Forgot password | [05-forgot-password](auth/05-forgot-password.png) | `/forgot-password` |
@@ -66,7 +85,7 @@ then the email and password only lead to the waiting page.
 ## German and Arabic
 
 The same screens in German (`de-…`) and Arabic (`ar-…`, right to left): dashboard, meetings, a new schedule,
-attendance on desktop and phone, the parent portal, settings and sign-in.
+attendance on desktop and phone, the parent portal, settings, sign-in and the member portal.
 
 | Screen | German | Arabic |
 | --- | --- | --- |
@@ -78,12 +97,13 @@ attendance on desktop and phone, the parent portal, settings and sign-in.
 | Parent portal | [de-06](languages/de-06-parent-dashboard.png) | [ar-06](languages/ar-06-parent-dashboard.png) |
 | Settings | [de-07](languages/de-07-settings.png) | [ar-07](languages/ar-07-settings.png) |
 | Sign in | [de-08](languages/de-08-sign-in.png) | [ar-08](languages/ar-08-sign-in.png) |
+| Member portal | [de-09](languages/de-09-member-home.png) | [ar-09](languages/ar-09-member-home.png) |
 
 ## Dark mode
 
 [Dashboard](dark/01-dashboard.png), [attendance](dark/02-attendance.png),
-[parent portal](dark/03-parent-dashboard.png), [parent portal in Arabic on the phone](dark/04-parent-dashboard-arabic-mobile.png)
-and [sign-in](dark/05-sign-in.png). Everyone chooses light, dark or "like the device" in the account menu.
+[parent portal](dark/03-parent-dashboard.png), [parent portal in Arabic on the phone](dark/04-parent-dashboard-arabic-mobile.png),
+[sign-in](dark/05-sign-in.png) and [member portal in Arabic on the phone](dark/06-member-home-arabic-mobile.png). Everyone chooses light, dark or "like the device" in the account menu.
 
 ## Earlier mockups
 
