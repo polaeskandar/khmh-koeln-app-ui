@@ -1,0 +1,258 @@
+{
+  "forbidden": [],
+  "checkFields": [],
+  "invalidRequest": [],
+  "conflict": [],
+  "tooManyRequests": [],
+  "internal": [],
+  "unavailable": [],
+  "auth.unauthenticated": [],
+  "auth.invalidCredentials": [],
+  "auth.pending": [],
+  "auth.disabled": [],
+  "auth.tooManyAttempts": [],
+  "auth.resetLinkInvalid": [],
+  "notFound.service": [],
+  "notFound.stage": [],
+  "notFound.person": [],
+  "notFound.membership": [],
+  "notFound.schedule": [],
+  "notFound.session": [],
+  "notFound.attendance": [],
+  "notFound.lesson": [],
+  "notFound.homework": [],
+  "notFound.user": [],
+  "notFound.guardian": [],
+  "notFound.request": [],
+  "notFound.route": [],
+  "validation.tooLong": [
+    "max"
+  ],
+  "validation.chooseDate": [],
+  "validation.invalidDate": [],
+  "validation.chooseTime": [],
+  "validation.invalidTime": [],
+  "validation.invalidType": [],
+  "validation.unexpectedField": [],
+  "validation.invalidRange": [
+    "max"
+  ],
+  "validation.birthDateInFuture": [],
+  "validation.addressIncomplete": [],
+  "services.adminOnlyCreate": [],
+  "services.adminOnlyArchive": [],
+  "services.adminOnlyRestore": [],
+  "services.adminOnlyDelete": [],
+  "services.nameRequired": [],
+  "services.nameTaken": [
+    "name"
+  ],
+  "services.nameTakenArchived": [
+    "name"
+  ],
+  "services.alreadyArchived": [
+    "name"
+  ],
+  "services.notArchived": [
+    "name"
+  ],
+  "services.takingAttendance": [
+    "name"
+  ],
+  "services.hasHistory": [
+    "name",
+    "count"
+  ],
+  "services.archivedNoStageChanges": [
+    "name"
+  ],
+  "stages.nameRequired": [],
+  "stages.nameTaken": [
+    "name"
+  ],
+  "stages.nameTakenArchived": [
+    "name"
+  ],
+  "stages.reorderStale": [],
+  "stages.alreadyArchived": [
+    "name"
+  ],
+  "stages.notArchived": [
+    "name"
+  ],
+  "stages.takingAttendance": [
+    "name"
+  ],
+  "stages.hasHistory": [
+    "name",
+    "count"
+  ],
+  "stages.hasMembers": [
+    "count",
+    "name"
+  ],
+  "meetings.chooseService": [],
+  "meetings.serviceArchived": [
+    "name"
+  ],
+  "meetings.chooseStage": [],
+  "meetings.stageArchived": [
+    "name"
+  ],
+  "meetings.scheduleNameRequired": [],
+  "meetings.endAfterStart": [],
+  "meetings.chooseRosterMode": [],
+  "meetings.serviceArchivedRestoreFirst": [
+    "name"
+  ],
+  "meetings.stageArchivedRestoreFirst": [
+    "name"
+  ],
+  "meetings.scheduleHasSessions": [
+    "count"
+  ],
+  "meetings.sessionCanceled": [],
+  "meetings.attendanceClosed": [],
+  "meetings.opensOnTheDay": [],
+  "meetings.onlyActiveCanClose": [],
+  "meetings.reopenLeadersOnly": [],
+  "meetings.onlyCompletedCanReopen": [],
+  "meetings.onlyScheduledCanCancel": [],
+  "meetings.noMeetingOnDate": [],
+  "meetings.scheduleInactive": [],
+  "meetings.dateInPast": [],
+  "recurrence.interval": [],
+  "recurrence.weekdays": [],
+  "recurrence.weekdayRange": [],
+  "recurrence.monthlyOneDay": [],
+  "recurrence.monthWeek": [],
+  "recurrence.monthWeekOnlyMonthly": [],
+  "recurrence.endBeforeStart": [],
+  "attendance.openFirst": [],
+  "attendance.closedReopen": [],
+  "attendance.personInactive": [
+    "name"
+  ],
+  "attendance.alreadyPresent": [
+    "name",
+    "time"
+  ],
+  "attendance.alreadyPresentBy": [
+    "name",
+    "time",
+    "by"
+  ],
+  "attendance.alreadyRemoved": [],
+  "people.firstNameRequired": [],
+  "people.lastNameRequired": [],
+  "people.editOutsideServices": [
+    "name"
+  ],
+  "people.addOutsideServices": [],
+  "people.chooseJoinService": [],
+  "people.duplicate": [
+    "count",
+    "name"
+  ],
+  "people.alreadyIn": [
+    "name",
+    "where"
+  ],
+  "people.membershipOutsideServices": [],
+  "people.membershipEnded": [],
+  "people.moveOutsideStages": [],
+  "roles.adminOnly": [],
+  "roles.chooseService": [],
+  "roles.alreadyHasRole": [
+    "name"
+  ],
+  "roles.ownAdminRole": [],
+  "roles.stageOnlyForServants": [],
+  "roles.lastAdministrator": [],
+  "roles.nameRequired": [],
+  "roles.unknown": [],
+  "materials.labelTooLong": [],
+  "materials.url": [],
+  "materials.tooMany": [],
+  "lessons.titleRequired": [],
+  "lessons.chooseMeeting": [],
+  "lessons.chooseDate": [],
+  "lessons.noMeetingThatDay": [
+    "name"
+  ],
+  "lessons.chooseWhen": [],
+  "lessons.meetingHasLesson": [
+    "title"
+  ],
+  "lessons.chooseResponsible": [],
+  "lessons.helpersInStage": [],
+  "lessons.prepareStageOnly": [],
+  "lessons.changeStageOnly": [],
+  "lessons.stageArchived": [
+    "name"
+  ],
+  "lessons.archived": [],
+  "lessons.taughtAfterDate": [],
+  "lessons.deleteDraftsOnly": [],
+  "lessons.homeworkPublished": [],
+  "homework.titleRequired": [],
+  "homework.instructionsRequired": [],
+  "homework.instructionsTooLong": [],
+  "homework.dueBeforeLesson": [],
+  "homework.changeStageOnly": [],
+  "homework.lessonWithoutStage": [],
+  "homework.assignStageOnly": [],
+  "homework.lessonArchived": [],
+  "homework.archivedNoEdit": [],
+  "homework.archivedNoPublish": [],
+  "homework.notArchived": [],
+  "homework.onlyPublishedBack": [],
+  "homework.alreadyReported": [],
+  "homework.publishedStays": [],
+  "homework.ownChildrenOnly": [],
+  "homework.notAvailable": [],
+  "homework.otherClass": [
+    "name"
+  ],
+  "guardians.adminOnlyGrant": [],
+  "guardians.alreadyHasAccess": [
+    "parent",
+    "child"
+  ],
+  "guardians.adminOnlyApprove": [],
+  "guardians.adminOnlyRemove": [],
+  "accounts.firstNameRequired": [],
+  "accounts.lastNameRequired": [],
+  "accounts.nameRequired": [],
+  "accounts.emailRequired": [],
+  "accounts.emailInvalid": [],
+  "accounts.emailTaken": [],
+  "accounts.passwordTooShort": [
+    "min"
+  ],
+  "accounts.childrenRequired": [],
+  "accounts.serviceDetailsRequired": [],
+  "accounts.chooseService": [],
+  "accounts.chooseServiceForRole": [],
+  "accounts.acceptPrivacy": [],
+  "accounts.adminOnly": [],
+  "accounts.alreadyApproved": [],
+  "accounts.chooseChild": [],
+  "accounts.childNotFound": [],
+  "accounts.stageNotInService": [],
+  "accounts.privacyNoticeOutdated": [],
+  "accounts.currentPasswordWrong": [],
+  "privacy.adminOnly": [],
+  "privacy.chooseSubject": [],
+  "privacy.requestedByRequired": [],
+  "privacy.receivedInFuture": [],
+  "privacy.alreadyRequested": [],
+  "privacy.notOpen": [],
+  "privacy.notErasure": [],
+  "privacy.notCopy": [],
+  "privacy.subjectGone": [],
+  "privacy.ownAccount": [],
+  "privacy.declineReasonRequired": [],
+  "network": [],
+  "sessionExpired": []
+}
