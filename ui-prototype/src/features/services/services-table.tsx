@@ -199,20 +199,6 @@ export function ServicesTable({ rows, today }: { rows: ServiceRow[]; today: Loca
         size: 150,
       },
       {
-        id: "leaders",
-        header: () => <span className="flex h-8 items-center">{t("leaders")}</span>,
-        cell: ({ row: { original: r } }) => (
-          <span className="line-clamp-2 text-sm">
-            {r.leaders.length ? (
-              r.leaders.map((l) => l.name).join(listSeparator)
-            ) : (
-              <span className="text-muted-foreground">{tc("dash")}</span>
-            )}
-          </span>
-        ),
-        size: 170,
-      },
-      {
         id: "actions",
         header: () => <span className="sr-only">{t("actions")}</span>,
         cell: ({ row: { original: r } }) => (

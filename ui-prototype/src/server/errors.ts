@@ -51,6 +51,7 @@ export type Thing =
   | "user"
   | "guardian"
   | "request"
+  | "role"
 
 export const forbidden = (detail: Message = msg("errors.forbidden")) =>
   new ProblemError({ status: 403, detail })

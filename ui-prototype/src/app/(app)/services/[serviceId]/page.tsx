@@ -39,12 +39,11 @@ export default async function ServiceDetailPage({ params }: PageProps<"/services
   const ctx = await getStaffContext()
   const d = await getServiceDetail(ctx, serviceId)
   if (!d) notFound()
-  const [t, ts, tn, tc, tr, tcommon, f, lines] = await Promise.all([
+  const [t, ts, tn, tc, tcommon, f, lines] = await Promise.all([
     getTranslations("services"),
     getTranslations("stages"),
     getTranslations("nav"),
     getTranslations("counts"),
-    getTranslations("roles"),
     getTranslations("common"),
     getFormat(),
     getSessionLines(),
@@ -333,50 +332,6 @@ export default async function ServiceDetailPage({ params }: PageProps<"/services
                             : `/meetings/schedules/${item.scheduleId}`
                         }
                       />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-            <Section
-              id="team"
-              title={t("detail.team.title")}
-              actions={
-                can.roles && d.team.length > 0 ? (
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href="/settings#users">
-                      {t("detail.team.manageRoles")} <ArrowRight data-icon="inline-end" />
-                    </Link>
-                  </Button>
-                ) : null
-              }
-            >
-              {d.team.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {t("detail.team.empty")}
-                  {can.roles ? (
-                    <>
-                      {" "}
-                      {t.rich("detail.team.giveRole", {
-                        link: (chunks) => (
-                          <Link href="/settings#users" className="underline underline-offset-4">
-                            {chunks}
-                          </Link>
-                        ),
-                      })}
-                    </>
-                  ) : null}
-                </p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {d.team.map((u) => (
-                    <li key={u.id} className="flex items-center justify-between gap-3 text-sm">
-                      <span className="truncate">{u.name}</span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {u.roles
-                          .map((r) => (r.stage ? `${tr(r.role)} · ${r.stage}` : tr(r.role)))
-                          .join(listSeparator)}
-                      </span>
                     </li>
                   ))}
                 </ul>

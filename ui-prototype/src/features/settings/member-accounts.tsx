@@ -32,9 +32,12 @@ const initialsOf = (name: string) =>
 export function MemberAccounts({
   accounts,
   today,
+  canChange,
 }: {
   accounts: MemberAccount[]
   today: LocalDate
+  /** "Accounts: Change": remove links. Without it the list is read-only. */
+  canChange: boolean
 }) {
   const t = useTranslations("settings.members")
   const f = useFormat()
@@ -101,12 +104,14 @@ export function MemberAccounts({
                 </p>
               </div>
             </div>
-            <div className="flex shrink-0 md:pt-0.5">
-              <Button size="sm" variant="outline" onClick={() => setRemoving(a)}>
-                <Unlink data-icon="inline-start" />
-                {t("remove")}
-              </Button>
-            </div>
+            {canChange ? (
+              <div className="flex shrink-0 md:pt-0.5">
+                <Button size="sm" variant="outline" onClick={() => setRemoving(a)}>
+                  <Unlink data-icon="inline-start" />
+                  {t("remove")}
+                </Button>
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

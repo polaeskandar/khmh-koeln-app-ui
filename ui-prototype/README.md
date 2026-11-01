@@ -28,9 +28,10 @@ version by itself, pnpm 10 can't). `pnpm screenshots` uses the Chromium that Pla
 | | In the prototype |
 | --- | --- |
 | Data | In memory in the Next.js server, created from a fixed seed. Changes last until the server restarts or someone chooses "Reset demo data" (account menu or Settings). Nothing is written to a database. |
-| Rules and permissions | Checked in the mock layer (`src/server/mock`) on every action, the way the API will check them: roles, stage scopes, parent access, status changes, validation. Errors come back as problem details (403, 404, 409, 422). |
+| Rules and permissions | Checked in the mock layer (`src/server/mock`) on every action, the way the API will check them: permissions from roles, parent access, status changes, validation. Errors come back as problem details (403, 404, 409, 422). |
+| Roles | RBAC as in the backend (polaeskandar/khmh-koeln-app-backend#130): a permission is an action (create, read, update, delete) on a resource (users, roles, services, stages, sessions, attendance, members, lessons, homework, parentPortal), 40 in all (`PERMISSIONS` in `src/lib/domain/policy.ts`); a role is a name and some of them; an account has roles and may do what any of them allows. Roles are global: no service or stage, a role holds in every service. The church starts with the backend's defaults, Administrator, Service leader, Servant and Parent (`DEFAULT_ROLES`, same ids and permissions), which are ordinary roles: renamed, changed and deleted like the church's own. Settings › Roles lists them; `/settings/roles/new` and `/settings/roles/:role` show the See / Add / Change / Delete grid. Someone active must always keep "Roles: Change": a change that would leave nobody is refused (409 `roles.lastRoleManager`). The mock keeps each account's permissions in sync with its roles; the API resolves them on every request. |
 | Sign-in | Email and password, checked against salted hashes in the mock layer; the session is a cookie with the account id. Every demo account uses the password `khmk-demo`, and `/sign-in/demo` signs in without typing. The account menu ("Prototype: view the app as") switches accounts. |
-| Registration | Real flow on mock data: anyone can register as a parent, member or servant; the account can't be used until an administrator approves it in Settings (linking the children, linking the member's own record after an age check, or giving a role). Declining deletes it. No emails are sent (confirmation, approval, password links). |
+| Registration | Real flow on mock data: anyone can register as a parent, member or servant; the account can't be used until the office approves it in Settings (linking the children and giving roles, linking the member's own record after an age check, or giving roles). Declining deletes it. No emails are sent (confirmation, approval, password links). |
 | Data protection | Requests to see or erase personal data (Settings › Data protection), with the one-month deadline, a review of what the app stores, a JSON copy, and erasure that keeps past attendance totals as anonymous numbers. Everyone can download their data and ask for deletion on their account page. The privacy notice is a draft. |
 | Languages and appearance | English, German and Arabic (right to left), and light, dark or like the device, chosen in the account menu or on the account page. The language is a cookie and is also stored on the account. |
 | Clock | Starts at Sunday 8 November 2026, 12:08 in Cologne and then runs in real time. `KHMK_DEMO_CLOCK=frozen` keeps it at the start (used for the screenshots). |
@@ -41,13 +42,14 @@ version by itself, pnpm 10 can't). `pnpm screenshots` uses the Chromium that Pla
 
 | Account | Role | Good for |
 | --- | --- | --- |
-| Christine Adel | Service leader, Sunday School | Dashboard, services, stages, schedules, reopening attendance |
-| Daniel Michael | Servant, Sunday School › 3rd Class | Taking attendance, preparing lessons, giving homework |
-| Mariam Fahmy | Administrator | Creating, archiving and deleting services; users and roles; parent access; account requests; data protection requests |
+| Christine Adel | Service leader (leads Sunday School) | Dashboard, services, stages, schedules, reopening attendance |
+| Daniel Michael | Servant (serves in Sunday School › 3rd Class) | Taking attendance, preparing lessons, giving homework |
+| Mariam Fahmy | Administrator | Creating, archiving and deleting services; roles and who has them; parent access; account requests; data protection requests |
+| Sara Wissa | Church office (a role of the church's own) | Account requests, roles for accounts, parent access, member accounts, data protection requests and the member list; she doesn't see the roles |
 | Hoda Farag | Parent of Mina (3rd Class) and Mimi (1st Class), and in the Coptic course herself | The parent portal; "My groups" in its menu opens her member portal |
 | Nadia Mansour | Parent, access to Sophia still waiting for approval | The parent portal before approval |
 | Nevine Boulos | Member: Bible Study and Coptic Language Course › Level 1 | The member portal: her groups, next meetings and homework |
-| Irene Wahba | Service leader, Coptic Language Course | Homework progress where members reported with their own account |
+| Irene Wahba | Service leader (leads the Coptic Language Course) | Homework progress where members reported with their own account |
 
 All of them sign in with their email address (for example `christine.adel@example.org`) and the password
 `khmk-demo`. `/sign-in/demo` lists every account, including the other servants and leaders. Two people have
@@ -56,9 +58,9 @@ signing in shows the waiting page.
 
 An account belongs to a member when an administrator links it to the person's own record (Settings › Member
 accounts). Staff and parents whose record is in a group (the servants are in the Servants' Preparation) get
-"My groups" in their account menu. Members see only their own groups, when and where they meet, their
-servants, the last lesson's passage and memory verse, and the homework of their stages; never attendance,
-servants' notes, cancel reasons or other members.
+"My groups" in their account menu. Members see only their own groups, when and where they meet, the last
+lesson's passage and memory verse, and the homework of their stages; never attendance, servants' notes,
+cancel reasons or other members.
 
 ## The scenario
 
@@ -88,6 +90,10 @@ It then takes the MVP screens as Christine (leader), Daniel (servant, also on th
 9. Mina, a youth who shares his name with a child in 3rd Class, registers as a member. Mariam chooses the
    right record of the two, notes that his mother agreed because he is under 16, and approves the account;
    Mina signs in to the member portal and sees the Youth Meeting and the Deacons' School.
+10. Mariam adds "Attendance helper" (Services: See, Attendance: See and Add), gives it to Sara, chooses
+    Servant when approving Fady, and deletes "Lesson preparation", which nobody has. Unticking "Roles:
+    Change" on the Administrator role warns that nobody else could change roles. Sara (church office) sees
+    account requests and data protection in Settings, but no roles.
 
 Desktop screenshots are 1440 px wide at 2×, phone screenshots 390 × 844 at 3×.
 

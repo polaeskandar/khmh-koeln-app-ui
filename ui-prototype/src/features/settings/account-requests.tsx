@@ -1,12 +1,12 @@
 "use client"
 
 /**
- * Account requests (administrators only): people who registered themselves.
- * Their accounts can't be used until an administrator approves them — a
- * parent by linking their children, a servant by giving them a role, a member
- * by linking the account to their own member record (under 16 only with a
- * parent's or guardian's agreement). Declining deletes the account and
- * everything the person entered.
+ * Account requests: people who registered themselves. Their accounts can't be
+ * used until the office approves them — a parent by linking their children and
+ * giving roles (Parent), a servant by giving roles, a member by linking the
+ * account to their own member record (under 16 only with a parent's or
+ * guardian's agreement). Declining deletes the account and everything the
+ * person entered.
  */
 import { useId, useMemo, useState } from "react"
 import { Check, Search, UserRoundCheck, X } from "lucide-react"
@@ -37,7 +37,6 @@ import {
 } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Textarea } from "@/components/ui/textarea"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { useServerAction } from "@/hooks/use-server-action"
@@ -289,6 +288,67 @@ function MemberApproval({
   )
 }
 
+/**
+ * The roles an approved account gets, at least one. Roles hold everywhere in the church, so
+ * there is no service or stage to choose. Parents start with the roles that only open the
+ * parent portal; for servants the office chooses.
+ */
+function RolesChoice({
+  roles,
+  selected,
+  onChange,
+  error,
+}: {
+  roles: Data["roles"]
+  selected: string[]
+  onChange: (ids: string[]) => void
+  error?: string
+}) {
+  const t = useTranslations("accountRequests.approve")
+  const tp = useTranslations("permissions.resources")
+  const f = useFormat()
+  const id = useId()
+  return (
+    <FieldSet data-invalid={error ? true : undefined}>
+      <FieldLegend variant="label">{t("roles")}</FieldLegend>
+      <FieldDescription>{t("rolesHint")}</FieldDescription>
+      <ul className="flex flex-col divide-y border-y">
+        {roles.map((r) => {
+          const checked = selected.includes(r.id)
+          return (
+            <li key={r.id}>
+              <label
+                htmlFor={`${id}-${r.id}`}
+                className="flex cursor-pointer items-start gap-3 py-2.5 text-sm"
+              >
+                <Checkbox
+                  id={`${id}-${r.id}`}
+                  className="mt-0.5"
+                  checked={checked}
+                  onCheckedChange={(v) =>
+                    onChange(v === true ? [...selected, r.id] : selected.filter((x) => x !== r.id))
+                  }
+                />
+                <span className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-medium">
+                    <bdi>{r.name}</bdi>
+                  </span>
+                  {r.resources.length > 0 ? (
+                    <span className="text-xs text-pretty text-muted-foreground">
+                      {f.list(r.resources.map((x) => tp(`${x}.name`)))}
+                    </span>
+                  ) : null}
+                </span>
+              </label>
+            </li>
+          )
+        })}
+      </ul>
+      {error ? <FieldError>{error}</FieldError> : null}
+    </FieldSet>
+  )
+}
+
 function ApproveDialog({
   request,
   data,
@@ -301,18 +361,16 @@ function ApproveDialog({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useTranslations("accountRequests.approve")
-  const tr = useTranslations("roles")
   const tc = useTranslations("common")
-  const ids = { service: useId(), stage: useId() }
   const [childIds, setChildIds] = useState(() => suggestedChildren(request, data.children))
   const [personId, setPersonId] = useState(() => suggestedMember(request, data.members))
   const [ageCheck, setAgeCheck] = useState<AgeCheck | null>(null)
   const [note, setNote] = useState("")
-  const [role, setRole] = useState<"servant" | "service_leader">("servant")
-  const [serviceId, setServiceId] = useState(request.service?.id ?? "")
-  const [stageId, setStageId] = useState("")
+  // Parents start with the roles that open the parent portal and nothing else.
+  const [roleIds, setRoleIds] = useState(() =>
+    request.as === "parent" ? data.roles.filter((r) => r.parent && !r.staff).map((r) => r.id) : []
+  )
   const approve = useServerAction(approveAccountAction, { onSuccess: () => onOpenChange(false) })
-  const stages = data.services.find((s) => s.id === serviceId)?.stages ?? []
   const errors = approve.fieldErrors
 
   return (
@@ -343,7 +401,7 @@ function ApproveDialog({
             approve.execute(
               request.id,
               request.as === "parent"
-                ? { as: "parent", childIds }
+                ? { as: "parent", childIds, roleIds }
                 : request.as === "member"
                   ? {
                       as: "member",
@@ -351,23 +409,26 @@ function ApproveDialog({
                       ageCheck,
                       guardianConsentNote: ageCheck === "guardianConsent" ? note : null,
                     }
-                  : {
-                      as: "servant",
-                      role,
-                      serviceId,
-                      stageId: role === "servant" && stageId ? stageId : null,
-                    }
+                  : { as: "servant", roleIds }
             )
           }}
         >
           {request.as === "parent" ? (
-            <ParentApproval
-              request={request}
-              candidates={data.children}
-              selected={childIds}
-              onChange={setChildIds}
-              error={errors.childIds}
-            />
+            <FieldGroup>
+              <ParentApproval
+                request={request}
+                candidates={data.children}
+                selected={childIds}
+                onChange={setChildIds}
+                error={errors.childIds}
+              />
+              <RolesChoice
+                roles={data.roles}
+                selected={roleIds}
+                onChange={setRoleIds}
+                error={errors.roleIds}
+              />
+            </FieldGroup>
           ) : request.as === "member" ? (
             <MemberApproval
               request={request}
@@ -382,72 +443,17 @@ function ApproveDialog({
             />
           ) : (
             <FieldGroup>
-              <FieldSet>
-                <FieldLegend variant="label">{t("role")}</FieldLegend>
-                <RadioGroup
-                  value={role}
-                  onValueChange={(v) => setRole(v as typeof role)}
-                  className="grid gap-2"
-                >
-                  {(["servant", "service_leader"] as const).map((r) => (
-                    <FieldLabel
-                      key={r}
-                      className={cn(
-                        "flex cursor-pointer items-start gap-3 border p-3 text-sm font-normal tracking-normal normal-case",
-                        role === r && "border-primary bg-primary/5"
-                      )}
-                    >
-                      <RadioGroupItem value={r} className="mt-0.5" />
-                      <span className="flex flex-col gap-0.5">
-                        <span className="font-medium">{tr(r)}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {tr(`description.${r}`)}
-                        </span>
-                      </span>
-                    </FieldLabel>
-                  ))}
-                </RadioGroup>
-              </FieldSet>
-              <Field data-invalid={errors.serviceId ? true : undefined}>
-                <FieldLabel htmlFor={ids.service}>{t("service")}</FieldLabel>
-                <NativeSelect
-                  id={ids.service}
-                  className="w-full"
-                  value={serviceId}
-                  onChange={(e) => {
-                    setServiceId(e.target.value)
-                    setStageId("")
-                  }}
-                >
-                  <NativeSelectOption value="">{t("chooseService")}</NativeSelectOption>
-                  {data.services.map((s) => (
-                    <NativeSelectOption key={s.id} value={s.id}>
-                      {s.name}
-                    </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-                {errors.serviceId ? <FieldError>{errors.serviceId}</FieldError> : null}
-              </Field>
-              {role === "servant" && stages.length > 0 ? (
-                <Field data-invalid={errors.stageId ? true : undefined}>
-                  <FieldLabel htmlFor={ids.stage}>{t("stage")}</FieldLabel>
-                  <NativeSelect
-                    id={ids.stage}
-                    className="w-full"
-                    value={stageId}
-                    onChange={(e) => setStageId(e.target.value)}
-                  >
-                    <NativeSelectOption value="">{t("wholeService")}</NativeSelectOption>
-                    {stages.map((s) => (
-                      <NativeSelectOption key={s.id} value={s.id}>
-                        {s.name}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                  <FieldDescription>{t("stageHint")}</FieldDescription>
-                  {errors.stageId ? <FieldError>{errors.stageId}</FieldError> : null}
-                </Field>
+              {request.service ? (
+                <p className="text-sm text-muted-foreground">
+                  {t("servesIn", { service: request.service.name })}
+                </p>
               ) : null}
+              <RolesChoice
+                roles={data.roles}
+                selected={roleIds}
+                onChange={setRoleIds}
+                error={errors.roleIds}
+              />
             </FieldGroup>
           )}
         </form>
@@ -461,10 +467,10 @@ function ApproveDialog({
             disabled={
               approve.pending ||
               (request.as === "parent"
-                ? childIds.length === 0
+                ? childIds.length === 0 || roleIds.length === 0
                 : request.as === "member"
                   ? !personId || !ageCheck
-                  : !serviceId)
+                  : roleIds.length === 0)
             }
           >
             {approve.pending ? <Spinner data-icon="inline-start" /> : null}
@@ -528,16 +534,18 @@ export function AccountRequests({ data }: { data: Data }) {
                 ) : null}
               </div>
             </div>
-            <div className="flex shrink-0 gap-2 md:pt-0.5">
-              <Button size="sm" onClick={() => setApproving(r)}>
-                <Check data-icon="inline-start" />
-                {t("approveButton")}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setDeclining(r)}>
-                <X data-icon="inline-start" />
-                {t("declineButton")}
-              </Button>
-            </div>
+            {data.canDecide ? (
+              <div className="flex shrink-0 gap-2 md:pt-0.5">
+                <Button size="sm" onClick={() => setApproving(r)}>
+                  <Check data-icon="inline-start" />
+                  {t("approveButton")}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setDeclining(r)}>
+                  <X data-icon="inline-start" />
+                  {t("declineButton")}
+                </Button>
+              </div>
+            ) : null}
           </li>
         ))}
       </ul>

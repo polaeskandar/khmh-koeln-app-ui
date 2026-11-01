@@ -25,6 +25,21 @@ export const NAV: NavItem[] = [
 
 export const SETTINGS: NavItem = { href: "/settings", key: "settings", icon: Settings }
 
+/**
+ * May the account use this item? Every staff account sees the services and meetings; members and
+ * attendance depend on its roles. Without permissions (the static fallback) everything shows.
+ * Settings stays for everyone in the prototype, for its demo controls; the app shows it to roles
+ * that may see accounts or roles, or handle data protection requests.
+ */
+export function navAllowed(key: NavKey, permissions?: readonly string[]): boolean {
+  if (!permissions) return true
+  if (key === "members") return permissions.includes("members:read")
+  if (key === "attendance") {
+    return permissions.includes("attendance:read") || permissions.includes("attendance:create")
+  }
+  return true
+}
+
 export function isActive(href: string, pathname: string | null | undefined): boolean {
   if (!pathname) return false
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`)

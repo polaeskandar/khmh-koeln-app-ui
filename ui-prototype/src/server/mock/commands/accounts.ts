@@ -1,25 +1,25 @@
 import "server-only"
 
 import { msg } from "@/i18n/message"
-import { isAdministrator } from "@/lib/domain/policy"
+import { permissionsOf } from "@/lib/domain/policy"
 import { PRIVACY_VERSION } from "@/lib/domain/privacy"
 import { toInstant } from "@/lib/domain/time"
 import type { AgeCheck, GuardianRelationship, Language, User, Uuid } from "@/lib/domain/types"
-import { forbidden, ruleViolation } from "@/server/errors"
+import { ruleViolation } from "@/server/errors"
 
 import { nowMs } from "../clock"
-import { found, Violations } from "../guard"
+import { authorize, found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "../passwords"
-import { isArchived, personOf, serviceOf, stageOf, userOf } from "../selectors"
+import { isArchived, personOf, roleOf, serviceOf, userOf } from "../selectors"
 import type { State } from "../state"
 
 /**
  * Accounts: registration, sign-in and the administrator's approval.
  *
- * Anyone can register, but a new account can't be used until an
- * administrator approves it: for a parent by linking their children, for a
- * servant by giving them a role, for a member by linking the account to their
+ * Anyone can register, but a new account can't be used until the office
+ * approves it: for a parent by linking their children and giving roles (Parent),
+ * for a servant by giving roles, for a member by linking the account to their
  * own member record (under 16 only with a parent's or guardian's agreement).
  * Declined registrations are deleted, with everything the person entered
  * (data minimisation, DSGVO Art. 5(1)(c)).
@@ -85,7 +85,8 @@ export function register(s: State, input: RegistrationInput): User {
     email,
     displayName: `${first} ${last}`,
     personId: null,
-    roles: [],
+    roleIds: [],
+    permissions: [],
     passwordHash: hashPassword(input.password),
     language: input.language,
     registration: { as: input.as, details, serviceId },
@@ -118,13 +119,16 @@ export function authenticate(s: State, email: string, password: string): SignInR
 }
 
 export type ApprovalInput =
-  | { as: "parent"; childIds: Uuid[] }
+  | {
+      as: "parent"
+      childIds: Uuid[]
+      /** The roles the account gets; the dialog suggests those that open the parent portal. */
+      roleIds: Uuid[]
+    }
   | {
       as: "servant"
-      role: "servant" | "service_leader"
-      serviceId: Uuid
-      /** Servants only: narrows the role to one stage. */
-      stageId?: Uuid | null
+      /** The roles the account gets. They hold everywhere: there is no service to choose. */
+      roleIds: Uuid[]
     }
   | {
       as: "member"
@@ -141,14 +145,22 @@ export const accountOfPerson = (s: State, personId: Uuid) =>
   s.users.find((u) => u.personId === personId)
 
 function pendingAccount(s: State, actor: User, userId: Uuid): User {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.accounts.adminOnly"))
+  authorize(actor, "create", "users", msg("errors.accounts.adminOnly"))
   const user = found(userOf(s, userId), "user")
   if (user.approvedAt) throw ruleViolation(msg("errors.accounts.alreadyApproved"))
   return user
 }
 
+/** The roles chosen for an approval: at least one, and each must exist. */
+function chosenRoles(s: State, v: Violations, roleIds: Uuid[]): Uuid[] {
+  const ids = [...new Set(roleIds)]
+  if (ids.length === 0) v.add("roleIds", msg("errors.roles.chooseRole"))
+  else if (ids.some((id) => !roleOf(s, id))) v.add("roleIds", msg("errors.roles.unknown"))
+  return ids
+}
+
 /**
- * Approves a registration: links the children, gives the role or links the member record, then
+ * Approves a registration: links the children, gives the roles or links the member record, then
  * the account can be used.
  */
 export function approveAccount(s: State, actor: User, userId: Uuid, input: ApprovalInput): User {
@@ -172,7 +184,7 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
       v.add("guardianConsentNote", msg("errors.validation.tooLong", { max: 200 }))
     }
     v.throwIfAny()
-    user.roles = []
+    user.roleIds = []
     user.personId = person!.id
     user.ageCheck = input.ageCheck
     user.guardianConsentNote = input.ageCheck === "guardianConsent" && note ? note : null
@@ -182,8 +194,9 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
     if (children.some((c) => !c || c.status !== "active")) {
       v.add("childIds", msg("errors.accounts.childNotFound"))
     }
+    const roleIds = chosenRoles(s, v, input.roleIds)
     v.throwIfAny()
-    user.roles = [{ role: "parent", serviceId: null, stageId: null }]
+    user.roleIds = roleIds
     for (const child of children) {
       const link: GuardianRelationship = {
         id: uuidv7(ms),
@@ -198,17 +211,11 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
       s.guardians.push(link)
     }
   } else {
-    const service = serviceOf(s, input.serviceId)
-    if (!service || isArchived(service)) {
-      v.add("serviceId", msg("errors.accounts.chooseServiceForRole"))
-    }
-    const stage = input.role === "servant" && input.stageId ? stageOf(s, input.stageId) : null
-    if (input.role === "servant" && input.stageId && (!stage || stage.serviceId !== service?.id)) {
-      v.add("stageId", msg("errors.accounts.stageNotInService"))
-    }
+    const roleIds = chosenRoles(s, v, input.roleIds)
     v.throwIfAny()
-    user.roles = [{ role: input.role, serviceId: service!.id, stageId: stage?.id ?? null }]
+    user.roleIds = roleIds
   }
+  user.permissions = permissionsOf(s.roles, user.roleIds)
   user.approvedAt = toInstant(ms)
   user.approvedBy = actor.id
   // The registration text was only needed for this decision.
@@ -218,18 +225,18 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
 
 /**
  * Removes the link between an account and its member record, for example when the office linked
- * the wrong person. Reports the account made stay in the history. An account with another role
- * (a parent) keeps it; an account that only had the link goes back to the account requests, so
- * an administrator links it to the right record or declines it.
+ * the wrong person. Reports the account made stay in the history. An account with roles (a
+ * parent) keeps them; an account that only had the link goes back to the account requests, so
+ * the office links it to the right record or declines it.
  */
 export function unlinkMember(s: State, actor: User, userId: Uuid): User {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.accounts.adminOnly"))
+  authorize(actor, "update", "users", msg("errors.accounts.unlinkNotAllowed"))
   const user = found(userOf(s, userId), "user")
   if (!user.personId) throw ruleViolation(msg("errors.accounts.notLinked"))
   user.personId = null
   user.ageCheck = null
   user.guardianConsentNote = null
-  if (user.roles.length === 0) {
+  if (user.roleIds.length === 0) {
     user.approvedAt = null
     user.approvedBy = null
     user.registration = { as: "member", details: "", serviceId: null }

@@ -12,7 +12,8 @@ dark mode. To regenerate them, see the prototype's README.
 ## Staff app
 
 `…/stages/:stage` stands for `/services/:service/stages/:stage`. Screens 02 and 03 show an administrator:
-only administrators create, archive and delete services, while a service leader edits the services they lead.
+the Administrator role creates, archives and deletes services, while a service leader edits them. Roles hold
+everywhere in the church, so a servant sees and works in every service.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
@@ -29,6 +30,10 @@ only administrators create, archive and delete services, while a service leader 
 | Settings: account requests | [account-requests](admin/account-requests.png), [approve a parent](admin/dialog-approve-account.png), [approve a member](admin/dialog-approve-member.png) | `/settings` |
 | Settings: parent access | [parent-access](admin/parent-access.png) | `/settings` |
 | Settings: member accounts | [member-accounts](admin/member-accounts.png), [remove a link](admin/dialog-remove-member-link.png) | `/settings` |
+| Settings: roles | [roles](admin/roles.png), [delete a role](admin/dialog-delete-role.png) | `/settings` |
+| A role | [new role](admin/role-editor.png), [Church office](admin/role-church-office.png), [the last way to change roles](admin/role-locks-out.png) | `/settings/roles/new`, `/settings/roles/:role` |
+| Settings: staff accounts and roles | [staff-roles](admin/staff-roles.png), [give a role](admin/dialog-give-role.png), [approve a servant with roles](admin/dialog-approve-servant.png) | `/settings` |
+| Settings as the church office | [settings-church-office](admin/settings-church-office.png) | `/settings`, signed in as Sara Wissa |
 | Data protection requests | [data-requests](admin/data-requests.png), [record a request](admin/dialog-record-data-request.png) | `/settings/data-requests` |
 | A request to erase data | [review](admin/data-request-review.png), [erase](admin/dialog-erase-data.png), [done](admin/data-request-done.png) | `/settings/data-requests/:request` |
 | Your account | [account](admin/account.png) | `/account` |
@@ -56,8 +61,8 @@ only administrators create, archive and delete services, while a service leader 
 
 For people on a roster with an account of their own: a youth, an adult in the Coptic course, an older child
 whose parents agreed. An administrator links the account to the member's record. Members see their groups,
-when and where they meet, their servants, the last lesson's passage and memory verse, and the homework of
-their stages, which they tick off themselves. Planned after the launch.
+when and where they meet, the last lesson's passage and memory verse, and the homework of their stages, which
+they tick off themselves. Planned after the launch.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
@@ -70,8 +75,9 @@ their stages, which they tick off themselves. Planned after the launch.
 
 ## Signing in and registering
 
-New accounts wait for an administrator: parents are linked to their children, members to their own record,
-servants get a role. Until then the email and password only lead to the waiting page.
+New accounts wait for the office: parents are linked to their children and get the Parent role, members are
+linked to their own record, servants get their roles. Until then the email and password only lead to the
+waiting page.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
@@ -85,7 +91,7 @@ servants get a role. Until then the email and password only lead to the waiting 
 ## German and Arabic
 
 The same screens in German (`de-…`) and Arabic (`ar-…`, right to left): dashboard, meetings, a new schedule,
-attendance on desktop and phone, the parent portal, settings, sign-in and the member portal.
+attendance on desktop and phone, the parent portal, settings, sign-in, the member portal and a role.
 
 | Screen | German | Arabic |
 | --- | --- | --- |
@@ -98,6 +104,7 @@ attendance on desktop and phone, the parent portal, settings, sign-in and the me
 | Settings | [de-07](languages/de-07-settings.png) | [ar-07](languages/ar-07-settings.png) |
 | Sign in | [de-08](languages/de-08-sign-in.png) | [ar-08](languages/ar-08-sign-in.png) |
 | Member portal | [de-09](languages/de-09-member-home.png) | [ar-09](languages/ar-09-member-home.png) |
+| A role (Servant) | [de-10](languages/de-10-role-editor.png) | [ar-10](languages/ar-10-role-editor.png) |
 
 ## Dark mode
 

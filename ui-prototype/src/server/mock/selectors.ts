@@ -8,6 +8,7 @@ import type {
   MeetingSession,
   Membership,
   Person,
+  Role,
   Service,
   Stage,
   User,
@@ -161,15 +162,13 @@ export function searchPersons(s: State, query: string, includeInactive = false):
     .sort(byName)
 }
 
-export function usersWithRole(s: State, serviceId: Uuid): User[] {
-  return s.users.filter((u) => !u.disabledAt && u.roles.some((r) => r.serviceId === serviceId))
+export function roleOf(s: State, id: string | null | undefined): Role | undefined {
+  return id ? s.roles.find((r) => r.id === id) : undefined
 }
 
-export function leadersOf(s: State, serviceId: Uuid): User[] {
-  return s.users.filter(
-    (u) =>
-      !u.disabledAt && u.roles.some((r) => r.serviceId === serviceId && r.role === "service_leader")
-  )
+/** The accounts that have the role, disabled ones included. */
+export function holdersOf(s: State, roleId: Uuid): User[] {
+  return s.users.filter((u) => u.roleIds.includes(roleId))
 }
 
 // ---------------------------------------------------------------- learning

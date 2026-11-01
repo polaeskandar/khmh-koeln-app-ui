@@ -27,6 +27,7 @@ import {
   undoCompletion,
   unpublishHomework,
 } from "./commands/learning"
+import { syncPermissions } from "./commands/roles"
 import { seed } from "./seed"
 import { childrenOf, currentCompletion } from "./selectors"
 import type { State } from "./state"
@@ -95,28 +96,35 @@ function goodSamaritan(t: Demo, { publish = true } = {}) {
 }
 
 describe("roles", () => {
-  test("a servant prepares lessons only for the stage they serve in", () => {
+  test("roles hold everywhere: a servant prepares lessons for any stage", () => {
     const t = demo()
-    expect(can(t.daniel, "MANAGE_LESSONS", t.c3.serviceId, t.c3.id)).toBe(true)
-    expect(can(t.daniel, "MANAGE_LESSONS", t.c1.serviceId, t.c1.id)).toBe(false)
-    const elsewhere = () =>
-      createLesson(t.s, t.daniel, t.c1.id, {
-        title: "Noah’s ark",
+    expect(can(t.daniel, "create", "lessons")).toBe(true)
+    const lesson = createLesson(t.s, t.daniel, t.c1.id, {
+      title: "Noah’s ark",
+      meeting: "date:2026-11-15",
+      responsibleId: t.daniel.id,
+    })
+    expect(lesson.stageId).toBe(t.c1.id)
+  })
+
+  test("without Lessons: Add, preparing a lesson is refused", () => {
+    const t = demo()
+    const servant = t.s.roles.find((r) => r.name === "Servant")!
+    servant.permissions = servant.permissions.filter((p) => p !== "lessons:create")
+    syncPermissions(t.s)
+    const lesson = () =>
+      createLesson(t.s, t.daniel, t.c3.id, {
+        title: "Zacchaeus",
         meeting: "date:2026-11-15",
         responsibleId: t.daniel.id,
       })
-    expect(statusOf(elsewhere)).toBe(403)
-  })
-
-  test("the service leader covers every stage of the service", () => {
-    const t = demo()
-    expect(can(t.leader, "MANAGE_HOMEWORK", t.c1.serviceId, t.c1.id)).toBe(true)
-    expect(can(t.leader, "MANAGE_HOMEWORK", t.c3.serviceId, t.c3.id)).toBe(true)
+    expect(statusOf(lesson)).toBe(403)
+    expect(can(t.leader, "create", "homework")).toBe(true)
   })
 
   test("parents hold no staff permission", () => {
     const t = demo()
-    expect(can(t.hoda, "VIEW_SERVICE", t.c3.serviceId)).toBe(false)
+    expect(can(t.hoda, "read", "services")).toBe(false)
     const lesson = () =>
       createLesson(t.s, t.hoda, t.c3.id, {
         title: "Zacchaeus",

@@ -64,7 +64,8 @@
     "optionalNote": "(optional)",
     "reason": "Grund",
     "loadingEllipsis": "Wird geladen …",
-    "formerAccount": "Ehemaliges Konto"
+    "formerAccount": "Ehemaliges Konto",
+    "disabled": "Deaktiviert"
   },
   "ui": {
     "close": "Schließen",
@@ -82,7 +83,7 @@
       "conflict": "Gerade nicht möglich",
       "invalid": "Bitte prüfen Sie einige Felder"
     },
-    "forbidden": "Ihre Rolle erlaubt das nicht.",
+    "forbidden": "Ihre Rollen erlauben das nicht.",
     "checkFields": "Bitte prüfen Sie die markierten Felder.",
     "invalidRequest": "Die Anfrage war ungültig.",
     "notFound": {
@@ -97,7 +98,8 @@
       "homework": "Diese Hausaufgabe existiert nicht oder wurde gelöscht.",
       "user": "Dieses Konto existiert nicht oder wurde gelöscht.",
       "guardian": "Diese Eltern-Verknüpfung existiert nicht oder wurde entfernt.",
-      "request": "Diese Anfrage existiert nicht oder wurde gelöscht."
+      "request": "Diese Anfrage existiert nicht oder wurde gelöscht.",
+      "role": "Diese Rolle existiert nicht oder wurde gelöscht."
     },
     "validation": {
       "tooLong": "Höchstens {max} Zeichen.",
@@ -107,10 +109,10 @@
       "invalidTime": "Geben Sie eine Uhrzeit wie 18:30 ein."
     },
     "services": {
-      "adminOnlyCreate": "Nur Administratoren können Dienste anlegen.",
-      "adminOnlyArchive": "Nur Administratoren können Dienste archivieren.",
-      "adminOnlyRestore": "Nur Administratoren können Dienste wiederherstellen.",
-      "adminOnlyDelete": "Nur Administratoren können Dienste löschen.",
+      "adminOnlyCreate": "Sie können keine Dienste anlegen.",
+      "adminOnlyArchive": "Sie können keine Dienste archivieren.",
+      "adminOnlyRestore": "Sie können keine Dienste wiederherstellen.",
+      "adminOnlyDelete": "Sie können keine Dienste löschen.",
       "nameRequired": "Geben Sie einen Namen für den Dienst ein.",
       "nameTaken": "Es gibt schon einen Dienst namens „{name}“.",
       "nameTakenArchived": "Ein archivierter Dienst heißt bereits „{name}“. Stellen Sie ihn wieder her, statt einen neuen anzulegen.",
@@ -146,7 +148,6 @@
       "attendanceClosed": "Die Anwesenheit für diesen Termin ist abgeschlossen. Öffnen Sie sie erneut, um etwas zu korrigieren.",
       "opensOnTheDay": "Die Anwesenheit kann erst am Tag des Termins geöffnet werden.",
       "onlyActiveCanClose": "Nur ein Termin, bei dem gerade Anwesenheit erfasst wird, kann abgeschlossen werden.",
-      "reopenLeadersOnly": "Nur die Dienstleitung und Administratoren können einen abgeschlossenen Termin wieder öffnen.",
       "onlyCompletedCanReopen": "Nur ein abgeschlossener Termin kann wieder geöffnet werden.",
       "onlyScheduledCanCancel": "Nur ein Termin, der noch nicht begonnen hat, kann abgesagt werden.",
       "sessionEndAfterStart": "Der Termin muss nach dem Beginn enden.",
@@ -154,7 +155,8 @@
       "chooseFutureTime": "Wählen Sie einen Zeitpunkt in der Zukunft.",
       "titleRequired": "Geben Sie einen Titel ein.",
       "noMeetingOnDate": "Der Regeltermin hat an diesem Datum kein Treffen.",
-      "scheduleInactive": "Dieser Regeltermin ist inaktiv. Aktivieren Sie ihn zuerst."
+      "scheduleInactive": "Dieser Regeltermin ist inaktiv. Aktivieren Sie ihn zuerst.",
+      "reopenNotAllowed": "Sie können keine Termine wieder öffnen."
     },
     "recurrence": {
       "interval": "Der Abstand muss zwischen 1 und 52 liegen.",
@@ -176,21 +178,26 @@
     "people": {
       "firstNameRequired": "Geben Sie einen Vornamen ein.",
       "lastNameRequired": "Geben Sie einen Nachnamen ein.",
-      "editOutsideServices": "Sie können nur Personen in Ihren Diensten bearbeiten. {name} ist in keinem davon.",
-      "addOutsideServices": "Sie können Personen nur zu Ihren Diensten und Stufen hinzufügen.",
-      "chooseJoinService": "Wählen Sie den Dienst, zu dem die Person gehört.",
       "duplicateTitle": "Mögliche Doppelung",
       "duplicate": "{count, plural, one {Es gibt schon eine Person namens {name}.} other {Es gibt schon # Personen namens {name}.}} Prüfen Sie, ob es eine andere Person ist.",
       "alreadyIn": "{name} ist bereits in {where}.",
-      "membershipOutsideServices": "Sie können Zugehörigkeiten nur in Ihren Diensten und Stufen ändern.",
       "membershipEnded": "Diese Zugehörigkeit ist bereits beendet.",
-      "moveOutsideStages": "Sie können Personen nur in Stufen verschieben, in denen Sie dienen."
+      "addNotAllowed": "Sie können keine Personen hinzufügen.",
+      "changeNotAllowed": "Sie können keine Personen oder ihre Stufen ändern.",
+      "removeNotAllowed": "Sie können keine Personen aus Stufen nehmen."
     },
     "roles": {
-      "adminOnly": "Nur Administratoren können Rollen ändern.",
-      "chooseService": "Wählen Sie den Dienst, für den die Rolle gilt.",
+      "adminOnly": "Sie können keine Rollen vergeben oder entziehen.",
       "alreadyHasRole": "{name} hat diese Rolle bereits.",
-      "ownAdminRole": "Sie können Ihre eigene Administratorrolle nicht entfernen. Bitten Sie einen anderen Administrator darum."
+      "chooseRole": "Wählen Sie mindestens eine Rolle.",
+      "nameRequired": "Geben Sie einen Namen für die Rolle ein.",
+      "nameTaken": "Eine Rolle namens „{name}“ gibt es bereits.",
+      "lastRoleManager": "Mindestens ein aktives Konto muss Rollen ändern können. Geben Sie diese Berechtigung zuerst jemand anderem.",
+      "unknownPermission": "Einige dieser Berechtigungen gibt es nicht.",
+      "createNotAllowed": "Sie können keine Rollen anlegen.",
+      "updateNotAllowed": "Sie können keine Rollen ändern.",
+      "deleteNotAllowed": "Sie können keine Rollen löschen.",
+      "unknown": "Diese Rolle gibt es nicht mehr. Wählen Sie eine andere."
     },
     "materials": {
       "labelTooLong": "Höchstens 120 Zeichen für die Bezeichnung.",
@@ -204,24 +211,23 @@
       "noMeetingThatDay": "{name} trifft sich an diesem Datum nicht.",
       "chooseWhen": "Wählen Sie, wann die Lektion gehalten wird.",
       "meetingHasLesson": "Für dieses Treffen gibt es schon eine Lektion: „{title}“. Bearbeiten Sie diese oder wählen Sie ein anderes Datum.",
-      "chooseResponsible": "Wählen Sie einen Diener dieser Stufe.",
-      "helpersInStage": "Alle Helfenden müssen in dieser Stufe dienen.",
-      "prepareStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Lektionen vorbereiten.",
-      "changeStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Lektionen ändern.",
+      "chooseResponsible": "Wählen Sie jemanden, der Lektionen ändern darf.",
+      "helpersInStage": "Alle, die helfen, müssen Lektionen ändern dürfen.",
       "stageArchived": "{name} ist archiviert.",
       "archived": "Diese Lektion ist archiviert.",
       "taughtAfterDate": "Eine Lektion wird erst am Tag des Unterrichts oder danach als gehalten markiert.",
       "deleteDraftsOnly": "Nur Lektionen im Entwurf können gelöscht werden. Archivieren Sie sie stattdessen.",
-      "homeworkPublished": "Hausaufgaben dieser Lektion wurden für Eltern veröffentlicht. Archivieren Sie die Lektion stattdessen."
+      "homeworkPublished": "Hausaufgaben dieser Lektion wurden für Eltern veröffentlicht. Archivieren Sie die Lektion stattdessen.",
+      "createNotAllowed": "Sie können keine Lektionen vorbereiten.",
+      "changeNotAllowed": "Sie können keine Lektionen ändern.",
+      "deleteNotAllowed": "Sie können keine Lektionen archivieren oder löschen."
     },
     "homework": {
       "titleRequired": "Geben Sie einen Titel ein, z. B. „Merkvers auswendig lernen“.",
       "instructionsRequired": "Schreiben Sie, was zu Hause zu tun ist.",
       "instructionsTooLong": "Höchstens 2.000 Zeichen.",
       "dueBeforeLesson": "Das Fälligkeitsdatum kann nicht vor der Lektion liegen.",
-      "changeStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Hausaufgaben ändern.",
       "lessonWithoutStage": "Hausaufgaben gehören zu einer Stufe. Ordnen Sie die Lektion zuerst einer Stufe zu.",
-      "assignStageOnly": "Nur Diener dieser Stufe und die Dienstleitung können ihre Hausaufgaben vergeben.",
       "lessonArchived": "Die Lektion ist archiviert. Stellen Sie zuerst die Lektion wieder her.",
       "archivedNoEdit": "Archivierte Hausaufgaben können nicht bearbeitet werden.",
       "archivedNoPublish": "Archivierte Hausaufgaben können nicht veröffentlicht werden. Stellen Sie sie zuerst wieder her.",
@@ -231,13 +237,16 @@
       "publishedStays": "Veröffentlichte Hausaufgaben bleiben im Verlauf. Archivieren Sie sie stattdessen.",
       "ownChildrenOnly": "Sie können Hausaufgaben nur für Ihre eigenen Kinder melden.",
       "notAvailable": "Diese Hausaufgabe ist nicht verfügbar.",
-      "otherClass": "Diese Hausaufgabe ist für eine andere Klasse als die von {name}."
+      "otherClass": "Diese Hausaufgabe ist für eine andere Klasse als die von {name}.",
+      "createNotAllowed": "Sie können keine Hausaufgaben geben.",
+      "changeNotAllowed": "Sie können keine Hausaufgaben ändern.",
+      "deleteNotAllowed": "Sie können keine Hausaufgaben archivieren oder löschen."
     },
     "guardians": {
-      "adminOnlyGrant": "Nur Administratoren können Eltern Zugang zu einem Kind geben.",
+      "adminOnlyGrant": "Sie können Eltern keinen Zugang zu Kindern geben.",
       "alreadyHasAccess": "{parent} hat bereits Zugang zu {child}.",
-      "adminOnlyApprove": "Nur Administratoren können den Elternzugang freigeben.",
-      "adminOnlyRemove": "Nur Administratoren können den Elternzugang entfernen."
+      "adminOnlyApprove": "Sie können den Elternzugang nicht freigeben.",
+      "adminOnlyRemove": "Sie können den Elternzugang nicht entfernen."
     },
     "accounts": {
       "firstNameRequired": "Geben Sie Ihren Vornamen ein.",
@@ -249,22 +258,22 @@
       "childrenRequired": "Nennen Sie die Namen und Klassen Ihrer Kinder, damit das Gemeindebüro sie mit Ihrem Konto verknüpfen kann.",
       "serviceDetailsRequired": "Schreiben Sie, wo Sie dienen, damit das Gemeindebüro Ihnen den passenden Zugang geben kann.",
       "chooseService": "Wählen Sie den Dienst, in dem Sie dienen.",
-      "chooseServiceForRole": "Wählen Sie den Dienst für diese Rolle.",
       "acceptPrivacy": "Bitte bestätigen Sie, dass Sie die Datenschutzhinweise gelesen haben.",
-      "adminOnly": "Nur Administratoren können Konten freigeben oder ablehnen.",
+      "adminOnly": "Sie können keine Kontoanfragen freigeben oder ablehnen.",
       "alreadyApproved": "Dieses Konto wurde bereits freigegeben.",
       "chooseChild": "Wählen Sie mindestens ein Kind aus.",
       "childNotFound": "Eines der ausgewählten Kinder existiert nicht mehr oder ist inaktiv.",
-      "stageNotInService": "Diese Stufe gehört nicht zum gewählten Dienst.",
       "groupsRequired": "Schreiben Sie, an welchen Gruppen Sie teilnehmen, damit das Gemeindebüro Ihr Konto mit Ihrem Eintrag verknüpfen kann.",
       "choosePerson": "Wählen Sie den Mitgliedseintrag, zu dem dieses Konto gehört.",
       "personNotFound": "Dieser Mitgliedseintrag existiert nicht mehr oder ist inaktiv.",
       "personHasAccount": "{name} hat bereits ein Konto. Prüfen Sie, ob Sie die richtige Person gewählt haben.",
       "chooseAge": "Wählen Sie, ob das Mitglied 16 oder älter ist oder unter 16 mit Zustimmung eines Elternteils.",
-      "notLinked": "Dieses Konto ist mit keinem Mitgliedseintrag verknüpft."
+      "notLinked": "Dieses Konto ist mit keinem Mitgliedseintrag verknüpft.",
+      "unlinkNotAllowed": "Sie können keine Mitgliederverknüpfungen entfernen.",
+      "notApproved": "Dieses Konto ist noch nicht freigegeben. Geben Sie es zuerst unter Kontoanfragen frei."
     },
     "privacy": {
-      "adminOnly": "Nur Administratoren können Datenschutzanfragen bearbeiten.",
+      "adminOnly": "Sie können keine Datenschutzanfragen bearbeiten.",
       "chooseSubject": "Wählen Sie das Mitglied oder Konto, um das es geht.",
       "requestedByRequired": "Geben Sie an, wer die Anfrage gestellt hat.",
       "receivedInFuture": "Das Datum darf nicht in der Zukunft liegen.",
@@ -273,7 +282,7 @@
       "notErasure": "Nur Löschanfragen löschen Daten.",
       "notCopy": "Dies ist keine Anfrage nach einer Kopie.",
       "subjectGone": "Die Daten, um die es in dieser Anfrage geht, gibt es nicht mehr.",
-      "ownAccount": "Sie können Ihr eigenes Konto nicht löschen. Bitten Sie einen anderen Administrator darum.",
+      "ownAccount": "Sie können Ihr eigenes Konto nicht löschen. Bitten Sie jemand anderen, der Datenschutzanfragen bearbeitet.",
       "declineReasonRequired": "Geben Sie den Grund an. Die Person muss ihn erfahren und darauf hingewiesen werden, dass sie sich bei der Datenschutzaufsicht beschweren kann."
     }
   },
@@ -336,21 +345,13 @@
     "copySent": "Als verschickt markiert.",
     "dataRequestDeclined": "Anfrage abgelehnt. Teilen Sie der Person den Grund mit und dass sie sich bei der Datenschutzaufsicht beschweren kann.",
     "erasureRequested": "Ihre Anfrage ist beim Gemeindebüro eingegangen. Es antwortet innerhalb eines Monats.",
-    "memberUnlinked": "Verknüpfung für {name} entfernt."
+    "memberUnlinked": "Verknüpfung für {name} entfernt.",
+    "roleCreated": "Rolle „{name}“ angelegt.",
+    "roleSaved": "Rolle gespeichert.",
+    "roleDeleted": "Rolle „{name}“ gelöscht."
   },
   "roles": {
-    "administrator": "Administrator",
-    "service_leader": "Dienstleitung",
-    "servant": "Diener/in",
-    "parent": "Elternteil",
-    "description": {
-      "administrator": "Verwaltet Dienste, Konten, Rollen und den Elternzugang für die ganze Gemeinde.",
-      "service_leader": "Leitet einen Dienst: Stufen, Regeltermine, Termine, Mitglieder, Lektionen und Hausaufgaben.",
-      "servant": "Erfasst Anwesenheit, bereitet Lektionen und Hausaufgaben vor – in einem Dienst oder einer seiner Stufen.",
-      "parent": "Sieht die veröffentlichten Hausaufgaben der Kinder, die ein Administrator mit dem Konto verknüpft hat."
-    },
     "summary": {
-      "staff": "{role} · {where}{more, plural, =0 {} other { +#}}",
       "parentOf": "Elternteil von {children}",
       "parentWaiting": "Elternteil, wartet auf Zugang",
       "none": "Noch keine Rolle",
@@ -366,13 +367,13 @@
     },
     "stagesCount": "{count, plural, one {# Stufe} other {# Stufen}}",
     "summary": {
-      "none": "Heute gibt es keine Treffen in Ihren Diensten.",
+      "none": "Heute gibt es keine Treffen.",
       "open": "{count, plural, one {Bei # Treffen} other {Bei # Treffen}} wird gerade Anwesenheit erfasst",
       "notOpened": "{count, plural, other {# noch nicht geöffnet}}"
     },
     "today": {
       "title": "Heute",
-      "description": "Alle heutigen Treffen in Ihren Diensten.",
+      "description": "Alle heutigen Treffen.",
       "allMeetings": "Alle Termine",
       "empty": "Heute keine Treffen",
       "tomorrow": "Morgen: {names}.",
@@ -386,7 +387,7 @@
     },
     "recent": {
       "title": "Zuletzt abgeschlossen",
-      "description": "Abgeschlossene Anwesenheit in Ihren Diensten.",
+      "description": "Kürzlich abgeschlossene Anwesenheit.",
       "link": "Anwesenheit",
       "empty": "Noch nichts abgeschlossen.",
       "closedAt": "abgeschlossen um {time}",
@@ -394,11 +395,11 @@
     },
     "comingUp": {
       "title": "Demnächst",
-      "description": "Die nächsten sieben Tage in Ihren Diensten.",
-      "empty": "In Ihren Diensten ist nichts geplant."
+      "description": "Die nächsten sieben Tage.",
+      "empty": "Nichts geplant."
     },
     "services": {
-      "title": "Ihre Dienste",
+      "title": "Dienste",
       "link": "Dienste",
       "next": "nächstes Mal {when}, {time}",
       "ofRoster": "der Liste, 4 Wochen",
@@ -420,8 +421,6 @@
     },
     "sections": "Bereiche von {name}",
     "meets": "{pattern}, {time}",
-    "servants": "Diener: {names}",
-    "leader": "{name} (Dienstleitung)",
     "noSchedule": "Kein Regeltermin",
     "pastSessions": "{count, plural, one {# vergangener Termin} other {# vergangene Termine}}",
     "archivedOn": "Archiviert am {date}",
@@ -680,8 +679,7 @@
     "description": "Konten und Rollen, Elternzugang und die Grundeinstellungen der Gemeinde.",
     "users": {
       "title": "Mitarbeiterkonten und Rollen",
-      "descriptionAdmin": "Administratoren vergeben Rollen je Dienst. Die Rolle eines Dieners kann auf eine Stufe beschränkt werden.",
-      "descriptionReadOnly": "Nur Administratoren ändern Rollen. Hier sehen Sie, wer welche Rolle hat.",
+      "descriptionReadOnly": "Wer welche Rolle hat. Ihre Rollen erlauben Ihnen, das zu sehen, aber nicht zu ändern.",
       "addRole": "Rolle",
       "removeRoleLabel": "Rolle „{role}“ von {name} entfernen",
       "removeTitle": "„{role}“ von {name} entfernen?",
@@ -689,20 +687,17 @@
       "remove": "Rolle entfernen",
       "assign": {
         "title": "Rolle an {name} vergeben",
-        "description": "Rollen bestimmen, was jemand sehen und ändern kann. Eine Person kann mehrere haben.",
+        "description": "Rollen bestimmen, was jemand sehen und ändern kann, in jedem Dienst. Ein Konto kann mehrere haben.",
         "role": "Rolle",
-        "service": "Dienst",
-        "stage": "Stufe",
-        "wholeService": "Ganzer Dienst",
-        "limitedTo": "Beschränkt auf {stage}: nur Anwesenheit, Lektionen und Hausaufgaben dieser Stufe.",
-        "submit": "Rolle vergeben"
-      }
+        "submit": "Rolle vergeben",
+        "roleHint": "Was jede Rolle erlaubt, sehen Sie unter <link>Rollen</link>.",
+        "choose": "Rolle wählen"
+      },
+      "description": "Geben Sie jedem Konto die Rollen, die es braucht. Rollen gelten überall in der Gemeinde."
     },
     "parents": {
       "title": "Elternzugang",
       "description": "Welche Elternkonten die Hausaufgaben welcher Kinder sehen.",
-      "adminsOnly": "Nur für Administratoren",
-      "adminsOnlyHint": "Eltern werden von den Administratoren der Gemeinde mit Kindern verknüpft.",
       "give": "Elternzugang erteilen",
       "giveTitle": "Einem Elternteil Zugang zu einem Kind erteilen",
       "giveDescription": "Prüfen Sie zuerst die Familie, zum Beispiel persönlich nach der Liturgie. Der Elternteil sieht dann die veröffentlichten Hausaufgaben dieses Kindes.",
@@ -761,8 +756,6 @@
     "members": {
       "title": "Mitgliedskonten",
       "description": "Konten, die mit dem eigenen Eintrag eines Mitglieds verknüpft sind. Das Mitglied sieht seine Gruppen, die nächsten Treffen und seine Hausaufgaben.",
-      "adminsOnly": "Nur Administratoren verwalten Mitgliedskonten",
-      "adminsOnlyHint": "Die Administratoren der Gemeinde verknüpfen Konten mit Mitgliedseinträgen.",
       "empty": "Noch keine Mitgliedskonten.",
       "alsoParent": "Auch Elternteil",
       "disabled": "Deaktiviert",
@@ -781,6 +774,25 @@
       "removeKept": "Mit dem Konto gemeldete Erledigungen bleiben im Verlauf erhalten.",
       "removeAgain": "Ein Konto ohne weitere Rolle kommt zurück zu den Kontoanfragen: Sie können es mit dem richtigen Eintrag verknüpfen oder ablehnen.",
       "removeConfirm": "Verknüpfung entfernen"
+    },
+    "roles": {
+      "title": "Rollen",
+      "description": "Was jede Rolle erlaubt. Vergeben Sie Rollen unter Mitarbeiterkonten und Rollen.",
+      "newRole": "Neue Rolle",
+      "role": "Rolle",
+      "accounts": "Konten",
+      "permissionCount": "{count, number} von {total, number} Berechtigungen",
+      "holders": "{count, plural, =0 {Niemand} one {# Konto} other {# Konten}}",
+      "actionsFor": "Aktionen für {role}",
+      "edit": "Bearbeiten",
+      "view": "Ansehen",
+      "delete": "Löschen",
+      "deleteTitle": "Rolle „{name}“ löschen?",
+      "deleteDescription": "{count, plural, =0 {Niemand hat sie.} one {# Konto hat sie und verliert sofort, was sie erlaubt.} other {# Konten haben sie und verlieren sofort, was sie erlaubt.}}",
+      "deleteConfirm": "Rolle löschen",
+      "readOnly": "Ihre Rollen erlauben Ihnen, Rollen zu sehen, aber nicht zu ändern.",
+      "allows": "Erlaubt",
+      "global": "Rollen gelten überall in der Gemeinde, in jedem Dienst. Welche Kinder Eltern sehen, ergibt sich weiter aus dem Elternzugang; Mitglieder sehen ihre eigenen Gruppen ohne Rolle."
     }
   },
   "session": {
@@ -1050,7 +1062,9 @@
         "history": "Anwesenheit und Zugehörigkeiten der Person bleiben im Verlauf erhalten.",
         "reactivate": "Sie können die Person jederzeit wieder aktivieren."
       }
-    }
+    },
+    "noAccess": "Sie können die Mitgliederliste nicht sehen",
+    "noAccessHint": "Dafür braucht es eine Rolle mit „Mitglieder: Sehen“."
   },
   "homework": {
     "title": "Hausaufgaben",
@@ -1257,7 +1271,6 @@
       "next": "Nächstes Treffen",
       "attendance": "Anwesenheit, 4 Wo.",
       "attendanceHint": "Anteil der Liste, der in den letzten vier Wochen als anwesend markiert wurde",
-      "leaders": "Dienstleitung",
       "actions": "Aktionen",
       "onAverage": "{count, number} <muted>im Schnitt</muted>",
       "noSessions": "Keine Termine",
@@ -1309,12 +1322,6 @@
       "upcoming": {
         "title": "Demnächst",
         "empty": "In den nächsten zwei Wochen ist nichts geplant."
-      },
-      "team": {
-        "title": "Dienstleitung und Diener",
-        "manageRoles": "Rollen verwalten",
-        "empty": "In diesem Dienst hat noch niemand eine Rolle.",
-        "giveRole": "<link>Vergeben Sie die Rolle „Dienstleitung“</link> in den Einstellungen."
       }
     }
   },
@@ -1687,7 +1694,7 @@
       "intro": "Wählen Sie eine Person, um die App mit deren Berechtigungen zu sehen. Die Daten sind erfunden.",
       "back": "Mit E-Mail-Adresse und Passwort anmelden",
       "staff": "Mitarbeitende der Gemeinde",
-      "staffHint": "Administratoren, Dienstleitungen und Diener",
+      "staffHint": "Administratoren, Gemeindebüro, Dienstleitungen und Diener",
       "parents": "Eltern",
       "parentsHint": "Der Elternbereich: die Hausaufgaben ihrer Kinder",
       "members": "Mitglieder",
@@ -1697,7 +1704,7 @@
       "title": "Ihr Konto wartet auf Freigabe",
       "text": "E-Mail-Adresse und Passwort stimmen, aber das Gemeindebüro hat das Konto noch nicht freigegeben. Jedes neue Konto wird von Hand geprüft, weil die App Angaben über Kinder zeigt.",
       "parents": "Bei Eltern verknüpft das Büro das Konto mit ihren Kindern.",
-      "servants": "Diener erhalten Zugang zu dem Dienst, in dem sie dienen.",
+      "servants": "Diener erhalten die Rollen, die sie brauchen.",
       "email": "Sie erhalten eine E-Mail, sobald das Konto bereit ist.",
       "slow": "Dauert es länger als eine Woche? Fragen Sie im Gemeindebüro nach, zum Beispiel nach der Liturgie.",
       "back": "Zurück zur Anmeldung",
@@ -1729,7 +1736,7 @@
       "haveAccount": "Sie haben schon ein Konto? <link>Anmelden</link>",
       "nextTitle": "Wie es weitergeht",
       "step1": "Sie legen Ihr Konto an. Nutzen können Sie es noch nicht.",
-      "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Mitglieder mit ihrem eigenen Eintrag, Diener erhalten Zugang zu ihrem Dienst.",
+      "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Mitglieder mit ihrem eigenen Eintrag, Diener erhalten die Rollen, die sie brauchen.",
       "step3": "Sie erhalten eine E-Mail und können sich anmelden.",
       "childrenNoAccounts": "Kinder unter 16 bekommen ein eigenes Konto nur mit Zustimmung eines Elternteils. Bis dahin sehen ihre Eltern die Hausaufgaben.",
       "asMember": "Mitglied",
@@ -1785,11 +1792,11 @@
     "who": {
       "title": "Wer sie sieht",
       "items": {
-        "servants": "Diener sehen die Personen und die Anwesenheit der Gruppen, in denen sie dienen.",
-        "leaders": "Die Dienstleitung sieht ihren ganzen Dienst.",
+        "servants": "Diener und Dienstleitungen sehen, was ihre Rollen erlauben, in jedem Dienst der Gemeinde: zum Beispiel Angaben zu Personen, Anwesenheit, Lektionen und Hausaufgaben.",
+        "leaders": "Das Gemeindebüro legt fest, welche Rolle was erlaubt und wer welche Rolle hat, und beschränkt das auf das, was der jeweilige Dienst braucht.",
         "admins": "Administratoren im Gemeindebüro verwalten Konten, Rollen und den Elternzugang.",
         "parents": "Eltern sehen nur die veröffentlichten Hausaufgaben ihrer eigenen Kinder: nie Anwesenheit, Notizen oder andere Familien.",
-        "members": "Mitglieder mit eigenem Konto sehen ihre eigenen Gruppen, Termine und Diener, die Bibelstelle und den Merkvers ihrer Lektionen und ihre Hausaufgaben: nie Anwesenheit, Notizen oder andere Mitglieder."
+        "members": "Mitglieder mit eigenem Konto sehen ihre eigenen Gruppen und Termine, die Bibelstelle und den Merkvers ihrer Lektionen und ihre Hausaufgaben: nie Anwesenheit, Notizen oder andere Mitglieder."
       },
       "text": "Die App wird bei [Hosting-Anbieter in der EU] im Rahmen eines Auftragsverarbeitungsvertrags betrieben. Daten werden weder verkauft noch weitergegeben."
     },
@@ -1827,7 +1834,7 @@
   },
   "accountRequests": {
     "title": "{count, plural, =0 {Kontoanfragen} other {Kontoanfragen (#)}}",
-    "description": "Personen, die sich selbst registriert haben. Deren Konten können erst genutzt werden, wenn Sie sie freigeben: Verknüpfen Sie die Kinder eines Elternteils oder geben Sie einem Diener eine Rolle.",
+    "description": "Personen, die sich selbst registriert haben. Deren Konten können erst genutzt werden, wenn Sie sie freigeben: Verknüpfen Sie die Kinder eines Elternteils oder geben Sie einem Diener seine Rollen.",
     "empty": "Keine Konten warten auf Freigabe.",
     "asParent": "Elternteil",
     "asServant": "Diener/in",
@@ -1837,19 +1844,13 @@
     "approve": {
       "title": "Konto von {name} freigeben",
       "parentDescription": "Prüfen Sie die Familie zuerst, zum Beispiel persönlich nach der Liturgie. Der Elternteil sieht dann die veröffentlichten Hausaufgaben dieser Kinder.",
-      "servantDescription": "Sprechen Sie zuerst mit der Dienstleitung. Die Rolle bestimmt, was der Diener sehen und tun kann.",
+      "servantDescription": "Sprechen Sie zuerst mit der Dienstleitung. Die Rollen bestimmen, was der Diener sehen und tun kann, in jedem Dienst.",
       "children": "Kinder",
       "childrenHint": "Kinder, deren Namen {name} angegeben hat, sind schon ausgewählt. Suchen Sie nach weiteren.",
       "findChild": "Kind nach Namen oder Klasse suchen",
       "noChildMatches": "Kein Kind passt.",
       "searchToAdd": "Geben Sie einen Namen ein, um ein Kind zu finden.",
       "selected": "{count, plural, =0 {Noch kein Kind ausgewählt} one {# Kind ausgewählt} other {# Kinder ausgewählt}}",
-      "role": "Rolle",
-      "service": "Dienst",
-      "chooseService": "Dienst auswählen",
-      "stage": "Stufe",
-      "wholeService": "Der ganze Dienst",
-      "stageHint": "Beschränken Sie die Rolle auf eine Stufe, wenn der Diener nur dort dient.",
       "submit": "Konto freigeben",
       "memberDescription": "Verknüpfen Sie das Konto mit dem eigenen Eintrag des Mitglieds. Dann sieht es seine Gruppen, die nächsten Treffen und seine Hausaufgaben. Prüfen Sie zuerst, wem das Konto gehört.",
       "memberRecord": "Mitgliedseintrag",
@@ -1867,7 +1868,10 @@
         "guardianConsent": "Unter 16, ein Elternteil oder eine erziehungsberechtigte Person hat zugestimmt"
       },
       "consentNote": "Wie wurde zugestimmt? (optional)",
-      "consentNotePlaceholder": "Zum Beispiel: Seine Mutter hat am 8. November persönlich zugestimmt."
+      "consentNotePlaceholder": "Zum Beispiel: Seine Mutter hat am 8. November persönlich zugestimmt.",
+      "roles": "Rollen",
+      "rolesHint": "Was das Konto darf, überall in der Gemeinde. Sie können das später unter Mitarbeiterkonten und Rollen ändern.",
+      "servesIn": "Gibt an, in {service} zu dienen."
     },
     "decline": {
       "title": "Registrierung von {name} ablehnen?",
@@ -1907,7 +1911,7 @@
     "list": {
       "title": "Datenschutzanfragen",
       "description": "Auskunfts- und Löschanfragen zu personenbezogenen Daten (DSGVO). Jede muss innerhalb eines Monats nach Eingang beantwortet werden.",
-      "adminsOnly": "Nur Administratoren bearbeiten Datenschutzanfragen",
+      "adminsOnly": "Sie können keine Datenschutzanfragen bearbeiten",
       "adminsOnlyHint": "Wenn jemand Sie nach seinen Daten fragt, geben Sie die Anfrage an das Gemeindebüro weiter.",
       "open": "{count, plural, =0 {Offen} other {Offen (#)}}",
       "noneOpen": "Keine offenen Anfragen.",
@@ -1981,7 +1985,7 @@
     },
     "detail": {
       "requestedBy": "Gestellt von {name}.",
-      "ownAccount": "Diese Anfrage betrifft Ihr eigenes Konto. Ein anderer Administrator muss sie bearbeiten.",
+      "ownAccount": "Diese Anfrage betrifft Ihr eigenes Konto. Jemand anderes, der Datenschutzanfragen bearbeitet, muss sie ausführen.",
       "request": "Anfrage",
       "received": "Eingegangen",
       "channel": "Eingang",
@@ -2086,7 +2090,6 @@
     },
     "groups": {
       "noSchedule": "Derzeit keine regelmäßigen Treffen.",
-      "servants": "Diener:",
       "lastLesson": "Letzte Lektion: „{title}“, {date}"
     },
     "homework": {
@@ -2112,6 +2115,89 @@
         "body": "Die Diener Ihrer Gruppen sehen, ob und wann Sie eine Hausaufgabe abgehakt haben. Andere Mitglieder sehen in diesem Bereich nichts über Sie."
       },
       "prototype": "In diesem Prototyp werden keine E-Mails verschickt. Über das Menü mit Ihrem Namen können Sie den Bereich aus Sicht einer anderen Person ansehen oder <link>ein anderes Demokonto wählen</link>."
+    }
+  },
+  "roleEditor": {
+    "titleNew": "Neue Rolle",
+    "descriptionNew": "Benennen Sie die Rolle und wählen Sie, was sie erlaubt. Danach vergeben Sie sie an Konten.",
+    "roles": "Rollen",
+    "details": "Rolle",
+    "name": "Name",
+    "nameHint": "Zum Beispiel: Gemeindebüro, Anwesenheitshilfe.",
+    "description": "Was die Rolle erlaubt, überall in der Gemeinde, und wer sie hat.",
+    "permissions": "Was sie erlaubt",
+    "permissionsHint": "Rollen gelten überall: Eine Rolle, die Anwesenheit erfassen darf, darf es in jedem Dienst. Wer Anlegen, Ändern oder Löschen ankreuzt, kreuzt auch Sehen an.",
+    "chosen": "{count, number} von {total, number} gewählt",
+    "readOnlyNote": "Sie können diese Rolle sehen, aber Ihre Rollen erlauben nicht, sie zu ändern.",
+    "create": "Rolle anlegen",
+    "save": "Änderungen speichern",
+    "deleteRole": "Rolle löschen",
+    "holdersTitle": "Wer diese Rolle hat",
+    "holdersNone": "Noch niemand. Vergeben Sie die Rolle unter <link>Mitarbeiterkonten und Rollen</link>.",
+    "holdersNew": "Nach dem Anlegen vergeben Sie die Rolle unter <link>Mitarbeiterkonten und Rollen</link>.",
+    "disabledAccount": "deaktiviert",
+    "applyCount": "{count, plural, =0 {Noch hat niemand diese Rolle.} one {Änderungen gelten sofort für # Konto.} other {Änderungen gelten sofort für # Konten.}}",
+    "sensitive": "Sensibel",
+    "sensitiveHint": "Erlaubt Einblick in die persönlichen Daten aller oder die Entscheidung, wer was darf. Nur für Personen, denen Sie wie einem Administrator vertrauen.",
+    "noAccess": "Sie können keine Rollen sehen",
+    "noAccessHint": "Dafür braucht es eine Rolle mit „Rollen: Sehen“; zum Anlegen „Rollen: Anlegen“.",
+    "nameTaken": "Eine Rolle namens „{name}“ gibt es bereits.",
+    "area": "Bereich",
+    "cell": "{resource}: {action}",
+    "opensNothing": "Konten mit nur dieser Rolle können weder die Mitarbeiter-App noch den Elternbereich öffnen. Kreuzen Sie Dienste: Sehen an, damit sie in die Mitarbeiter-App kommen.",
+    "locksOut": "Sonst kann niemand Rollen ändern. Ohne „Rollen: Ändern“ hier könnte niemand mehr Rollen reparieren, deshalb würde diese Änderung abgelehnt.",
+    "deleteLocksOut": "Sonst kann niemand Rollen ändern, deshalb kann diese Rolle nicht gelöscht werden. Geben Sie zuerst einer anderen Rolle „Rollen: Ändern“.",
+    "added": "Angelegt {when}",
+    "changed": "Zuletzt geändert {when}"
+  },
+  "permissions": {
+    "actions": {
+      "read": "Sehen",
+      "create": "Anlegen",
+      "update": "Ändern",
+      "delete": "Löschen"
+    },
+    "resources": {
+      "services": {
+        "name": "Dienste",
+        "description": "Sehen: die Mitarbeiter-App mit allen Diensten, Stufen und Terminen öffnen. Anlegen: Dienste gründen. Ändern: sie bearbeiten. Löschen: sie archivieren, wiederherstellen und löschen."
+      },
+      "stages": {
+        "name": "Stufen",
+        "description": "Anlegen, Ändern, Löschen: die Stufen eines Dienstes anlegen, umbenennen, ordnen, archivieren und löschen. Wer Dienste sieht, sieht auch die Stufen."
+      },
+      "sessions": {
+        "name": "Termine",
+        "description": "Anlegen: Terminpläne und einzelne Termine planen. Ändern: Termine bearbeiten, verschieben, absagen und wieder öffnen. Löschen: Terminpläne löschen. Wer Dienste sieht, sieht auch die Termine."
+      },
+      "attendance": {
+        "name": "Anwesenheit",
+        "description": "Sehen: Anwesenheitslisten und Verlauf. Anlegen: Anwesenheit erfassen (Termin öffnen, Anwesende markieren, schließen). Löschen: eine versehentliche Markierung entfernen. Ändern wird noch nicht verwendet."
+      },
+      "members": {
+        "name": "Mitglieder",
+        "description": "Sehen: die Mitgliederliste und die Angaben zu Personen. Anlegen: Personen hinzufügen. Ändern: Personen bearbeiten, Stufen zuordnen und verschieben. Löschen: Personen aus Stufen nehmen."
+      },
+      "lessons": {
+        "name": "Lektionen",
+        "description": "Sehen: Lektionen. Anlegen: Lektionen vorbereiten. Ändern: sie bearbeiten und abschließen. Löschen: sie archivieren und löschen."
+      },
+      "homework": {
+        "name": "Hausaufgaben",
+        "description": "Sehen: Hausaufgaben und wer sie als erledigt gemeldet hat. Anlegen: Hausaufgaben geben. Ändern: sie bearbeiten, veröffentlichen und zurücknehmen. Löschen: sie archivieren und löschen."
+      },
+      "parentPortal": {
+        "name": "Elternbereich",
+        "description": "Sehen: den Elternbereich öffnen, für die Kinder, für die das Konto Elternzugang hat. Anlegen, Ändern und Löschen werden noch nicht verwendet."
+      },
+      "users": {
+        "name": "Konten",
+        "description": "Sehen: Konten, Kontoanfragen, Elternzugang und Mitgliedskonten. Anlegen: Kontoanfragen freigeben und ablehnen. Ändern: Rollen vergeben und entziehen, Elternzugang und Mitgliederverknüpfungen. Löschen: Datenschutzanfragen und Löschungen."
+      },
+      "roles": {
+        "name": "Rollen",
+        "description": "Sehen: die Rollen und was sie erlauben. Anlegen, Ändern, Löschen: Rollen anlegen, ändern und löschen."
+      }
     }
   }
 }

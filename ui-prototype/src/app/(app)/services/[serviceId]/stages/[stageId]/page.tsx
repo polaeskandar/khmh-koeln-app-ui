@@ -49,7 +49,7 @@ export default async function StageOverviewPage({
     homework?.rows.filter((r) => r.status === "published" && (!r.dueDate || r.dueDate >= today)) ??
     []
   const directory = h.can.members ? personDirectory(ctx) : []
-  const placementServices = h.can.members ? (await listMembers(ctx)).services : []
+  const placementServices = h.can.members ? ((await listMembers(ctx))?.services ?? []) : []
   return (
     <>
       <StageCrumbsTopbar h={h} tab="overview" />

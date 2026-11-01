@@ -1,123 +1,155 @@
-import type { GuardianRelationship, Role, RoleAssignment, User, Uuid } from "./types"
+import type { Action, GuardianRelationship, Permission, Resource, User, Uuid } from "./types"
+
+export type { Action, Permission, Resource } from "./types"
 
 /**
- * Who may do what. Mirrors the rules agreed for the MVP: the backend will
- * enforce them on every request; the prototype's mock layer enforces them in
- * every server action, and the UI only uses them to hide actions a person
- * cannot take.
+ * Who may do what (RBAC). The backend enforces it on every request; the prototype's mock layer
+ * enforces it in every server action, and the UI only uses it to hide what a person cannot do.
  *
- * Roles are scoped: a service leader or servant holds the role in one service,
- * optionally narrowed to one stage (Daniel serves Sunday School · 3rd Class).
- * A stage-scoped role covers that stage only; service-wide things need a
- * service-wide role. Parents have no service roles at all: what they see
- * follows only from approved guardian relationships. Members have no role
- * either: their account is linked to their own member record, and they see
- * only their own groups and homework.
+ * Permissions are fixed by the code: one action (create, read, update, delete) on one resource,
+ * 40 in all. Roles are data: a name and some of those permissions. An account has roles, and may
+ * do what any of them allows. Roles and permissions are global: there is no "where" — a role
+ * that allows taking attendance allows it in every service and every stage.
+ *
+ * Which children a parent sees still follows from approved parent access, not from roles: the
+ * Parent role only opens the parent portal. A member sees their own record's groups and
+ * homework; that needs no role at all, only the link to the record.
  */
-export type Permission =
-  // Global
-  | "CREATE_SERVICE"
-  | "MANAGE_USERS"
-  // Scoped to a service (and optionally a stage)
-  | "VIEW_SERVICE"
-  | "EDIT_SERVICE"
-  | "ARCHIVE_SERVICE"
-  | "MANAGE_STRUCTURE"
-  | "MANAGE_SESSIONS"
-  | "RECORD_ATTENDANCE"
-  | "REOPEN_SESSION"
-  | "MANAGE_MEMBERS"
-  | "MANAGE_LESSONS"
-  | "MANAGE_HOMEWORK"
-  | "VIEW_HOMEWORK_PROGRESS"
 
-type Scoped = Exclude<Permission, "CREATE_SERVICE" | "MANAGE_USERS">
+/** The actions in the order the role editor shows them: See, Add, Change, Delete. */
+export const ACTIONS: Action[] = ["read", "create", "update", "delete"]
 
-const GLOBAL: Permission[] = ["CREATE_SERVICE", "MANAGE_USERS"]
+/** The resources in the order the role editor lists them: the church's work first, access last. */
+export const RESOURCES: Resource[] = [
+  "services",
+  "stages",
+  "sessions",
+  "attendance",
+  "members",
+  "lessons",
+  "homework",
+  "parentPortal",
+  "users",
+  "roles",
+]
 
-const SCOPED: Record<Scoped, Role[]> = {
-  VIEW_SERVICE: ["service_leader", "servant"],
-  EDIT_SERVICE: ["service_leader"],
-  ARCHIVE_SERVICE: [],
-  MANAGE_STRUCTURE: ["service_leader"],
-  MANAGE_SESSIONS: ["service_leader"],
-  RECORD_ATTENDANCE: ["service_leader", "servant"],
-  REOPEN_SESSION: ["service_leader"],
-  MANAGE_MEMBERS: ["service_leader", "servant"],
-  MANAGE_LESSONS: ["service_leader", "servant"],
-  MANAGE_HOMEWORK: ["service_leader", "servant"],
-  VIEW_HOMEWORK_PROGRESS: ["service_leader", "servant"],
+export function permissionOf(action: Action, resource: Resource): Permission {
+  return `${resource}:${action}`
 }
 
-export function isAdministrator(user: User): boolean {
-  return user.roles.some((r) => r.role === "administrator")
+/** The permission catalog: every action on every resource, in the editor's order. */
+export const PERMISSIONS: Permission[] = RESOURCES.flatMap((r) =>
+  ACTIONS.map((a) => permissionOf(a, r))
+)
+
+const CATALOG = new Set<string>(PERMISSIONS)
+
+export function isPermission(value: string): value is Permission {
+  return CATALOG.has(value)
 }
 
-/** An account people can sign in with: approved by an administrator and not disabled. */
+/** The permissions without duplicates, in catalog order. */
+export function inCatalogOrder(permissions: Iterable<Permission>): Permission[] {
+  const set = new Set(permissions)
+  return PERMISSIONS.filter((p) => set.has(p))
+}
+
+/** Rows and columns of the role editor: does the set allow this action on this resource? */
+export function allows(permissions: Permission[], action: Action, resource: Resource): boolean {
+  return permissions.includes(permissionOf(action, resource))
+}
+
+function crud(...resources: Resource[]): Permission[] {
+  return resources.flatMap((r) => ACTIONS.map((a) => permissionOf(a, r)))
+}
+
+/**
+ * The roles a church starts with: the backend's seed (polaeskandar/khmh-koeln-app-backend#130,
+ * migration Version20261101141611), with the same ids, names and permissions. They are ordinary
+ * roles: the church may rename, change and delete them.
+ */
+export const DEFAULT_ROLES: { id: Uuid; name: string; permissions: Permission[] }[] = [
+  {
+    id: "019a3f00-0000-7000-8000-000000000001",
+    name: "Administrator",
+    // Everything but the parent portal (36).
+    permissions: crud(
+      "users",
+      "roles",
+      "services",
+      "stages",
+      "sessions",
+      "attendance",
+      "members",
+      "lessons",
+      "homework"
+    ),
+  },
+  {
+    id: "019a3f00-0000-7000-8000-000000000002",
+    name: "Service leader",
+    // 26
+    permissions: [
+      "services:read",
+      "services:update",
+      ...crud("stages", "sessions", "attendance", "members", "lessons", "homework"),
+    ],
+  },
+  {
+    id: "019a3f00-0000-7000-8000-000000000003",
+    name: "Servant",
+    // 17
+    permissions: ["services:read", ...crud("attendance", "members", "lessons", "homework")],
+  },
+  {
+    id: "019a3f00-0000-7000-8000-000000000004",
+    name: "Parent",
+    permissions: ["parentPortal:read"],
+  },
+].map((r) => ({ ...r, permissions: inCatalogOrder(r.permissions as Permission[]) }))
+
+/** What the roles with these ids allow together, in catalog order. */
+export function permissionsOf(
+  roles: { id: Uuid; permissions: Permission[] }[],
+  roleIds: Uuid[]
+): Permission[] {
+  return inCatalogOrder(roles.filter((r) => roleIds.includes(r.id)).flatMap((r) => r.permissions))
+}
+
+/** An account people can sign in with: approved by the office and not disabled. */
 export function isActiveAccount(user: User): boolean {
   return user.approvedAt !== null && user.disabledAt === null
 }
 
-/** Staff: anyone with an administrator, leader or servant role. Only staff see the church app. */
-export function isStaff(user: User): boolean {
-  return user.roles.some((r) => r.role !== "parent")
+/** May the account do this? Only while it is enabled, and only if one of its roles allows it. */
+export function can(user: User, action: Action, resource: Resource): boolean {
+  return user.disabledAt === null && user.permissions.includes(permissionOf(action, resource))
 }
 
+/**
+ * Staff: the account's roles let it see the services, which opens the church app (services,
+ * meetings, attendance, members, lessons). What it may do there is up to its other permissions.
+ */
+export function isStaff(user: User): boolean {
+  return user.permissions.includes("services:read")
+}
+
+/**
+ * Parent: the account's roles open the parent portal. Which children it shows still depends on
+ * approved parent access.
+ */
 export function isParent(user: User): boolean {
-  return user.roles.some((r) => r.role === "parent")
+  return user.permissions.includes("parentPortal:read")
 }
 
 /**
  * Member: the account belongs to a member record (someone on a service's roster), so it opens
- * the member portal with that person's own groups and homework. Only an administrator links an
+ * the member portal with that person's own groups and homework. Only the office links an
  * account to a record. Staff and parents can be members too: a servant in the Bible Study, a
  * mother in the Coptic course.
  */
 export function isMember(user: User): boolean {
   return user.personId !== null
-}
-
-/** Does the assignment cover the target? A stage-scoped role covers only its own stage. */
-export function covers(
-  r: RoleAssignment,
-  serviceId: Uuid,
-  stageId: Uuid | null | undefined
-): boolean {
-  if (r.serviceId !== serviceId) return false
-  return r.stageId === null || r.stageId === (stageId ?? null)
-}
-
-export function can(
-  user: User,
-  permission: Permission,
-  serviceId?: Uuid | null,
-  stageId?: Uuid | null
-): boolean {
-  if (user.disabledAt) return false
-  if (isAdministrator(user)) return true
-  if (GLOBAL.includes(permission)) return false
-  if (permission === "VIEW_SERVICE") return isStaff(user)
-  if (!serviceId) return false
-  const allowed = SCOPED[permission as Scoped]
-  return user.roles.some((r) => allowed.includes(r.role) && covers(r, serviceId, stageId))
-}
-
-/** Does the user hold the permission somewhere in the service (in the whole service or one of its stages)? */
-export function canInService(user: User, permission: Permission, serviceId: Uuid): boolean {
-  if (user.disabledAt) return false
-  if (isAdministrator(user)) return true
-  if (GLOBAL.includes(permission)) return false
-  const allowed = SCOPED[permission as Scoped]
-  return user.roles.some((r) => r.serviceId === serviceId && allowed.includes(r.role))
-}
-
-/** Does the user hold the permission anywhere at all? */
-export function canAnywhere(user: User, permission: Permission): boolean {
-  if (user.disabledAt) return false
-  if (isAdministrator(user)) return true
-  if (GLOBAL.includes(permission)) return false
-  const allowed = SCOPED[permission as Scoped]
-  return user.roles.some((r) => r.serviceId !== null && allowed.includes(r.role))
 }
 
 /** Can the user act for this child? Only through an approved guardian relationship. */

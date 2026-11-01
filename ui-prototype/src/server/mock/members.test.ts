@@ -7,7 +7,7 @@
  */
 import { describe, expect, test } from "vitest"
 
-import { isActiveAccount, isMember } from "@/lib/domain/policy"
+import { isActiveAccount, isMember, isParent, isStaff } from "@/lib/domain/policy"
 import type { User } from "@/lib/domain/types"
 import { hasMemberPortal } from "@/lib/view-models"
 import { ProblemError } from "@/server/errors"
@@ -92,7 +92,7 @@ describe("member accounts", () => {
       guardianConsentNote: "His mother agreed in person on 8 November.",
     })
     expect(user.personId).toBe(youth.id)
-    expect(user.roles).toEqual([])
+    expect(user.roleIds).toEqual([])
     expect(user.registration).toBeNull()
     expect(user.guardianConsentNote).toBe("His mother agreed in person on 8 November.")
     expect(isMember(user) && isActiveAccount(user)).toBe(true)
@@ -148,9 +148,7 @@ describe("member accounts", () => {
     const t = demo()
     const portal = (u: User) => hasMemberPortal(viewerInfo(contextFor(t.s, u), u))
     const daniel = t.s.users.find((u) => u.email === "daniel.michael@example.org")!
-    const parentOnly = t.s.users.find(
-      (u) => u.personId === null && u.roles.some((r) => r.role === "parent")
-    )!
+    const parentOnly = t.s.users.find((u) => u.personId === null && isParent(u) && !isStaff(u))!
     expect(portal(t.nevine)).toBe(true)
     expect(portal(t.hoda)).toBe(true) // Bible Study and Level 1
     expect(portal(daniel)).toBe(true) // Servants' Preparation
@@ -166,12 +164,12 @@ describe("member accounts", () => {
     unlinkMember(t.s, t.admin, t.hoda.id)
     expect(t.hoda.personId).toBeNull()
     expect(isActiveAccount(t.hoda)).toBe(true)
-    expect(t.hoda.roles.map((r) => r.role)).toEqual(["parent"])
+    expect(t.hoda.roleIds.map((id) => t.s.roles.find((r) => r.id === id)?.name)).toEqual(["Parent"])
   })
 })
 
 describe("member portal", () => {
-  test("the home shows the member's groups, servants and last lesson", async () => {
+  test("the home shows the member's groups and last lesson", async () => {
     const t = demo()
     const home = await getMemberHome(contextFor(t.s, t.nevine))
     expect(home.groups.map((g) => g.stage?.name ?? g.service.name)).toEqual([
@@ -179,10 +177,6 @@ describe("member portal", () => {
       "Level 1",
     ])
     const level1 = home.groups.find((g) => g.stage?.id === t.level1.id)!
-    expect(level1.servants.map((s) => `${s.name} (${s.role})`)).toEqual([
-      "Irene Wahba (service_leader)",
-      "Youssef Nashed (servant)",
-    ])
     expect(level1.lastLesson?.title).toBe("The first eight letters")
     expect(level1.schedules.map((s) => s.name)).toEqual(["Level 1 class"])
   })

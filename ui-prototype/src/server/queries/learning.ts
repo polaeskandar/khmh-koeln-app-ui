@@ -1,6 +1,6 @@
 import "server-only"
 
-import { can } from "@/lib/domain/policy"
+import { can, isActiveAccount } from "@/lib/domain/policy"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type { HomeworkAssignment, Lesson, LocalDate, Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
@@ -165,15 +165,26 @@ function stageContext(s: State, serviceId: Uuid, stageId: Uuid) {
   return { service: serviceRef(s, service), stage: stageRef(stage)! }
 }
 
-/** Servants who may prepare the stage's lessons: candidates for "responsible" and "helping". */
-function preparers(s: State, serviceId: Uuid, stageId: Uuid) {
+/**
+ * Who may prepare lessons: candidates for "responsible" and "helping". Roles hold everywhere,
+ * so that is every active account whose roles may change lessons.
+ */
+function preparers(s: State) {
   return s.users
-    .filter(
-      (u) =>
-        !u.disabledAt &&
-        u.roles.some((r) => r.role !== "administrator" && r.role !== "parent") &&
-        can(u, "MANAGE_LESSONS", serviceId, stageId)
-    )
+    .filter((u) => isActiveAccount(u) && can(u, "update", "lessons"))
+    .map((u) => userRef(u)!)
+    .sort((a, b) => a.name.localeCompare(b.name, "de"))
+}
+
+/** The people responsible for or helping with the stage's lessons: the lesson list's filter. */
+function lessonPeople(s: State, stageId: Uuid) {
+  const ids = new Set(
+    s.lessons
+      .filter((l) => l.stageId === stageId)
+      .flatMap((l) => [l.responsibleId, ...l.collaboratorIds])
+  )
+  return s.users
+    .filter((u) => ids.has(u.id))
     .map((u) => userRef(u)!)
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
@@ -199,10 +210,9 @@ export async function getStageLessons(ctx: Context, serviceId: Uuid, stageId: Uu
       .filter((l) => l.teachingDate < today)
       .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate)),
     archived: lessons.filter((l) => l.archived),
-    servants: preparers(s, serviceId, stageId),
+    servants: lessonPeople(s, stageId),
     can: {
-      manage:
-        can(viewer, "MANAGE_LESSONS", serviceId, stageId) && !isArchived(stageOf(s, stageId)!),
+      manage: can(viewer, "create", "lessons") && !isArchived(stageOf(s, stageId)!),
     },
   }
 }
@@ -238,8 +248,8 @@ export async function getLessonDetail(
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
       .map((h) => homeworkRow(s, h, today)),
     can: {
-      manage: can(viewer, "MANAGE_LESSONS", serviceId, stageId),
-      homework: can(viewer, "MANAGE_HOMEWORK", serviceId, stageId),
+      manage: can(viewer, "update", "lessons"),
+      homework: can(viewer, "create", "homework"),
     },
   }
 }
@@ -266,11 +276,11 @@ export async function getLessonForm(ctx: Context, serviceId: Uuid, stageId: Uuid
           : `date:${lesson.teachingDate}`
       : (firstFree?.value ?? `date:${today}`),
     options,
-    servants: preparers(s, serviceId, stageId),
+    servants: preparers(s),
     viewerId: viewer.id,
     /** Changes whenever lessons are added or this one is saved: the form starts fresh then. */
     version: `${s.lessons.length}-${lesson?.updatedAt ?? "new"}`,
-    can: { manage: can(viewer, "MANAGE_LESSONS", serviceId, stageId) },
+    can: { manage: can(viewer, lesson ? "update" : "create", "lessons") },
   }
 }
 
@@ -298,8 +308,7 @@ export async function getStageHomework(ctx: Context, serviceId: Uuid, stageId: U
       .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate))
       .map((l) => ({ id: l.id, title: l.title, teachingDate: l.teachingDate })),
     can: {
-      manage:
-        can(viewer, "MANAGE_HOMEWORK", serviceId, stageId) && !isArchived(stageOf(s, stageId)!),
+      manage: can(viewer, "create", "homework") && !isArchived(stageOf(s, stageId)!),
     },
   }
 }
@@ -352,7 +361,7 @@ export async function getHomeworkEditor(
       : 0,
     /** Changes whenever homework is added or this one is saved: the form starts fresh then. */
     version: `${s.homework.length}-${homework?.updatedAt ?? "new"}`,
-    can: { manage: can(viewer, "MANAGE_HOMEWORK", serviceId, stageId) },
+    can: { manage: can(viewer, homework ? "update" : "create", "homework") },
   }
 }
 
@@ -372,8 +381,7 @@ export async function getHomeworkProgress(
   const context = stageContext(s, serviceId, stageId)
   const hw = homeworkOf(s, homeworkId)
   if (!context || !hw || hw.stageId !== stageId) return null
-  if (!can(viewer, "VIEW_HOMEWORK_PROGRESS", serviceId, stageId))
-    return { ...context, forbidden: true as const }
+  if (!can(viewer, "read", "homework")) return { ...context, forbidden: true as const }
   const today = clockToday()
   const lesson = lessonOf(s, hw.lessonId)!
   const rows = homeworkAudience(s, hw, today)
@@ -407,7 +415,7 @@ export async function getHomeworkProgress(
     homework: homeworkRow(s, hw, today),
     lesson: { id: lesson.id, title: lesson.title, teachingDate: lesson.teachingDate },
     rows,
-    can: { manage: can(viewer, "MANAGE_HOMEWORK", serviceId, stageId) },
+    can: { manage: can(viewer, "update", "homework") },
   }
 }
 

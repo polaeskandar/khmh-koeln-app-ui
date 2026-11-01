@@ -64,7 +64,8 @@
     "optionalNote": "(optional)",
     "reason": "Reason",
     "loadingEllipsis": "Loading…",
-    "formerAccount": "Former account"
+    "formerAccount": "Former account",
+    "disabled": "Disabled"
   },
   "ui": {
     "close": "Close",
@@ -82,7 +83,7 @@
       "conflict": "Not possible right now",
       "invalid": "Some fields need attention"
     },
-    "forbidden": "Your role does not allow this.",
+    "forbidden": "Your roles don’t allow this.",
     "checkFields": "Check the highlighted fields.",
     "invalidRequest": "The request was not valid.",
     "notFound": {
@@ -97,7 +98,8 @@
       "homework": "This homework does not exist or was deleted.",
       "user": "This account does not exist or was deleted.",
       "guardian": "This parent link does not exist or was removed.",
-      "request": "This request does not exist or was deleted."
+      "request": "This request does not exist or was deleted.",
+      "role": "This role does not exist or was deleted."
     },
     "validation": {
       "tooLong": "Use at most {max} characters.",
@@ -107,10 +109,10 @@
       "invalidTime": "Enter a time like 18:30."
     },
     "services": {
-      "adminOnlyCreate": "Only administrators can create services.",
-      "adminOnlyArchive": "Only administrators can archive services.",
-      "adminOnlyRestore": "Only administrators can restore services.",
-      "adminOnlyDelete": "Only administrators can delete services.",
+      "adminOnlyCreate": "You can’t create services.",
+      "adminOnlyArchive": "You can’t archive services.",
+      "adminOnlyRestore": "You can’t restore services.",
+      "adminOnlyDelete": "You can’t delete services.",
       "nameRequired": "Enter a name for the service.",
       "nameTaken": "A service called “{name}” already exists.",
       "nameTakenArchived": "An archived service is already called “{name}”. Restore it instead of creating a new one.",
@@ -146,7 +148,6 @@
       "attendanceClosed": "Attendance for this session is closed. Reopen it to make corrections.",
       "opensOnTheDay": "Attendance opens on the day of the session.",
       "onlyActiveCanClose": "Only a session that is taking attendance can be closed.",
-      "reopenLeadersOnly": "Only service leaders and administrators can reopen a closed session.",
       "onlyCompletedCanReopen": "Only a completed session can be reopened.",
       "onlyScheduledCanCancel": "Only a session that has not started can be canceled.",
       "sessionEndAfterStart": "The session has to end after it starts.",
@@ -154,7 +155,8 @@
       "chooseFutureTime": "Choose a time in the future.",
       "titleRequired": "Enter a title.",
       "noMeetingOnDate": "The schedule has no meeting on that date.",
-      "scheduleInactive": "This schedule is inactive. Activate it first."
+      "scheduleInactive": "This schedule is inactive. Activate it first.",
+      "reopenNotAllowed": "You can’t reopen meetings."
     },
     "recurrence": {
       "interval": "The interval must be between 1 and 52.",
@@ -176,21 +178,26 @@
     "people": {
       "firstNameRequired": "Enter a first name.",
       "lastNameRequired": "Enter a last name.",
-      "editOutsideServices": "You can only edit people in the services you serve in. {name} is not in any of them.",
-      "addOutsideServices": "You can only add people to the services and stages you serve in.",
-      "chooseJoinService": "Choose the service this person joins.",
       "duplicateTitle": "Possible duplicate",
       "duplicate": "{count, plural, one {Someone called {name} already exists.} other {# people called {name} already exist.}} Check that this is a different person.",
       "alreadyIn": "{name} is already in {where}.",
-      "membershipOutsideServices": "You can only change memberships in the services and stages you serve in.",
       "membershipEnded": "This membership has already ended.",
-      "moveOutsideStages": "You can only move people into stages you serve in."
+      "addNotAllowed": "You can’t add people.",
+      "changeNotAllowed": "You can’t change people or their stages.",
+      "removeNotAllowed": "You can’t take people out of stages."
     },
     "roles": {
-      "adminOnly": "Only administrators can change roles.",
-      "chooseService": "Choose the service this role applies to.",
+      "adminOnly": "You can’t give or remove roles.",
       "alreadyHasRole": "{name} already has this role.",
-      "ownAdminRole": "You cannot remove your own administrator role. Ask another administrator."
+      "chooseRole": "Choose at least one role.",
+      "nameRequired": "Enter a name for the role.",
+      "nameTaken": "A role called “{name}” already exists.",
+      "lastRoleManager": "At least one active account must be able to change roles. Give that permission to someone else first.",
+      "unknownPermission": "Some of these permissions don’t exist.",
+      "createNotAllowed": "You can’t add roles.",
+      "updateNotAllowed": "You can’t change roles.",
+      "deleteNotAllowed": "You can’t delete roles.",
+      "unknown": "This role doesn’t exist any more. Choose another one."
     },
     "materials": {
       "labelTooLong": "Use at most 120 characters for the label.",
@@ -204,24 +211,23 @@
       "noMeetingThatDay": "{name} does not meet on that date.",
       "chooseWhen": "Choose when the lesson will be taught.",
       "meetingHasLesson": "This meeting already has a lesson: “{title}”. Edit that one, or pick another date.",
-      "chooseResponsible": "Choose a servant of this stage.",
-      "helpersInStage": "Everyone helping must serve in this stage.",
-      "prepareStageOnly": "Only servants of this stage and service leaders can prepare its lessons.",
-      "changeStageOnly": "Only servants of this stage and service leaders can change its lessons.",
+      "chooseResponsible": "Choose someone who may change lessons.",
+      "helpersInStage": "Everyone helping must be allowed to change lessons.",
       "stageArchived": "{name} is archived.",
       "archived": "This lesson is archived.",
       "taughtAfterDate": "A lesson is marked as taught on or after its teaching date.",
       "deleteDraftsOnly": "Only draft lessons can be deleted. Archive it instead.",
-      "homeworkPublished": "Homework of this lesson was published to parents. Archive the lesson instead."
+      "homeworkPublished": "Homework of this lesson was published to parents. Archive the lesson instead.",
+      "createNotAllowed": "You can’t prepare lessons.",
+      "changeNotAllowed": "You can’t change lessons.",
+      "deleteNotAllowed": "You can’t archive or delete lessons."
     },
     "homework": {
       "titleRequired": "Enter a title, e.g. “Learn the memory verse”.",
       "instructionsRequired": "Write what to do at home.",
       "instructionsTooLong": "Use at most 2,000 characters.",
       "dueBeforeLesson": "The due date can’t be before the lesson.",
-      "changeStageOnly": "Only servants of this stage and service leaders can change its homework.",
       "lessonWithoutStage": "Homework is assigned to a stage. Add the lesson to a stage first.",
-      "assignStageOnly": "Only servants of this stage and service leaders can assign its homework.",
       "lessonArchived": "The lesson is archived. Restore the lesson first.",
       "archivedNoEdit": "Archived homework can’t be edited.",
       "archivedNoPublish": "Archived homework can’t be published. Restore it first.",
@@ -231,13 +237,16 @@
       "publishedStays": "Homework that was published stays in the history. Archive it instead.",
       "ownChildrenOnly": "You can only report homework for your own children.",
       "notAvailable": "This homework is not available.",
-      "otherClass": "This homework is for another class than {name}’s."
+      "otherClass": "This homework is for another class than {name}’s.",
+      "createNotAllowed": "You can’t give homework.",
+      "changeNotAllowed": "You can’t change homework.",
+      "deleteNotAllowed": "You can’t archive or delete homework."
     },
     "guardians": {
-      "adminOnlyGrant": "Only administrators can give parents access to a child.",
+      "adminOnlyGrant": "You can’t give parents access to children.",
       "alreadyHasAccess": "{parent} already has access to {child}.",
-      "adminOnlyApprove": "Only administrators can approve parent access.",
-      "adminOnlyRemove": "Only administrators can remove parent access."
+      "adminOnlyApprove": "You can’t approve parent access.",
+      "adminOnlyRemove": "You can’t remove parent access."
     },
     "accounts": {
       "firstNameRequired": "Enter your first name.",
@@ -249,22 +258,22 @@
       "childrenRequired": "Write the names and classes of your children, so the church office can link them to your account.",
       "serviceDetailsRequired": "Write where you serve, so the church office can give you the right access.",
       "chooseService": "Choose the service you serve in.",
-      "chooseServiceForRole": "Choose the service for this role.",
       "acceptPrivacy": "Please confirm that you have read the privacy notice.",
-      "adminOnly": "Only administrators can approve or decline accounts.",
+      "adminOnly": "You can’t approve or decline account requests.",
       "alreadyApproved": "This account has already been approved.",
       "chooseChild": "Choose at least one child.",
       "childNotFound": "One of the chosen children no longer exists or is inactive.",
-      "stageNotInService": "This stage doesn’t belong to the chosen service.",
       "groupsRequired": "Write which groups you take part in, so the church office can link your account to your record.",
       "choosePerson": "Choose the member record this account belongs to.",
       "personNotFound": "This member record no longer exists or is inactive.",
       "personHasAccount": "{name} already has an account. Check that you chose the right person.",
       "chooseAge": "Choose whether the member is 16 or older, or under 16 with a parent’s agreement.",
-      "notLinked": "This account isn’t linked to a member record."
+      "notLinked": "This account isn’t linked to a member record.",
+      "unlinkNotAllowed": "You can’t remove member links.",
+      "notApproved": "This account hasn’t been approved yet. Approve it under Account requests first."
     },
     "privacy": {
-      "adminOnly": "Only administrators can handle data protection requests.",
+      "adminOnly": "You can’t handle data protection requests.",
       "chooseSubject": "Choose the member or account the request is about.",
       "requestedByRequired": "Enter who made the request.",
       "receivedInFuture": "The date can’t be in the future.",
@@ -273,7 +282,7 @@
       "notErasure": "Only erasure requests delete data.",
       "notCopy": "This is not a request for a copy.",
       "subjectGone": "The data this request is about no longer exists.",
-      "ownAccount": "You can’t erase your own account. Ask another administrator.",
+      "ownAccount": "You can’t erase your own account. Ask someone else who handles data protection requests.",
       "declineReasonRequired": "Give the reason. The person must be told why, and that they can complain to the data protection authority."
     }
   },
@@ -305,7 +314,7 @@
     "membershipAdded": "Added.",
     "membershipEnded": "Removed. Past attendance is kept.",
     "membershipMoved": "Moved. Past attendance stays with the old stage.",
-    "roleAssigned": "Role assigned.",
+    "roleAssigned": "Role given.",
     "roleRemoved": "Role removed.",
     "lessonReady": "“{title}” is ready to teach.",
     "lessonDraftSaved": "Draft saved: “{title}”.",
@@ -336,21 +345,13 @@
     "copySent": "Marked as sent.",
     "dataRequestDeclined": "Request declined. Tell the person why, and that they can complain to the data protection authority.",
     "erasureRequested": "Your request was sent to the church office. It will answer within one month.",
-    "memberUnlinked": "Link removed for {name}."
+    "memberUnlinked": "Link removed for {name}.",
+    "roleCreated": "Role “{name}” created.",
+    "roleSaved": "Role saved.",
+    "roleDeleted": "Role “{name}” deleted."
   },
   "roles": {
-    "administrator": "Administrator",
-    "service_leader": "Service leader",
-    "servant": "Servant",
-    "parent": "Parent",
-    "description": {
-      "administrator": "Manages services, accounts, roles and parent access for the whole church.",
-      "service_leader": "Manages one service: stages, schedules, sessions, members, lessons and homework.",
-      "servant": "Takes attendance, prepares lessons and homework, in one service or one of its stages.",
-      "parent": "Sees the published homework of the children an administrator linked to the account."
-    },
     "summary": {
-      "staff": "{role} · {where}{more, plural, =0 {} other { +#}}",
       "parentOf": "Parent of {children}",
       "parentWaiting": "Parent, waiting for access",
       "none": "No role yet",
@@ -366,13 +367,13 @@
     },
     "stagesCount": "{count, plural, one {# stage} other {# stages}}",
     "summary": {
-      "none": "There are no meetings in your services today.",
+      "none": "There are no meetings today.",
       "open": "{count, plural, one {# meeting is} other {# meetings are}} taking attendance",
       "notOpened": "{count, plural, other {# not opened yet}}"
     },
     "today": {
       "title": "Today",
-      "description": "All of today’s meetings in your services.",
+      "description": "All of today’s meetings.",
       "allMeetings": "All meetings",
       "empty": "No meetings today",
       "tomorrow": "Tomorrow: {names}.",
@@ -386,7 +387,7 @@
     },
     "recent": {
       "title": "Recently closed",
-      "description": "Attendance that was closed in your services.",
+      "description": "Attendance that was closed recently.",
       "link": "Attendance",
       "empty": "Nothing closed yet.",
       "closedAt": "closed at {time}",
@@ -394,11 +395,11 @@
     },
     "comingUp": {
       "title": "Coming up",
-      "description": "The next seven days in your services.",
-      "empty": "Nothing planned in your services."
+      "description": "The next seven days.",
+      "empty": "Nothing planned."
     },
     "services": {
-      "title": "Your services",
+      "title": "Services",
       "link": "Services",
       "next": "next {when}, {time}",
       "ofRoster": "of roster, 4 weeks",
@@ -420,8 +421,6 @@
     },
     "sections": "{name} sections",
     "meets": "{pattern}, {time}",
-    "servants": "Servants: {names}",
-    "leader": "{name} (leader)",
     "noSchedule": "No schedule",
     "pastSessions": "{count, plural, one {# past session} other {# past sessions}}",
     "archivedOn": "Archived {date}",
@@ -680,8 +679,7 @@
     "description": "Accounts and roles, parent access, and the church’s basic settings.",
     "users": {
       "title": "Staff accounts and roles",
-      "descriptionAdmin": "Administrators give roles per service. A servant’s role can be limited to one stage.",
-      "descriptionReadOnly": "Only administrators change roles. This is who has which role.",
+      "descriptionReadOnly": "Who has which role. Your roles let you see this, not change it.",
       "addRole": "Role",
       "removeRoleLabel": "Remove role {role} from {name}",
       "removeTitle": "Remove “{role}” from {name}?",
@@ -689,20 +687,17 @@
       "remove": "Remove role",
       "assign": {
         "title": "Give {name} a role",
-        "description": "Roles decide what someone can see and change. They can hold several.",
+        "description": "Roles decide what someone can see and change, in every service. An account can have several.",
         "role": "Role",
-        "service": "Service",
-        "stage": "Stage",
-        "wholeService": "Whole service",
-        "limitedTo": "Limited to {stage}: attendance, lessons and homework of that stage only.",
-        "submit": "Give role"
-      }
+        "submit": "Give role",
+        "roleHint": "See what each role allows under <link>Roles</link>.",
+        "choose": "Choose a role"
+      },
+      "description": "Give each account the roles it needs. Roles hold everywhere in the church."
     },
     "parents": {
       "title": "Parent access",
       "description": "Which parent accounts see which children’s homework.",
-      "adminsOnly": "Administrators only",
-      "adminsOnlyHint": "Linking parents to children is done by the church’s administrators.",
       "give": "Give a parent access",
       "giveTitle": "Give a parent access to a child",
       "giveDescription": "Check the family first, for example in person after the liturgy. The parent then sees this child’s published homework.",
@@ -761,8 +756,6 @@
     "members": {
       "title": "Member accounts",
       "description": "Accounts linked to a member’s own record. The member sees their groups, the next meetings and their homework.",
-      "adminsOnly": "Only administrators manage member accounts",
-      "adminsOnlyHint": "Linking an account to a member’s record is done by the church’s administrators.",
       "empty": "No member accounts yet.",
       "alsoParent": "Also a parent",
       "disabled": "Disabled",
@@ -781,6 +774,25 @@
       "removeKept": "Homework reports made with the account stay in the history.",
       "removeAgain": "An account without another role goes back to the account requests, so you can link it to the right record or decline it.",
       "removeConfirm": "Remove link"
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "What each role allows. Give roles to accounts under Staff accounts and roles.",
+      "newRole": "New role",
+      "role": "Role",
+      "accounts": "Accounts",
+      "permissionCount": "{count, number} of {total, number} permissions",
+      "holders": "{count, plural, =0 {No one} one {# account} other {# accounts}}",
+      "actionsFor": "Actions for {role}",
+      "edit": "Edit",
+      "view": "View",
+      "delete": "Delete",
+      "deleteTitle": "Delete the role “{name}”?",
+      "deleteDescription": "{count, plural, =0 {Nobody has it.} one {# account has it and loses what it allows at once.} other {# accounts have it and lose what it allows at once.}}",
+      "deleteConfirm": "Delete role",
+      "readOnly": "Your roles let you see roles, not change them.",
+      "allows": "Allows",
+      "global": "Roles hold everywhere in the church, in every service. Which children a parent sees still comes from parent access; members see their own groups without a role."
     }
   },
   "session": {
@@ -1050,7 +1062,9 @@
         "history": "Their attendance and memberships stay in the history.",
         "reactivate": "You can reactivate them at any time."
       }
-    }
+    },
+    "noAccess": "You can’t see the member list",
+    "noAccessHint": "Seeing members needs a role with “Members: See”."
   },
   "homework": {
     "title": "Homework",
@@ -1257,7 +1271,6 @@
       "next": "Next meeting",
       "attendance": "Attendance, 4 wk",
       "attendanceHint": "Share of the roster marked present over the last four weeks",
-      "leaders": "Leaders",
       "actions": "Actions",
       "onAverage": "{count, number} <muted>on average</muted>",
       "noSessions": "No sessions",
@@ -1309,12 +1322,6 @@
       "upcoming": {
         "title": "Coming up",
         "empty": "Nothing planned in the next two weeks."
-      },
-      "team": {
-        "title": "Leaders and servants",
-        "manageRoles": "Manage roles",
-        "empty": "Nobody has a role in this service yet.",
-        "giveRole": "<link>Give someone the service leader role</link> in Settings."
       }
     }
   },
@@ -1687,7 +1694,7 @@
       "intro": "Pick someone to see the app with their permissions. The data is fictional.",
       "back": "Sign in with email and password",
       "staff": "Church staff",
-      "staffHint": "Administrators, service leaders and servants",
+      "staffHint": "Administrators, the church office, service leaders and servants",
       "parents": "Parents",
       "parentsHint": "The parent portal: their children’s homework",
       "members": "Members",
@@ -1697,7 +1704,7 @@
       "title": "Your account is waiting for approval",
       "text": "Your email address and password are right, but the church office hasn’t approved the account yet. Every new account is checked by hand, because the app shows information about children.",
       "parents": "For parents, the office links the account to their children.",
-      "servants": "For servants, it gives access to the service they serve in.",
+      "servants": "For servants, it gives them the roles they need.",
       "email": "You’ll get an email as soon as the account is ready.",
       "slow": "Taking longer than a week? Ask in the church office, for example after the liturgy.",
       "back": "Back to sign-in",
@@ -1729,7 +1736,7 @@
       "haveAccount": "Already have an account? <link>Sign in</link>",
       "nextTitle": "What happens next",
       "step1": "You create your account. You can’t use it yet.",
-      "step2": "The church office checks your details: parents are linked to their children, members to their own record, servants get access to their service.",
+      "step2": "The church office checks your details: parents are linked to their children, members to their own record, servants get the roles they need.",
       "step3": "You get an email and can sign in.",
       "childrenNoAccounts": "Children under 16 get an account of their own only with a parent’s agreement. Until then, their parents see their homework.",
       "asMember": "Member",
@@ -1785,11 +1792,11 @@
     "who": {
       "title": "Who can see it",
       "items": {
-        "servants": "Servants see the people and attendance of the groups they serve in.",
-        "leaders": "Service leaders see their whole service.",
+        "servants": "Servants and service leaders see what their roles allow, in every service of the church: for example people’s details, attendance, lessons and homework.",
+        "leaders": "The church office decides which role allows what and who has which role, and keeps this to what each person’s service needs.",
         "admins": "Administrators in the church office manage accounts, roles and parent access.",
         "parents": "Parents see only their own children’s published homework: never attendance, notes or other families.",
-        "members": "Members with their own account see their own groups, meeting times and servants, the passage and memory verse of their lessons, and their homework: never attendance, notes or other members."
+        "members": "Members with their own account see their own groups and meeting times, the passage and memory verse of their lessons, and their homework: never attendance, notes or other members."
       },
       "text": "The app is hosted by [hosting provider in the EU] under a data processing agreement. No data is sold or passed on."
     },
@@ -1827,7 +1834,7 @@
   },
   "accountRequests": {
     "title": "{count, plural, =0 {Account requests} other {Account requests (#)}}",
-    "description": "People who registered themselves. Their accounts can’t be used until you approve them: link a parent’s children, or give a servant a role.",
+    "description": "People who registered themselves. Their accounts can’t be used until you approve them: link a parent’s children, or give a servant their roles.",
     "empty": "No accounts are waiting for approval.",
     "asParent": "Parent",
     "asServant": "Servant",
@@ -1837,19 +1844,13 @@
     "approve": {
       "title": "Approve {name}’s account",
       "parentDescription": "Check the family first, for example in person after the liturgy. The parent then sees these children’s published homework.",
-      "servantDescription": "Check with the service leader first. The role decides what the servant can see and do.",
+      "servantDescription": "Check with the service leader first. The roles decide what the servant can see and do, in every service.",
       "children": "Children",
       "childrenHint": "Children whose names {name} wrote are already chosen. Search to add others.",
       "findChild": "Find a child by name or class",
       "noChildMatches": "No child matches.",
       "searchToAdd": "Type a name to find a child.",
       "selected": "{count, plural, =0 {No child chosen yet} one {# child chosen} other {# children chosen}}",
-      "role": "Role",
-      "service": "Service",
-      "chooseService": "Choose a service",
-      "stage": "Stage",
-      "wholeService": "The whole service",
-      "stageHint": "Narrow the role to one stage if the servant only serves there.",
       "submit": "Approve account",
       "memberDescription": "Link the account to the member’s own record. Then they see their groups, the next meetings and their homework. Check first who the account belongs to.",
       "memberRecord": "Member record",
@@ -1867,7 +1868,10 @@
         "guardianConsent": "Under 16, and a parent or guardian agreed"
       },
       "consentNote": "How did they agree? (optional)",
-      "consentNotePlaceholder": "For example: his mother agreed in person on 8 November."
+      "consentNotePlaceholder": "For example: his mother agreed in person on 8 November.",
+      "roles": "Roles",
+      "rolesHint": "What the account may do, everywhere in the church. You can change it later under Staff accounts and roles.",
+      "servesIn": "Says they serve in {service}."
     },
     "decline": {
       "title": "Decline {name}’s registration?",
@@ -1907,7 +1911,7 @@
     "list": {
       "title": "Data protection requests",
       "description": "Requests to see or delete personal data (DSGVO). Each one must be answered within one month of arriving.",
-      "adminsOnly": "Only administrators handle data protection requests",
+      "adminsOnly": "You can’t handle data protection requests",
       "adminsOnlyHint": "If someone asks you about their data, pass it on to the church office.",
       "open": "{count, plural, =0 {Open} other {Open (#)}}",
       "noneOpen": "No open requests.",
@@ -1981,7 +1985,7 @@
     },
     "detail": {
       "requestedBy": "Asked by {name}.",
-      "ownAccount": "This request is about your own account. Another administrator has to carry it out.",
+      "ownAccount": "This request is about your own account. Someone else who handles data protection requests has to carry it out.",
       "request": "Request",
       "received": "Received",
       "channel": "How it came",
@@ -2086,7 +2090,6 @@
     },
     "groups": {
       "noSchedule": "No regular meetings at the moment.",
-      "servants": "Servants:",
       "lastLesson": "Last lesson: “{title}”, {date}"
     },
     "homework": {
@@ -2112,6 +2115,89 @@
         "body": "The servants of your groups see whether you ticked off a homework task and when. Other members see nothing about you in this portal."
       },
       "prototype": "No emails are sent in this prototype. Use the menu with your name to view the portal as someone else, or <link>choose another demo account</link>."
+    }
+  },
+  "roleEditor": {
+    "titleNew": "New role",
+    "descriptionNew": "Name the role and choose what it allows. You give it to accounts afterwards.",
+    "roles": "Roles",
+    "details": "Role",
+    "name": "Name",
+    "nameHint": "For example: Church office, Attendance helper.",
+    "description": "What the role allows, everywhere in the church, and who has it.",
+    "permissions": "What it allows",
+    "permissionsHint": "Roles hold everywhere: a role that may take attendance may take it in every service. Ticking Add, Change or Delete ticks See too.",
+    "chosen": "{count, number} of {total, number} chosen",
+    "readOnlyNote": "You can see this role, but your roles don’t let you change it.",
+    "create": "Create role",
+    "save": "Save changes",
+    "deleteRole": "Delete role",
+    "holdersTitle": "Who has this role",
+    "holdersNone": "Nobody yet. Give the role to accounts in <link>Staff accounts and roles</link>.",
+    "holdersNew": "After you create the role, give it to accounts in <link>Staff accounts and roles</link>.",
+    "disabledAccount": "disabled",
+    "applyCount": "{count, plural, =0 {Nobody has this role yet.} one {Changes apply to # account at once.} other {Changes apply to # accounts at once.}}",
+    "sensitive": "Sensitive",
+    "sensitiveHint": "Lets people see everyone’s personal data or decide who may do what. Only for people you would trust as an administrator.",
+    "noAccess": "You can’t see roles",
+    "noAccessHint": "Seeing roles needs a role with “Roles: See”; adding them needs “Roles: Add”.",
+    "nameTaken": "There is already a role called “{name}”.",
+    "area": "Area",
+    "cell": "{resource}: {action}",
+    "opensNothing": "Accounts with only this role can’t open the staff app or the parent portal. Tick Services: See to let them into the staff app.",
+    "locksOut": "Nobody else can change roles. Without “Roles: Change” here, no one could repair roles any more, so this change would be refused.",
+    "deleteLocksOut": "Nobody else can change roles, so this role can’t be deleted. Give another role “Roles: Change” first.",
+    "added": "Added {when}",
+    "changed": "Last changed {when}"
+  },
+  "permissions": {
+    "actions": {
+      "read": "See",
+      "create": "Add",
+      "update": "Change",
+      "delete": "Delete"
+    },
+    "resources": {
+      "services": {
+        "name": "Services",
+        "description": "See: open the staff app with every service, stage and meeting. Add: start services. Change: edit them. Delete: archive, restore and delete them."
+      },
+      "stages": {
+        "name": "Stages",
+        "description": "Add, Change, Delete: add, rename, reorder, archive and delete a service’s stages. Whoever sees services sees the stages."
+      },
+      "sessions": {
+        "name": "Meetings",
+        "description": "Add: plan schedules and one-off meetings. Change: edit, move, cancel and reopen meetings. Delete: delete schedules. Whoever sees services sees the meetings."
+      },
+      "attendance": {
+        "name": "Attendance",
+        "description": "See: attendance lists and history. Add: take attendance (open a meeting, mark who is there, close it). Delete: remove a mark set by mistake. Change isn’t used yet."
+      },
+      "members": {
+        "name": "Members",
+        "description": "See: the member list and people’s details. Add: add people. Change: edit people, put them in stages and move them. Delete: take people out of stages."
+      },
+      "lessons": {
+        "name": "Lessons",
+        "description": "See: lessons. Add: prepare lessons. Change: edit and complete them. Delete: archive and delete them."
+      },
+      "homework": {
+        "name": "Homework",
+        "description": "See: homework and who reported it done. Add: give homework. Change: edit, publish and take it back. Delete: archive and delete it."
+      },
+      "parentPortal": {
+        "name": "Parent portal",
+        "description": "See: open the parent portal, for the children the account has parent access to. Add, Change and Delete aren’t used yet."
+      },
+      "users": {
+        "name": "Accounts",
+        "description": "See: accounts, account requests, parent access and member accounts. Add: approve and decline account requests. Change: give and remove roles, parent access and member links. Delete: data protection requests and erasure."
+      },
+      "roles": {
+        "name": "Roles",
+        "description": "See: the roles and what they allow. Add, Change, Delete: create, change and delete roles."
+      }
     }
   }
 }

@@ -32,7 +32,10 @@ async function SidebarDynamic() {
   return (
     <>
       <SidebarContent>
-        <ActiveSidebarNav openSessions={shell.openSessions} />
+        <ActiveSidebarNav
+          openSessions={shell.openSessions}
+          permissions={shell.viewer.permissions}
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUser viewer={shell.viewer} personas={shell.personas} />

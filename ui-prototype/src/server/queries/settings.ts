@@ -1,22 +1,20 @@
 import "server-only"
 
-import { can, isStaff } from "@/lib/domain/policy"
+import { can, isParent, isStaff } from "@/lib/domain/policy"
 import { CHURCH_TIME_ZONE } from "@/lib/domain/time"
 import { today as clockToday } from "@/server/mock/clock"
 import {
   currentGroupNames,
   currentStagesOf,
-  isArchived,
   personOf,
-  serviceOf,
   stageOf,
-  stagesOf,
   userOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context, Translator } from "@/server/viewer"
 
-import { serviceRef, stageRef, userRef, viewerInfo } from "./present"
+import { rolesOf, userRef, viewerInfo } from "./present"
+import { getAssignableRoles, getRoleList } from "./roles"
 
 function classOf(s: State, personId: string): string | null {
   const placement = currentStagesOf(s, personId, clockToday())[0]
@@ -24,8 +22,8 @@ function classOf(s: State, personId: string): string | null {
 }
 
 /**
- * Parent access, for administrators only: requests waiting for approval and
- * the approved links between parent accounts and children.
+ * Parent access: requests waiting for approval and the approved links between parent accounts
+ * and children.
  */
 function parentAccess(s: State, t: Translator) {
   const links = s.guardians
@@ -62,7 +60,7 @@ function parentAccess(s: State, t: Translator) {
     }))
     .sort((a, b) => a.group.localeCompare(b.group, "de") || a.name.localeCompare(b.name, "de"))
   const parents = s.users
-    .filter((u) => !u.disabledAt && u.roles.some((r) => r.role === "parent"))
+    .filter((u) => !u.disabledAt && u.approvedAt !== null && isParent(u))
     .map((u) => ({ id: u.id, name: u.displayName, email: u.email }))
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
   return {
@@ -82,9 +80,9 @@ function parentAccess(s: State, t: Translator) {
 }
 
 /**
- * Member accounts, for administrators only: accounts linked to a member record that are not
- * staff accounts (a servant's record link is part of their staff account). Parents whose own
- * record is linked are listed too, since the link is what opens the member portal.
+ * Member accounts: accounts linked to a member record that are not staff accounts (a servant's
+ * record link is part of their staff account). Parents whose own record is linked are listed
+ * too, since the link is what opens the member portal.
  */
 function memberAccounts(s: State) {
   const today = clockToday()
@@ -105,7 +103,7 @@ function memberAccounts(s: State) {
             groups: currentGroupNames(s, person.id, today),
             inactive: person.status !== "active",
           },
-          isParent: u.roles.some((r) => r.role === "parent"),
+          isParent: isParent(u),
           ageCheck: u.ageCheck,
           guardianConsentNote: u.guardianConsentNote,
           approvedAt: u.approvedAt,
@@ -118,42 +116,43 @@ function memberAccounts(s: State) {
 
 export type MemberAccount = ReturnType<typeof memberAccounts>[number]
 
-export async function getSettings(ctx: Context) {
-  const { state: s, viewer } = ctx
-  const canManageUsers = can(viewer, "MANAGE_USERS")
-  const users = s.users
-    // Parent accounts are managed under parent access; the list here is the church's staff.
-    .filter((u) => u.roles.some((r) => r.role !== "parent"))
+/**
+ * The accounts in "Staff accounts and roles": approved accounts with roles, except parents whose
+ * roles only open the parent portal (they are managed under parent access).
+ */
+function staffAccounts(ctx: Context) {
+  const { state: s } = ctx
+  return s.users
+    .filter((u) => u.approvedAt !== null && u.roleIds.length > 0 && (isStaff(u) || !isParent(u)))
     .map((u) => ({
       ...userRef(u)!,
       email: u.email,
       disabled: u.disabledAt !== null,
       disabledAt: u.disabledAt,
-      roles: u.roles
-        .filter((r) => r.role !== "parent")
-        .map((r) => ({
-          role: r.role,
-          service: r.serviceId ? serviceRef(s, serviceOf(s, r.serviceId)!) : null,
-          stage: stageRef(stageOf(s, r.stageId)),
-        })),
-      isParentToo: u.roles.some((r) => r.role === "parent"),
+      roles: rolesOf(s, u).map((r) => ({ id: r.id, name: r.name })),
     }))
     .sort((a, b) => Number(a.disabled) - Number(b.disabled) || a.name.localeCompare(b.name, "de"))
+}
+
+export type StaffAccount = ReturnType<typeof staffAccounts>[number]
+
+export async function getSettings(ctx: Context) {
+  const { state: s, viewer } = ctx
+  const seeAccounts = can(viewer, "read", "users")
+  const canChangeAccounts = can(viewer, "update", "users")
   return {
     viewer: viewerInfo(ctx, viewer),
-    users,
-    services: s.services
-      .filter((x) => !isArchived(x))
-      .sort((a, b) => a.name.localeCompare(b.name, "de"))
-      .map((x) => ({ ...serviceRef(s, x), stages: stagesOf(s, x.id).map((st) => stageRef(st)!) })),
-    parentAccess: canManageUsers ? parentAccess(s, ctx.t) : null,
-    memberAccounts: canManageUsers ? memberAccounts(s) : null,
+    users: seeAccounts ? staffAccounts(ctx) : null,
+    parentAccess: seeAccounts ? parentAccess(s, ctx.t) : null,
+    memberAccounts: seeAccounts ? memberAccounts(s) : null,
+    roles: getRoleList(ctx),
+    assignableRoles: canChangeAccounts ? getAssignableRoles(ctx) : [],
+    canChangeAccounts,
     church: { name: "KHMK Köln", timeZone: CHURCH_TIME_ZONE },
     generatorRuns: [...s.generatorRuns].reverse().slice(0, 6),
     seededAt: s.seededAt,
     today: clockToday(),
     clock: process.env.KHMK_DEMO_CLOCK === "frozen" ? ("frozen" as const) : ("running" as const),
-    canManageUsers,
   }
 }
 

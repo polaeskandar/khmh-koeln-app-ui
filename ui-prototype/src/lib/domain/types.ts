@@ -21,7 +21,26 @@ export type Frequency = "weekly" | "monthly"
 export type RosterMode = "expected" | "open"
 export type SessionStatus = "scheduled" | "active" | "completed" | "canceled"
 export type SessionEventType = "opened" | "closed" | "reopened" | "canceled" | "moved" | "edited"
-export type Role = "administrator" | "service_leader" | "servant" | "parent"
+/** What a permission lets someone do. */
+export type Action = "create" | "read" | "update" | "delete"
+/** What a permission is about. */
+export type Resource =
+  | "users"
+  | "roles"
+  | "services"
+  | "stages"
+  | "sessions"
+  | "attendance"
+  | "members"
+  | "lessons"
+  | "homework"
+  | "parentPortal"
+/**
+ * One action on one resource, written "resource:action" ("sessions:update"). The catalog holds
+ * every combination, 40 in all (`PERMISSIONS` in policy.ts); the API writes one as
+ * {"action": "update", "resource": "sessions"}.
+ */
+export type Permission = `${Resource}:${Action}`
 export type LessonStatus = "draft" | "ready" | "completed"
 export type HomeworkStatus = "draft" | "published" | "archived"
 export type GuardianStatus = "pending" | "approved" | "revoked"
@@ -141,12 +160,19 @@ export type Attendance = {
   removalReason: string | null
 }
 
-export type RoleAssignment = {
-  role: Role
-  /** Null for administrators and parents, who are never scoped to a service. */
-  serviceId: Uuid | null
-  /** Optional narrowing to one stage, e.g. a servant of Sunday School · 3rd Class. */
-  stageId: Uuid | null
+/**
+ * A role: a name and the permissions it allows. Roles and permissions are global: a role allows
+ * the same everywhere in the church, in every service. The church starts with Administrator,
+ * Service leader, Servant and Parent; they are ordinary roles, renamed, changed and deleted like
+ * the ones the office adds (such as "Church office").
+ */
+export type Role = {
+  id: Uuid
+  /** At most 80 characters; unique, ignoring case and extra spaces. */
+  name: string
+  permissions: Permission[]
+  createdAt: Instant
+  updatedAt: Instant
 }
 
 /** The languages of the app. Stored with an account so emails go out in the person's language. */
@@ -188,7 +214,14 @@ export type User = {
    * groups and homework), so only an administrator sets it, when approving a member account.
    */
   personId: Uuid | null
-  roles: RoleAssignment[]
+  /** The account's roles. */
+  roleIds: Uuid[]
+  /**
+   * What its roles allow together. Prototype only: kept in sync whenever roles or the roles an
+   * account has change, so permission checks need nothing but the account; the API resolves
+   * them on every request.
+   */
+  permissions: Permission[]
   /** Prototype only: a salted scrypt hash. Null until the person chooses a password (invitation). */
   passwordHash: string | null
   language: Language | null

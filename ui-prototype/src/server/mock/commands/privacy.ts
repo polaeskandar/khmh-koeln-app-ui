@@ -1,18 +1,18 @@
 import "server-only"
 
 import { msg } from "@/i18n/message"
-import { isAdministrator } from "@/lib/domain/policy"
 import { oneMonthAfter } from "@/lib/domain/privacy"
 import { epochOf, localDateOf, localInstant, toInstant } from "@/lib/domain/time"
 import type { DataRequest, LocalDate, Person, User, Uuid } from "@/lib/domain/types"
-import { forbidden, ruleViolation } from "@/server/errors"
+import { ruleViolation } from "@/server/errors"
 
 import { nowMs, today as clockToday } from "../clock"
-import { found, Violations } from "../guard"
+import { authorize, found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
 import {
   currentAttendance,
   personOf,
+  roleOf,
   serviceOf,
   sessionDate,
   sessionRoster,
@@ -20,6 +20,8 @@ import {
   userOf,
 } from "../selectors"
 import type { State } from "../state"
+
+import { roleManagers } from "./roles"
 
 /**
  * Data protection requests (DSGVO Art. 15, 17 and 20) and what carrying them
@@ -81,8 +83,9 @@ export type Inventory = {
 
 const fullName = (p: Person) => `${p.firstName} ${p.lastName}`
 
+/** Data protection requests are for the roles that may delete accounts' data. */
 function requireAdmin(actor: User) {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.privacy.adminOnly"))
+  authorize(actor, "delete", "users", msg("errors.privacy.adminOnly"))
 }
 
 /** A member's account, or an account's member record: one person, one request. */
@@ -285,7 +288,7 @@ export function inventoryOf(
   }
   if (user) {
     put(erase, "account", 1)
-    put(erase, "roles", user.roles.length)
+    put(erase, "roles", user.roleIds.length)
     put(erase, "guardianLinks", s.guardians.filter((g) => g.userId === user.id).length)
     put(
       keep,
@@ -342,6 +345,11 @@ export function eraseData(
   const { person, user } = subjectOf(s, request.personId, request.userId)
   if (!person && !user) throw ruleViolation(msg("errors.privacy.subjectGone"))
   if (user?.id === actor.id) throw ruleViolation(msg("errors.privacy.ownAccount"))
+  // Someone active must still be able to change roles afterwards.
+  const managers = roleManagers(s)
+  if (user && managers.length === 1 && managers[0].id === user.id) {
+    throw ruleViolation(msg("errors.roles.lastRoleManager"))
+  }
 
   const inventory = inventoryOf(s, person, user)
   const outcome: Record<string, number> = { ...inventory.erase }
@@ -493,10 +501,7 @@ export function personalData(s: State, person: Person | undefined, user: User | 
         memberAgeCheck: user.ageCheck
           ? { result: user.ageCheck, parentAgreed: user.guardianConsentNote }
           : null,
-        roles: user.roles.map((r) => ({
-          role: r.role,
-          ...(r.serviceId ? groupOf(r.serviceId, r.stageId) : {}),
-        })),
+        roles: user.roleIds.map((id) => roleOf(s, id)?.name ?? id),
         children: s.guardians
           .filter((g) => g.userId === user.id)
           .map((g) => {

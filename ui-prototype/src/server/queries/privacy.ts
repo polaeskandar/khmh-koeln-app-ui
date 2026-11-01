@@ -37,7 +37,7 @@ export type DataRequestRow = ReturnType<typeof row>
 /** The data protection log: open requests by due date, then the closed ones. Administrators only. */
 export async function getDataRequests(ctx: Context) {
   const { state: s, viewer } = ctx
-  if (!can(viewer, "MANAGE_USERS")) return null
+  if (!can(viewer, "delete", "users")) return null
   const today = clockToday()
   const rows = s.dataRequests.map((r) => row(s, r, today))
   const groupOf = (personId: string) => {
@@ -65,7 +65,7 @@ export type DataRequestsPage = NonNullable<Awaited<ReturnType<typeof getDataRequ
 /** One request with what the app stores about its subject, for the review before acting. */
 export async function getDataRequest(ctx: Context, id: string) {
   const { state: s, viewer } = ctx
-  if (!can(viewer, "MANAGE_USERS")) return null
+  if (!can(viewer, "delete", "users")) return null
   const request = s.dataRequests.find((r) => r.id === id)
   if (!request) return undefined
   const today = clockToday()

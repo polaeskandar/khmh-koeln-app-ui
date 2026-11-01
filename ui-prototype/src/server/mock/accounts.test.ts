@@ -4,7 +4,7 @@
  */
 import { describe, expect, test } from "vitest"
 
-import { isActiveAccount } from "@/lib/domain/policy"
+import { DEFAULT_ROLES, isActiveAccount } from "@/lib/domain/policy"
 import { ProblemError } from "@/server/errors"
 
 import {
@@ -37,7 +37,8 @@ function demo() {
     leader: user("christine.adel@example.org"),
     mina: s.persons.find((p) => p.firstName === "Mina" && p.lastName === "Hanna")!,
     youth: s.services.find((x) => x.name === "Youth Meeting")!,
-    c3: s.stages.find((x) => x.name === "3rd Class")!,
+    servant: s.roles.find((r) => r.name === "Servant")!,
+    parentRole: s.roles.find((r) => r.name === "Parent")!,
   }
 }
 
@@ -57,7 +58,8 @@ describe("registration", () => {
     const t = demo()
     const user = register(t.s, parent)
     expect(user.email).toBe("sara.hanna@example.org")
-    expect(user.roles).toEqual([])
+    expect(user.roleIds).toEqual([])
+    expect(user.permissions).toEqual([])
     expect(isActiveAccount(user)).toBe(false)
     expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password")).toEqual({
       ok: false,
@@ -108,42 +110,58 @@ describe("registration", () => {
 })
 
 describe("approval", () => {
-  test("approving a parent links the children; then they can sign in", () => {
+  test("approving a parent links the children and gives the roles; then they can sign in", () => {
     const t = demo()
     const user = register(t.s, parent)
-    approveAccount(t.s, t.admin, user.id, { as: "parent", childIds: [t.mina.id] })
+    approveAccount(t.s, t.admin, user.id, {
+      as: "parent",
+      childIds: [t.mina.id],
+      roleIds: [t.parentRole.id],
+    })
     expect(childrenOf(t.s, user.id).map((p) => p.id)).toEqual([t.mina.id])
+    expect(user.roleIds).toEqual([t.parentRole.id])
+    expect(user.permissions).toEqual(["parentPortal:read"])
     expect(user.registration).toBeNull()
     const result = authenticate(t.s, "sara.hanna@example.org", "a long enough password")
     expect(result.ok).toBe(true)
   })
 
-  test("approving a servant gives the role, narrowed to a stage of that service", () => {
+  test("approving a servant gives the chosen roles, which hold in every service", () => {
     const t = demo()
     const user = register(t.s, { ...parent, as: "servant", serviceId: t.youth.id })
-    const wrongStage = problemOf(() =>
+    const none = problemOf(() =>
+      approveAccount(t.s, t.admin, user.id, { as: "servant", roleIds: [] })
+    )
+    expect(none?.fieldErrors).toHaveProperty("roleIds")
+    const unknown = problemOf(() =>
       approveAccount(t.s, t.admin, user.id, {
         as: "servant",
-        role: "servant",
-        serviceId: t.youth.id,
-        stageId: t.c3.id,
+        roleIds: ["019a3f00-0000-7000-8000-0000000000ff"],
       })
     )
-    expect(wrongStage?.fieldErrors).toHaveProperty("stageId")
-    approveAccount(t.s, t.admin, user.id, { as: "servant", role: "servant", serviceId: t.youth.id })
-    expect(user.roles).toEqual([{ role: "servant", serviceId: t.youth.id, stageId: null }])
+    expect(unknown?.fieldErrors).toHaveProperty("roleIds")
+    approveAccount(t.s, t.admin, user.id, { as: "servant", roleIds: [t.servant.id] })
+    expect(user.roleIds).toEqual([t.servant.id])
+    expect(user.permissions).toEqual(DEFAULT_ROLES[2].permissions)
   })
 
-  test("only administrators approve, and a parent needs at least one child", () => {
+  test("approving needs Accounts: Add, and a parent needs a child and a role", () => {
     const t = demo()
     const user = register(t.s, parent)
     expect(
-      problemOf(() => approveAccount(t.s, t.leader, user.id, { as: "parent", childIds: [] }))
-        ?.status
+      problemOf(() =>
+        approveAccount(t.s, t.leader, user.id, {
+          as: "parent",
+          childIds: [t.mina.id],
+          roleIds: [t.parentRole.id],
+        })
+      )?.status
     ).toBe(403)
-    expect(
-      problemOf(() => approveAccount(t.s, t.admin, user.id, { as: "parent", childIds: [] }))?.status
-    ).toBe(422)
+    const problem = problemOf(() =>
+      approveAccount(t.s, t.admin, user.id, { as: "parent", childIds: [], roleIds: [] })
+    )
+    expect(problem?.status).toBe(422)
+    expect(Object.keys(problem?.fieldErrors ?? {})).toEqual(["childIds", "roleIds"])
   })
 
   test("declining deletes the account and what the person entered", () => {

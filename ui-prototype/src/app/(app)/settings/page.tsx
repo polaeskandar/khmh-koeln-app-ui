@@ -2,7 +2,6 @@ import { FlaskConical } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
-import { NoAccess } from "@/components/no-access"
 import { PageHeader, Section } from "@/components/page-header"
 import {
   Table,
@@ -17,6 +16,7 @@ import { DataProtectionSummary } from "@/features/settings/data-protection-summa
 import { MemberAccounts } from "@/features/settings/member-accounts"
 import { ParentAccess } from "@/features/settings/parent-access"
 import { ResetDemoButton } from "@/features/settings/reset-demo"
+import { NewRoleButton, RolesOverview } from "@/features/settings/roles-overview"
 import { UsersRoles } from "@/features/settings/users-roles"
 import { getFormat } from "@/i18n/server"
 import { getAccountRequests } from "@/server/queries/accounts"
@@ -58,31 +58,44 @@ export default async function SettingsPage() {
 
         {dataRequests ? <DataProtectionSummary data={dataRequests} /> : null}
 
-        <Section
-          id="users"
-          title={t("users.title")}
-          description={
-            d.canManageUsers ? t("users.descriptionAdmin") : t("users.descriptionReadOnly")
-          }
-        >
-          <UsersRoles data={d} />
-        </Section>
+        {d.users ? (
+          <Section
+            id="users"
+            title={t("users.title")}
+            description={
+              d.canChangeAccounts ? t("users.description") : t("users.descriptionReadOnly")
+            }
+          >
+            <UsersRoles users={d.users} roles={d.assignableRoles} canGive={d.canChangeAccounts} />
+          </Section>
+        ) : null}
 
-        <Section id="parents" title={t("parents.title")} description={t("parents.description")}>
-          {d.parentAccess ? (
-            <ParentAccess access={d.parentAccess} today={d.today} />
-          ) : (
-            <NoAccess title={t("parents.adminsOnly")}>{t("parents.adminsOnlyHint")}</NoAccess>
-          )}
-        </Section>
+        {d.roles ? (
+          <Section
+            id="roles"
+            title={t("roles.title")}
+            description={t("roles.description")}
+            actions={d.roles.can.create ? <NewRoleButton /> : null}
+          >
+            <RolesOverview list={d.roles} />
+          </Section>
+        ) : null}
 
-        <Section id="members" title={t("members.title")} description={t("members.description")}>
-          {d.memberAccounts ? (
-            <MemberAccounts accounts={d.memberAccounts} today={d.today} />
-          ) : (
-            <NoAccess title={t("members.adminsOnly")}>{t("members.adminsOnlyHint")}</NoAccess>
-          )}
-        </Section>
+        {d.parentAccess ? (
+          <Section id="parents" title={t("parents.title")} description={t("parents.description")}>
+            <ParentAccess access={d.parentAccess} today={d.today} canChange={d.canChangeAccounts} />
+          </Section>
+        ) : null}
+
+        {d.memberAccounts ? (
+          <Section id="members" title={t("members.title")} description={t("members.description")}>
+            <MemberAccounts
+              accounts={d.memberAccounts}
+              today={d.today}
+              canChange={d.canChangeAccounts}
+            />
+          </Section>
+        ) : null}
 
         <div className="grid gap-10 lg:grid-cols-2">
           <Section id="church" title={t("church.title")}>

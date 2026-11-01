@@ -1,6 +1,6 @@
 import "server-only"
 
-import { can, covers } from "@/lib/domain/policy"
+import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import type { Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
@@ -25,7 +25,6 @@ import {
   sessionCard,
   sortSessions,
   stageRef,
-  userRef,
 } from "./present"
 import { memberCount } from "./services"
 
@@ -36,20 +35,6 @@ export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uui
   const stage = stageOf(s, stageId)
   if (!service || !stage || stage.serviceId !== service.id) return null
   const schedule = s.schedules.find((x) => x.stageId === stageId && x.active)
-  const servants = s.users
-    .filter(
-      (u) =>
-        !u.disabledAt &&
-        u.roles.some(
-          (r) =>
-            (r.role === "servant" || r.role === "service_leader") && covers(r, serviceId, stageId)
-        )
-    )
-    .map((u) => ({
-      ...userRef(u)!,
-      leader: u.roles.some((r) => r.role === "service_leader" && r.serviceId === serviceId),
-    }))
-    .sort((a, b) => Number(a.leader) - Number(b.leader) || a.name.localeCompare(b.name, "de"))
   return {
     service: serviceRef(s, service),
     stage: { ...stageRef(stage)!, description: stage.description, archivedAt: stage.archivedAt },
@@ -61,7 +46,6 @@ export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uui
           location: schedule.location,
         }
       : null,
-    servants,
     otherStages: stagesOf(s, serviceId)
       .filter((x) => x.id !== stageId)
       .map((x) => stageRef(x)!),
@@ -86,12 +70,9 @@ export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uui
         .length,
     },
     can: {
-      structure: can(viewer, "MANAGE_STRUCTURE", serviceId) && !isArchived(service),
-      members:
-        can(viewer, "MANAGE_MEMBERS", serviceId, stageId) &&
-        !isArchived(service) &&
-        !isArchived(stage),
-      sessions: can(viewer, "MANAGE_SESSIONS", serviceId),
+      structure: can(viewer, "update", "stages") && !isArchived(service),
+      members: can(viewer, "update", "members") && !isArchived(service) && !isArchived(stage),
+      sessions: can(viewer, "create", "sessions"),
     },
   }
 }

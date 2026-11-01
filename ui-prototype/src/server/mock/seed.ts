@@ -1,4 +1,5 @@
 import { addDays, epochOf, localDateOf, localInstant, toInstant } from "@/lib/domain/time"
+import { DEFAULT_ROLES, inCatalogOrder, permissionsOf } from "@/lib/domain/policy"
 import { oneMonthAfter, PRIVACY_VERSION } from "@/lib/domain/privacy"
 import type {
   Attendance,
@@ -13,8 +14,10 @@ import type {
   MeetingSession,
   Membership,
   MonthWeek,
+  Permission,
   Person,
   Recurrence,
+  Role,
   RosterMode,
   Service,
   SessionEventType,
@@ -212,6 +215,7 @@ export function seed(): State {
     events: [],
     attendance: [],
     users: [],
+    roles: [],
     guardians: [],
     lessons: [],
     homework: [],
@@ -535,7 +539,22 @@ export function seed(): State {
 
   // ------------------------------------------------------------------- users
   const user = {} as Record<UserKey, User>
-  type RoleSpec = [User["roles"][number]["role"], ServiceKey | null, string?]
+  // The roles the church started with: the backend's defaults, with its ids. Roles are global,
+  // so a servant's role says what they may do, not where: they may do it in every service.
+  const churchStart = toInstant(at("2026-08-28", "20:00"))
+  for (const r of DEFAULT_ROLES) {
+    state.roles.push({
+      ...r,
+      permissions: [...r.permissions],
+      createdAt: churchStart,
+      updatedAt: churchStart,
+    })
+  }
+  const [administrator, serviceLeader, servant, parent] = DEFAULT_ROLES.map((r) => r.id)
+  const access = (roleIds: Uuid[]) => ({
+    roleIds,
+    permissions: permissionsOf(state.roles, roleIds),
+  })
   // The office created these accounts, so they were approved at once (by Mariam, the administrator).
   const officeAccount = (createdMs: number) => ({
     passwordHash: demoPasswordHash(),
@@ -549,7 +568,7 @@ export function seed(): State {
     guardianConsentNote: null,
     createdAt: toInstant(createdMs),
   })
-  const addUser = (key: UserKey, roles: RoleSpec[], disabled?: LocalDate) => {
+  const addUser = (key: UserKey, roleIds: Uuid[], disabled?: LocalDate) => {
     const p = servantPerson[key]
     const createdMs = epochOf(p.createdAt) + 30 * MIN
     const u: User = {
@@ -557,52 +576,38 @@ export function seed(): State {
       email: `${p.firstName}.${p.lastName}@example.org`.toLowerCase(),
       displayName: `${p.firstName} ${p.lastName}`,
       personId: p.id,
-      roles: roles.map(([role, key, stageKey]) => ({
-        role,
-        serviceId: key ? service[key].id : null,
-        stageId: stageKey ? stage[stageKey].id : null,
-      })),
+      ...access(roleIds),
       ...officeAccount(createdMs),
       disabledAt: disabled ? toInstant(at(disabled, "10:00")) : null,
     }
     user[key] = u
     state.users.push(u)
   }
-  addUser("mariam", [["administrator", null]])
-  addUser("christine", [
-    ["service_leader", "sunday-school"],
-    ["service_leader", "summer-club"],
-  ])
-  // Servants are assigned to their class; the leader covers the whole service.
-  addUser("daniel", [["servant", "sunday-school", "c3"]])
-  addUser("rebecca", [["servant", "sunday-school", "kg"]])
-  addUser("youssef", [
-    ["servant", "sunday-school", "c1"],
-    ["servant", "coptic"],
-  ])
-  addUser("marina", [["servant", "sunday-school", "c2"]])
-  addUser("george", [["servant", "sunday-school", "c4"]])
-  addUser("mark", [["service_leader", "youth"]])
-  addUser("bishoy", [
-    ["servant", "youth"],
-    ["servant", "deacons"],
-  ])
-  addUser("maged", [
-    ["service_leader", "bible-study"],
-    ["service_leader", "servants"],
-  ])
-  addUser("peter", [["service_leader", "deacons"]])
-  addUser("irene", [["service_leader", "coptic"]])
-  addUser("samuel", [["servant", "youth"]], "2026-09-30")
+  addUser("mariam", [administrator])
+  // Christine leads Sunday School and the summer club, Mark the Youth Meeting, Maged the Bible
+  // Study and the servants' meeting, Peter the Deacons' School, Irene the Coptic course; the
+  // others serve in a class or a service. Nothing records where: the roles hold everywhere.
+  addUser("christine", [serviceLeader])
+  addUser("daniel", [servant])
+  addUser("rebecca", [servant])
+  addUser("youssef", [servant])
+  addUser("marina", [servant])
+  addUser("george", [servant])
+  addUser("mark", [serviceLeader])
+  addUser("bishoy", [servant])
+  addUser("maged", [serviceLeader])
+  addUser("peter", [serviceLeader])
+  addUser("irene", [serviceLeader])
+  addUser("samuel", [servant], "2026-09-30")
   // Parents with accounts. Their accounts exist because the office created them; children have none.
   servantPerson.nabil = adults[0]
   servantPerson.hoda = adults[1]
   servantPerson.samir = adults[2]
   servantPerson.nadia = adults[3]
-  addUser("nabil", [["parent", null]])
-  addUser("hoda", [["parent", null]])
-  addUser("samir", [["parent", null]])
-  addUser("nadia", [["parent", null]])
+  addUser("nabil", [parent])
+  addUser("hoda", [parent])
+  addUser("samir", [parent])
+  addUser("nadia", [parent])
 
   // Guardian links, created or approved by the church office. Mina and Mariam have two guardians.
   const guardian = (
@@ -651,7 +656,7 @@ export function seed(): State {
       email,
       displayName: `${first} ${last}`,
       personId: null,
-      roles: [{ role: "parent", serviceId: null, stageId: null }],
+      ...access([parent]),
       ...officeAccount(ms),
       disabledAt: null,
     }
@@ -1563,7 +1568,8 @@ export function seed(): State {
       email: `${first}.${last}@example.org`.toLowerCase(),
       displayName: `${first} ${last}`,
       personId: null,
-      roles: [],
+      roleIds: [],
+      permissions: [],
       passwordHash: demoPasswordHash(),
       language,
       registration,
@@ -1680,7 +1686,8 @@ export function seed(): State {
     email: "nevine.boulos@example.org",
     displayName: `${nevine.firstName} ${nevine.lastName}`,
     personId: nevine.id,
-    roles: [],
+    roleIds: [],
+    permissions: [],
     passwordHash: demoPasswordHash(),
     language: null,
     registration: null,
@@ -1795,6 +1802,61 @@ export function seed(): State {
     "irene",
     null
   )
+
+  // ------------------------------------------------------------------- roles
+  // Two roles the office added: "Church office" for Sara, who handles account requests, parent
+  // access, member accounts and data protection requests and keeps the member list, and
+  // "Lesson preparation" for people who help prepare lessons and homework without taking
+  // attendance (no one has it yet).
+  const customRole = (name: string, permissions: Permission[], created: [LocalDate, LocalTime]) => {
+    const ms = at(...created)
+    const role: Role = {
+      id: id(ms),
+      name,
+      permissions: inCatalogOrder(permissions),
+      createdAt: toInstant(ms),
+      updatedAt: toInstant(ms),
+    }
+    state.roles.push(role)
+    return role
+  }
+  customRole(
+    "Lesson preparation",
+    [
+      "services:read",
+      "lessons:read",
+      "lessons:create",
+      "lessons:update",
+      "homework:read",
+      "homework:create",
+      "homework:update",
+    ],
+    ["2026-10-05", "21:30"]
+  )
+  const office = customRole(
+    "Church office",
+    [
+      "services:read",
+      "members:read",
+      "members:create",
+      "members:update",
+      "users:read",
+      "users:create",
+      "users:update",
+      "users:delete",
+    ],
+    ["2026-10-12", "18:40"]
+  )
+  const saraCreated = at("2026-10-12", "18:45")
+  state.users.push({
+    id: id(saraCreated),
+    email: "sara.wissa@example.org",
+    displayName: "Sara Wissa",
+    personId: null,
+    ...access([office.id]),
+    ...officeAccount(saraCreated),
+    disabledAt: null,
+  })
 
   return state
 }

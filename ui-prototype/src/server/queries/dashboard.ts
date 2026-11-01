@@ -1,6 +1,5 @@
 import "server-only"
 
-import { isAdministrator } from "@/lib/domain/policy"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type { LocalDate, LocalTime, SessionStatus, Uuid } from "@/lib/domain/types"
 import { compareAgenda, type AgendaItem, type ServiceRef } from "@/lib/view-models"
@@ -96,19 +95,12 @@ export async function getDashboard(ctx: Context) {
   const { state: s, viewer } = ctx
   const today = clockToday()
   const tomorrow = addDays(today, 1)
-  const myServiceIds: Uuid[] = (
-    isAdministrator(viewer)
-      ? s.services.map((x) => x.id)
-      : [...new Set(viewer.roles.map((r) => r.serviceId).filter((id): id is Uuid => !!id))]
-  ).filter((id) => {
-    const service = serviceOf(s, id)
-    return service && !isArchived(service)
-  })
+  // Roles hold in every service, so the dashboard covers every active service.
+  const myServiceIds: Uuid[] = s.services.filter((x) => !isArchived(x)).map((x) => x.id)
   const mine = (x: { serviceId: Uuid }) => myServiceIds.includes(x.serviceId)
 
-  // Every meeting of the day in the viewer's services, also the ones another
-  // servant takes attendance for. Each card offers only what the viewer may
-  // do, and the viewer's own meetings come first (a servant's class on top).
+  // Every meeting of the day. Each card offers only what the viewer may do, and the
+  // meetings the viewer may take attendance for come first.
   const todayCards = sortSessions(
     s.sessions
       .filter((x) => mine(x) && localDateOf(x.startsAt) === today)

@@ -1,6 +1,6 @@
 import "server-only"
 
-import { can, canAnywhere } from "@/lib/domain/policy"
+import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import type { Attendance, Uuid } from "@/lib/domain/types"
 import type { AttendanceEntry, PersonRef } from "@/lib/view-models"
@@ -55,11 +55,12 @@ export async function getAttendanceHome(ctx: Context) {
   const { state: s, viewer } = ctx
   const today = clockToday()
   const sessions = todaysSessions(ctx)
+  const record = can(viewer, "create", "attendance")
   const earlier = sortSessions(
     s.sessions
       .filter(
         (x) =>
-          can(viewer, "RECORD_ATTENDANCE", x.serviceId, x.stageId) &&
+          record &&
           localDateOf(x.startsAt) < today &&
           localDateOf(x.startsAt) >= addDays(today, -21) &&
           (x.status === "scheduled" || x.status === "active")
@@ -67,12 +68,7 @@ export async function getAttendanceHome(ctx: Context) {
       .map((x) => sessionCard(s, viewer, x))
   )
   const closed = s.sessions
-    .filter(
-      (x) =>
-        can(viewer, "RECORD_ATTENDANCE", x.serviceId, x.stageId) &&
-        x.status === "completed" &&
-        x.closedAt
-    )
+    .filter((x) => record && x.status === "completed" && x.closedAt)
     .sort((a, b) => b.closedAt!.localeCompare(a.closedAt!))
     .slice(0, 6)
     .map((x) => sessionCard(s, viewer, x))
@@ -81,7 +77,7 @@ export async function getAttendanceHome(ctx: Context) {
     sessions,
     earlier,
     closed,
-    canRecordAnywhere: canAnywhere(viewer, "RECORD_ATTENDANCE"),
+    canRecordAnywhere: record,
   }
 }
 
@@ -124,9 +120,9 @@ export async function getAttendanceBoard(ctx: Context, sessionId: Uuid) {
     history: sessionHistory(s, session),
     today: clockToday(),
     can: {
-      record: can(viewer, "RECORD_ATTENDANCE", session.serviceId, session.stageId),
-      reopen: can(viewer, "REOPEN_SESSION", session.serviceId),
-      manage: can(viewer, "MANAGE_SESSIONS", session.serviceId),
+      record: can(viewer, "create", "attendance"),
+      reopen: can(viewer, "update", "sessions"),
+      manage: can(viewer, "update", "sessions"),
     },
   }
 }

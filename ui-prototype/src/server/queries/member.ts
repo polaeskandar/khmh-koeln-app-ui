@@ -8,7 +8,6 @@ import type {
   Membership,
   Person,
   Recurrence,
-  Role,
   Service,
   Stage,
   Uuid,
@@ -60,7 +59,6 @@ export type MemberGroup = {
     endTime: LocalTime | null
     location: string | null
   }[]
-  servants: { id: Uuid; name: string; role: Extract<Role, "service_leader" | "servant"> }[]
   /** The last lesson taught to the stage (never a draft), with what parents see of it too. */
   lastLesson: {
     title: string
@@ -106,28 +104,6 @@ function membershipsOf(s: State, person: Person, today: LocalDate) {
     )
 }
 
-/** Leaders of the service, and its servants whose role covers the group, leaders first. */
-function servantsOf(s: State, m: Membership): MemberGroup["servants"] {
-  return s.users
-    .filter((u) => u.approvedAt !== null && u.disabledAt === null)
-    .flatMap((u) => {
-      const covering = u.roles.filter(
-        (r) =>
-          r.serviceId === m.serviceId &&
-          (r.role === "service_leader" ||
-            (r.role === "servant" && (r.stageId === null || r.stageId === m.stageId)))
-      )
-      if (covering.length === 0) return []
-      const role = covering.some((r) => r.role === "service_leader") ? "service_leader" : "servant"
-      return [{ id: u.id, name: u.displayName, role } as const]
-    })
-    .sort(
-      (a, b) =>
-        Number(b.role === "service_leader") - Number(a.role === "service_leader") ||
-        a.name.localeCompare(b.name, "de")
-    )
-}
-
 function lastLessonOf(s: State, stageId: Uuid | null, today: LocalDate) {
   if (!stageId) return null
   const lesson = s.lessons
@@ -168,7 +144,6 @@ function groupOf(s: State, m: Membership, service: Service, stage: Stage | null,
         endTime: sch.endTime,
         location: sch.location,
       })),
-    servants: servantsOf(s, m),
     lastLesson: lastLessonOf(s, m.stageId, today),
   } satisfies MemberGroup
 }

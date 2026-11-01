@@ -1,22 +1,13 @@
 import { type Message, msg } from "@/i18n/message"
 import { cleanName } from "@/lib/domain/names"
-import { can, type Permission } from "@/lib/domain/policy"
+import { type Action, can, type Resource } from "@/lib/domain/policy"
 import { isValidLocalDate, isValidLocalTime } from "@/lib/domain/time"
-import type { User, Uuid } from "@/lib/domain/types"
+import type { User } from "@/lib/domain/types"
 import { forbidden, invalid, notFound, type Thing } from "@/server/errors"
 
-export type Scope = Uuid | { serviceId: Uuid; stageId?: Uuid | null } | null | undefined
-
-/** Throws 403 unless the user holds the permission (in the service or stage, for scoped permissions). */
-export function authorize(
-  user: User,
-  permission: Permission,
-  scope?: Scope,
-  detail?: Message
-): void {
-  const serviceId = typeof scope === "object" && scope !== null ? scope.serviceId : scope
-  const stageId = typeof scope === "object" && scope !== null ? scope.stageId : null
-  if (!can(user, permission, serviceId, stageId)) throw forbidden(detail)
+/** Throws 403 unless one of the user's roles allows the action on the resource. */
+export function authorize(user: User, action: Action, resource: Resource, detail?: Message): void {
+  if (!can(user, action, resource)) throw forbidden(detail)
 }
 
 export function found<T>(value: T | undefined, what: Thing): T {

@@ -8,13 +8,12 @@ import { approveAccount, declineAccount, unlinkMember } from "@/server/mock/comm
 import { id, optionalId, run } from "./run"
 
 const approval = z.discriminatedUnion("as", [
-  z.object({ as: z.literal("parent"), childIds: z.array(id).max(20) }),
   z.object({
-    as: z.literal("servant"),
-    role: z.enum(["servant", "service_leader"]),
-    serviceId: id,
-    stageId: optionalId.optional(),
+    as: z.literal("parent"),
+    childIds: z.array(id).max(20),
+    roleIds: z.array(id).max(20),
   }),
+  z.object({ as: z.literal("servant"), roleIds: z.array(id).max(20) }),
   z.object({
     as: z.literal("member"),
     personId: optionalId,
@@ -23,7 +22,7 @@ const approval = z.discriminatedUnion("as", [
   }),
 ])
 
-/** Approves a registration: links the children, gives the role or links the member record. */
+/** Approves a registration: links the children, gives the roles or links the member record. */
 export async function approveAccountAction(userId: string, input: z.input<typeof approval>) {
   return run(
     ({ state, viewer }) =>

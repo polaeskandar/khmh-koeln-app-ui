@@ -2,7 +2,7 @@ import "server-only"
 
 import { nameKey } from "@/lib/domain/names"
 import { toInstant } from "@/lib/domain/time"
-import type { Service, Stage, User, Uuid } from "@/lib/domain/types"
+import type { Action, Service, Stage, User, Uuid } from "@/lib/domain/types"
 import { msg } from "@/i18n/message"
 import { ruleViolation } from "@/server/errors"
 
@@ -39,7 +39,7 @@ function freeTone(s: State): number {
 }
 
 export function createService(s: State, actor: User, input: ServiceInput): Service {
-  authorize(actor, "CREATE_SERVICE", null, msg("errors.services.adminOnlyCreate"))
+  authorize(actor, "create", "services", msg("errors.services.adminOnlyCreate"))
   const v = new Violations()
   const name = v.name("name", input.name, 120, msg("errors.services.nameRequired"))
   const description = v.optionalText("description", input.description, 2000)
@@ -61,7 +61,7 @@ export function createService(s: State, actor: User, input: ServiceInput): Servi
 
 export function updateService(s: State, actor: User, id: Uuid, input: ServiceInput): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "EDIT_SERVICE", service.id)
+  authorize(actor, "update", "services")
   const v = new Violations()
   const name = v.name("name", input.name, 120, msg("errors.services.nameRequired"))
   const description = v.optionalText("description", input.description, 2000)
@@ -94,7 +94,7 @@ export function serviceImpact(s: State, id: Uuid) {
 
 export function archiveService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "ARCHIVE_SERVICE", service.id, msg("errors.services.adminOnlyArchive"))
+  authorize(actor, "delete", "services", msg("errors.services.adminOnlyArchive"))
   if (isArchived(service)) {
     throw ruleViolation(msg("errors.services.alreadyArchived", { name: service.name }))
   }
@@ -109,7 +109,7 @@ export function archiveService(s: State, actor: User, id: Uuid): Service {
 
 export function restoreService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "ARCHIVE_SERVICE", service.id, msg("errors.services.adminOnlyRestore"))
+  authorize(actor, "delete", "services", msg("errors.services.adminOnlyRestore"))
   if (!isArchived(service)) {
     throw ruleViolation(msg("errors.services.notArchived", { name: service.name }))
   }
@@ -125,7 +125,7 @@ export function restoreService(s: State, actor: User, id: Uuid): Service {
  */
 export function deleteService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "ARCHIVE_SERVICE", service.id, msg("errors.services.adminOnlyDelete"))
+  authorize(actor, "delete", "services", msg("errors.services.adminOnlyDelete"))
   const impact = serviceImpact(s, id)
   if (impact.sessions > 0) {
     throw ruleViolation(
@@ -140,7 +140,6 @@ export function deleteService(s: State, actor: User, id: Uuid): Service {
   s.memberships = s.memberships.filter(
     (x) => x.serviceId !== id && !(x.stageId && stageIds.has(x.stageId))
   )
-  for (const u of s.users) u.roles = u.roles.filter((r) => r.serviceId !== id)
   return service
 }
 
@@ -159,9 +158,9 @@ function checkStageName(s: State, v: Violations, serviceId: Uuid, name: string, 
   )
 }
 
-function editableService(s: State, actor: User, serviceId: Uuid): Service {
+function editableService(s: State, actor: User, serviceId: Uuid, action: Action): Service {
   const service = found(serviceOf(s, serviceId), "service")
-  authorize(actor, "MANAGE_STRUCTURE", service.id)
+  authorize(actor, action, "stages")
   if (isArchived(service)) {
     throw ruleViolation(msg("errors.services.archivedNoStageChanges", { name: service.name }))
   }
@@ -169,7 +168,7 @@ function editableService(s: State, actor: User, serviceId: Uuid): Service {
 }
 
 export function createStage(s: State, actor: User, serviceId: Uuid, input: StageInput): Stage {
-  const service = editableService(s, actor, serviceId)
+  const service = editableService(s, actor, serviceId, "create")
   const v = new Violations()
   const name = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
   const description = v.optionalText("description", input.description, 500)
@@ -195,7 +194,7 @@ export function createStage(s: State, actor: User, serviceId: Uuid, input: Stage
 
 export function updateStage(s: State, actor: User, stageId: Uuid, input: StageInput): Stage {
   const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId)
+  editableService(s, actor, stage.serviceId, "update")
   const v = new Violations()
   const name = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
   const description = v.optionalText("description", input.description, 500)
@@ -208,7 +207,7 @@ export function updateStage(s: State, actor: User, stageId: Uuid, input: StageIn
 
 /** Sets the display order of a service's active stages. */
 export function reorderStages(s: State, actor: User, serviceId: Uuid, orderedIds: Uuid[]): Stage[] {
-  const service = editableService(s, actor, serviceId)
+  const service = editableService(s, actor, serviceId, "update")
   const active = stagesOf(s, service.id)
   const expected = new Set(active.map((x) => x.id))
   if (orderedIds.length !== expected.size || !orderedIds.every((id) => expected.has(id))) {
@@ -237,7 +236,7 @@ export function stageImpact(s: State, stageId: Uuid) {
 
 export function archiveStage(s: State, actor: User, stageId: Uuid): Stage {
   const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId)
+  editableService(s, actor, stage.serviceId, "delete")
   if (isArchived(stage)) {
     throw ruleViolation(msg("errors.stages.alreadyArchived", { name: stage.name }))
   }
@@ -252,7 +251,7 @@ export function archiveStage(s: State, actor: User, stageId: Uuid): Stage {
 
 export function restoreStage(s: State, actor: User, stageId: Uuid): Stage {
   const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId)
+  editableService(s, actor, stage.serviceId, "delete")
   if (!isArchived(stage)) {
     throw ruleViolation(msg("errors.stages.notArchived", { name: stage.name }))
   }
@@ -269,7 +268,7 @@ export function restoreStage(s: State, actor: User, stageId: Uuid): Stage {
  */
 export function deleteStage(s: State, actor: User, stageId: Uuid): Stage {
   const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId)
+  editableService(s, actor, stage.serviceId, "delete")
   const impact = stageImpact(s, stageId)
   if (impact.sessions > 0) {
     throw ruleViolation(

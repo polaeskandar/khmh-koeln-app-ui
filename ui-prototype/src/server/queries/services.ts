@@ -9,20 +9,18 @@ import { serviceImpact, stageImpact } from "@/server/mock/commands/services"
 import {
   isArchived,
   isCurrentOn,
-  leadersOf,
   personOf,
   rosterOn,
   serviceOf,
   sessionCounts,
   stageOf,
   stagesOf,
-  usersWithRole,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
 import { upcomingFor } from "./meetings"
-import { personRef, scheduleSummary, serviceRef, sessionCard, stageRef, userRef } from "./present"
+import { personRef, scheduleSummary, serviceRef, sessionCard, stageRef } from "./present"
 
 /** Distinct active people with a current membership in the service (or one stage of it). */
 export function memberCount(
@@ -101,12 +99,11 @@ function serviceRow(ctx: Context, service: Service) {
         }
       : null,
     trend: attendanceTrend(s, { serviceId: service.id }),
-    leaders: leadersOf(s, service.id).map((u) => userRef(u)!),
     canDelete: impact.sessions === 0,
     impact,
     can: {
-      edit: can(viewer, "EDIT_SERVICE", service.id),
-      archive: can(viewer, "ARCHIVE_SERVICE", service.id),
+      edit: can(viewer, "update", "services"),
+      archive: can(viewer, "delete", "services"),
     },
   }
 }
@@ -119,7 +116,7 @@ export async function listServices(ctx: Context) {
     .map((service) => serviceRow(ctx, service))
   return {
     rows,
-    canCreate: can(ctx.viewer, "CREATE_SERVICE"),
+    canCreate: can(ctx.viewer, "create", "services"),
     existingNames: ctx.state.services.map((x) => ({
       key: nameKey(x.name),
       name: x.name,
@@ -154,12 +151,6 @@ export async function getServiceDetail(ctx: Context, id: Uuid) {
         b.date.localeCompare(a.date) || a.order - b.order || a.startTime.localeCompare(b.startTime)
     )
     .slice(0, 6)
-  const team = usersWithRole(s, id).map((u) => ({
-    ...userRef(u)!,
-    roles: u.roles
-      .filter((r) => r.serviceId === id)
-      .map((r) => ({ role: r.role, stage: stageOf(s, r.stageId)?.name ?? null })),
-  }))
   return {
     service: {
       ...serviceRef(s, service),
@@ -174,7 +165,6 @@ export async function getServiceDetail(ctx: Context, id: Uuid) {
     schedules,
     upcoming: upcomingFor(ctx, { serviceId: id, days: 14 }).slice(0, 8),
     recent,
-    team,
     stats: {
       members: memberCount(s, id),
       serviceLevelMembers: rosterOn(s, id, null, today).length,
@@ -182,11 +172,10 @@ export async function getServiceDetail(ctx: Context, id: Uuid) {
     },
     impact: serviceImpact(s, id),
     can: {
-      edit: can(viewer, "EDIT_SERVICE", id),
-      archive: can(viewer, "ARCHIVE_SERVICE", id),
-      structure: can(viewer, "MANAGE_STRUCTURE", id),
-      sessions: can(viewer, "MANAGE_SESSIONS", id),
-      roles: can(viewer, "MANAGE_USERS"),
+      edit: can(viewer, "update", "services"),
+      archive: can(viewer, "delete", "services"),
+      structure: can(viewer, "update", "stages"),
+      sessions: can(viewer, "create", "sessions"),
     },
   }
 }
@@ -244,7 +233,7 @@ export async function getStageManagement(ctx: Context, serviceId: Uuid) {
       .filter(isArchived)
       .map((x) => ({ ...stageRow(ctx, x), archivedAt: x.archivedAt })),
     serviceLevelMembers: rosterOn(s, serviceId, null, clockToday()).length,
-    can: { structure: can(viewer, "MANAGE_STRUCTURE", serviceId) && !isArchived(service) },
+    can: { structure: can(viewer, "update", "stages") && !isArchived(service) },
   }
 }
 
@@ -299,12 +288,9 @@ export async function getStageDetail(ctx: Context, serviceId: Uuid, stageId: Uui
     upcoming: upcomingFor(ctx, { serviceId, stageId, days: 21 }).slice(0, 5),
     recent,
     can: {
-      structure: can(viewer, "MANAGE_STRUCTURE", serviceId) && !isArchived(service),
-      members:
-        can(viewer, "MANAGE_MEMBERS", serviceId, stageId) &&
-        !isArchived(service) &&
-        !isArchived(stage),
-      sessions: can(viewer, "MANAGE_SESSIONS", serviceId),
+      structure: can(viewer, "update", "stages") && !isArchived(service),
+      members: can(viewer, "update", "members") && !isArchived(service) && !isArchived(stage),
+      sessions: can(viewer, "create", "sessions"),
     },
   }
 }

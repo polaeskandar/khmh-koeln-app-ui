@@ -14,6 +14,7 @@ import type {
   MeetingSession,
   Membership,
   Person,
+  Role,
   Service,
   SessionEvent,
   Stage,
@@ -53,6 +54,8 @@ export type State = {
   events: SessionEvent[]
   attendance: Attendance[]
   users: User[]
+  /** The church's roles. Each account keeps what its roles allow in `permissions`. */
+  roles: Role[]
   guardians: GuardianRelationship[]
   lessons: Lesson[]
   homework: HomeworkAssignment[]

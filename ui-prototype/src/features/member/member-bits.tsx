@@ -14,11 +14,10 @@ export const memberTaskHref: TaskHref = (task) => `/member/homework/${task.id}`
 
 /**
  * One group the member is in: the service and stage, when and where it meets,
- * who serves it, and the passage and memory verse of the last lesson.
+ * and the passage and memory verse of the last lesson.
  */
 export function GroupCard({ group, today }: { group: MemberGroup; today: LocalDate }) {
   const t = useTranslations("member.groups")
-  const tr = useTranslations("roles")
   const f = useFormat()
   const name = group.stage?.name ?? group.service.name
   return (
@@ -54,17 +53,6 @@ export function GroupCard({ group, today }: { group: MemberGroup; today: LocalDa
       ) : (
         <p className="text-sm text-muted-foreground">{t("noSchedule")}</p>
       )}
-
-      {group.servants.length > 0 ? (
-        <p className="text-sm">
-          <span className="text-muted-foreground">{t("servants")} </span>
-          {group.servants
-            .map((s) =>
-              s.role === "service_leader" ? `${s.name} (${tr("service_leader")})` : s.name
-            )
-            .join(f.locale === "ar" ? "، " : ", ")}
-        </p>
-      ) : null}
 
       {group.lastLesson ? (
         <div className="flex flex-col gap-2 bg-muted/50 p-3">

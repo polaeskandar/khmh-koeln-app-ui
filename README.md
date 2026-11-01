@@ -14,7 +14,9 @@ reference for screens, wording and behaviour.
 Servants run their services (Sunday School, Youth Meeting, …): they plan recurring meetings, take attendance
 by hand on a laptop or phone, prepare lessons and give small homework tasks. Parents follow their
 children's homework in a parent portal and tick it off. People register themselves and an administrator approves each
-account; requests to see or delete personal data (DSGVO) are handled in the app. After the launch, members get
+account; roles are defined by the church itself (it starts with Administrator, Service leader, Servant and Parent
+and adds its own, such as a church office): each is a name and permissions, an action on a resource, and holds
+everywhere in the church. Requests to see or delete personal data (DSGVO) are handled in the app. After the launch, members get
 accounts of their own too (a youth, an adult in the Coptic course; under 16 only with a parent's agreement): a
 member portal shows their groups, the next meetings and their homework, which they tick off themselves. The app speaks English,
 German and Arabic (right to left) and has a dark mode. QR check-in, follow-up, visitation, events,

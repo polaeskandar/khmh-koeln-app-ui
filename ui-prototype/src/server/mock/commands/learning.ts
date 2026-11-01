@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fullName } from "@/lib/domain/names"
-import { can, canReportFor, isAdministrator } from "@/lib/domain/policy"
+import { can, canReportFor } from "@/lib/domain/policy"
 import { addDays, isValidLocalDate, toInstant } from "@/lib/domain/time"
 import type {
   GuardianRelationship,
@@ -80,9 +80,9 @@ function validateMaterials(
   return out
 }
 
-/** Can this user be responsible for or collaborate on the stage's lessons? */
-function canPrepare(user: User | undefined, serviceId: Uuid, stageId: Uuid) {
-  return !!user && !user.disabledAt && can(user, "MANAGE_LESSONS", serviceId, stageId)
+/** Can this account be responsible for a lesson or help with it? Anyone whose roles may change lessons. */
+function canPrepare(user: User | undefined) {
+  return !!user && can(user, "update", "lessons")
 }
 
 function validateLesson(
@@ -141,12 +141,11 @@ function validateLesson(
   }
 
   const responsible = userOf(s, input.responsibleId)
-  if (!canPrepare(responsible, serviceId, stageId))
-    v.add("responsibleId", msg("errors.lessons.chooseResponsible"))
+  if (!canPrepare(responsible)) v.add("responsibleId", msg("errors.lessons.chooseResponsible"))
   const collaboratorIds = [...new Set(input.collaboratorIds ?? [])].filter(
     (uid) => uid !== input.responsibleId
   )
-  if (collaboratorIds.some((uid) => !canPrepare(userOf(s, uid), serviceId, stageId))) {
+  if (collaboratorIds.some((uid) => !canPrepare(userOf(s, uid)))) {
     v.add("collaboratorIds", msg("errors.lessons.helpersInStage"))
   }
   const data = {
@@ -174,12 +173,7 @@ export function createLesson(
   status: "draft" | "ready" = "draft"
 ): Lesson {
   const { stage, service } = stageFor(s, stageId)
-  authorize(
-    actor,
-    "MANAGE_LESSONS",
-    { serviceId: service.id, stageId: stage.id },
-    msg("errors.lessons.prepareStageOnly")
-  )
+  authorize(actor, "create", "lessons", msg("errors.lessons.createNotAllowed"))
   if (isArchived(service) || isArchived(stage)) {
     throw ruleViolation(msg("errors.lessons.stageArchived", { name: stage.name }))
   }
@@ -200,13 +194,14 @@ export function createLesson(
   return lesson
 }
 
-function lessonFor(s: State, actor: User, id: Uuid) {
+/** The lesson, if the actor may change it ("update") or archive and delete it ("delete"). */
+function lessonFor(s: State, actor: User, id: Uuid, action: "update" | "delete" = "update") {
   const lesson = found(lessonOf(s, id), "lesson")
   authorize(
     actor,
-    "MANAGE_LESSONS",
-    { serviceId: lesson.serviceId, stageId: lesson.stageId },
-    msg("errors.lessons.changeStageOnly")
+    action,
+    "lessons",
+    msg(action === "update" ? "errors.lessons.changeNotAllowed" : "errors.lessons.deleteNotAllowed")
   )
   return lesson
 }
@@ -237,7 +232,7 @@ export function setLessonStatus(s: State, actor: User, id: Uuid, status: LessonS
 
 /** Archives the lesson and its homework; published homework disappears from the parent portal, completions are kept. */
 export function archiveLesson(s: State, actor: User, id: Uuid): Lesson {
-  const lesson = lessonFor(s, actor, id)
+  const lesson = lessonFor(s, actor, id, "delete")
   const at = toInstant(nowMs())
   lesson.archivedAt = at
   for (const hw of s.homework.filter((h) => h.lessonId === id && h.status !== "archived")) {
@@ -248,14 +243,14 @@ export function archiveLesson(s: State, actor: User, id: Uuid): Lesson {
 }
 
 export function restoreLesson(s: State, actor: User, id: Uuid): Lesson {
-  const lesson = lessonFor(s, actor, id)
+  const lesson = lessonFor(s, actor, id, "delete")
   lesson.archivedAt = null
   return lesson
 }
 
 /** Only a draft that never reached parents can be deleted; anything else is archived. */
 export function deleteLesson(s: State, actor: User, id: Uuid): Lesson {
-  const lesson = lessonFor(s, actor, id)
+  const lesson = lessonFor(s, actor, id, "delete")
   if (lesson.status !== "draft") throw ruleViolation(msg("errors.lessons.deleteDraftsOnly"))
   if (s.homework.some((h) => h.lessonId === id && h.publishedAt !== null)) {
     throw ruleViolation(msg("errors.lessons.homeworkPublished"))
@@ -296,13 +291,16 @@ function validateHomework(input: HomeworkInput, lesson: Lesson, existing?: Homew
   return { title, instructions, dueDate, resources }
 }
 
-function homeworkFor(s: State, actor: User, id: Uuid) {
+/** The homework, if the actor may change it ("update") or archive and delete it ("delete"). */
+function homeworkFor(s: State, actor: User, id: Uuid, action: "update" | "delete" = "update") {
   const hw = found(homeworkOf(s, id), "homework")
   authorize(
     actor,
-    "MANAGE_HOMEWORK",
-    { serviceId: hw.serviceId, stageId: hw.stageId },
-    msg("errors.homework.changeStageOnly")
+    action,
+    "homework",
+    msg(
+      action === "update" ? "errors.homework.changeNotAllowed" : "errors.homework.deleteNotAllowed"
+    )
   )
   return hw
 }
@@ -316,12 +314,7 @@ export function createHomework(
 ): HomeworkAssignment {
   const lesson = found(lessonOf(s, lessonId), "lesson")
   if (!lesson.stageId) throw ruleViolation(msg("errors.homework.lessonWithoutStage"))
-  authorize(
-    actor,
-    "MANAGE_HOMEWORK",
-    { serviceId: lesson.serviceId, stageId: lesson.stageId },
-    msg("errors.homework.assignStageOnly")
-  )
+  authorize(actor, "create", "homework", msg("errors.homework.createNotAllowed"))
   if (lesson.archivedAt) throw ruleViolation(msg("errors.lessons.archived"))
   const data = validateHomework(input, lesson)
   const ms = nowMs()
@@ -382,7 +375,7 @@ export function unpublishHomework(s: State, actor: User, id: Uuid): HomeworkAssi
 }
 
 export function archiveHomework(s: State, actor: User, id: Uuid): HomeworkAssignment {
-  const hw = homeworkFor(s, actor, id)
+  const hw = homeworkFor(s, actor, id, "delete")
   const ms = nowMs()
   hw.status = "archived"
   hw.archivedAt = toInstant(ms)
@@ -395,7 +388,7 @@ export function archiveHomework(s: State, actor: User, id: Uuid): HomeworkAssign
  * (their reported completions are still there), otherwise a draft.
  */
 export function restoreHomework(s: State, actor: User, id: Uuid): HomeworkAssignment {
-  const hw = homeworkFor(s, actor, id)
+  const hw = homeworkFor(s, actor, id, "delete")
   if (hw.status !== "archived") throw ruleViolation(msg("errors.homework.notArchived"))
   const lesson = lessonOf(s, hw.lessonId)!
   if (lesson.archivedAt) throw ruleViolation(msg("errors.homework.lessonArchived"))
@@ -406,7 +399,7 @@ export function restoreHomework(s: State, actor: User, id: Uuid): HomeworkAssign
 }
 
 export function deleteHomework(s: State, actor: User, id: Uuid): HomeworkAssignment {
-  const hw = homeworkFor(s, actor, id)
+  const hw = homeworkFor(s, actor, id, "delete")
   if (hw.publishedAt !== null) throw ruleViolation(msg("errors.homework.publishedStays"))
   s.homework = s.homework.filter((h) => h.id !== id)
   return hw
@@ -473,14 +466,14 @@ export function undoCompletion(
 
 // -------------------------------------------------------- guardian links
 
-/** Only administrators link parent accounts to children; knowing a child's name is never enough. */
+/** Only the office links parent accounts to children; knowing a child's name is never enough. */
 export function linkGuardian(
   s: State,
   actor: User,
   userId: Uuid,
   personId: Uuid
 ): GuardianRelationship {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.guardians.adminOnlyGrant"))
+  authorize(actor, "update", "users", msg("errors.guardians.adminOnlyGrant"))
   const parent = found(userOf(s, userId), "user")
   const child = found(personOf(s, personId), "person")
   const existing = s.guardians.find(
@@ -501,8 +494,6 @@ export function linkGuardian(
     existing.approvedAt = toInstant(ms)
     return existing
   }
-  if (!parent.roles.some((r) => r.role === "parent"))
-    parent.roles.push({ role: "parent", serviceId: null, stageId: null })
   const link: GuardianRelationship = {
     id: uuidv7(ms),
     userId: parent.id,
@@ -518,7 +509,7 @@ export function linkGuardian(
 }
 
 export function approveGuardian(s: State, actor: User, id: Uuid): GuardianRelationship {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.guardians.adminOnlyApprove"))
+  authorize(actor, "update", "users", msg("errors.guardians.adminOnlyApprove"))
   const link = found(
     s.guardians.find((g) => g.id === id),
     "guardian"
@@ -531,7 +522,7 @@ export function approveGuardian(s: State, actor: User, id: Uuid): GuardianRelati
 }
 
 export function revokeGuardian(s: State, actor: User, id: Uuid): GuardianRelationship {
-  if (!isAdministrator(actor)) throw forbidden(msg("errors.guardians.adminOnlyRemove"))
+  authorize(actor, "update", "users", msg("errors.guardians.adminOnlyRemove"))
   const link = found(
     s.guardians.find((g) => g.id === id),
     "guardian"

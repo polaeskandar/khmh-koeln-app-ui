@@ -4,6 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server"
 
 import { can, isActiveAccount, isStaff } from "@/lib/domain/policy"
 import { formatFor } from "@/lib/format"
+import type { ViewerInfo } from "@/lib/view-models"
 import { today as clockToday } from "@/server/mock/clock"
 import {
   currentGroupNames,
@@ -11,21 +12,13 @@ import {
   isArchived,
   serviceOf,
   stageOf,
-  stagesOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import { openState } from "@/server/mock/runtime"
 import type { Context } from "@/server/viewer"
 
-import { serviceRef, stageRef, viewerInfo } from "./present"
-
-/** Active services, with their stages, for choosing where someone serves. */
-function servicesWithStages(s: State) {
-  return s.services
-    .filter((x) => !isArchived(x))
-    .sort((a, b) => a.name.localeCompare(b.name, "de"))
-    .map((x) => ({ ...serviceRef(s, x), stages: stagesOf(s, x.id).map((st) => stageRef(st)!) }))
-}
+import { serviceRef, viewerInfo } from "./present"
+import { getAssignableRoles } from "./roles"
 
 /** Children in a stage today, for linking them to a parent account. */
 function linkableChildren(s: State) {
@@ -60,12 +53,12 @@ function linkableMembers(s: State) {
 }
 
 /**
- * Accounts people registered themselves, waiting for an administrator. Only
- * administrators see them; for everyone else this is null.
+ * Accounts people registered themselves, waiting for the office. Accounts that may see accounts
+ * get the list; approving and declining needs "Accounts: Add". Null for everyone else.
  */
 export async function getAccountRequests(ctx: Context) {
   const { state: s, viewer } = ctx
-  if (!can(viewer, "MANAGE_USERS")) return null
+  if (!can(viewer, "read", "users")) return null
   const requests = s.users
     .filter((u) => u.approvedAt === null && u.disabledAt === null)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
@@ -88,7 +81,9 @@ export async function getAccountRequests(ctx: Context) {
     requests,
     children: linkableChildren(s),
     members: linkableMembers(s),
-    services: servicesWithStages(s),
+    // Approving a parent or a servant gives the account its roles.
+    roles: getAssignableRoles(ctx),
+    canDecide: can(viewer, "create", "users"),
     today: clockToday(),
   }
 }
@@ -104,6 +99,16 @@ export function getRegistrationServices() {
     .map((x) => ({ id: x.id, name: x.name }))
 }
 
+/** Accounts that can change roles first, then staff, then by name. */
+export function byAccess(a: ViewerInfo, b: ViewerInfo) {
+  return (
+    Number(b.permissions.includes("roles:update")) -
+      Number(a.permissions.includes("roles:update")) ||
+    Number(b.isStaff) - Number(a.isStaff) ||
+    a.name.localeCompare(b.name, "de")
+  )
+}
+
 /**
  * The prototype's quick sign-in: every active staff account and the parents
  * of the demo story. Public, like the sign-in page.
@@ -115,10 +120,5 @@ export async function getDemoAccounts() {
   return s.users
     .filter((u) => isActiveAccount(u) && (isStaff(u) || u.personId !== null))
     .map((u) => viewerInfo({ state: s, viewer: u, t, f }, u))
-    .sort(
-      (a, b) =>
-        Number(b.isAdmin) - Number(a.isAdmin) ||
-        Number(b.isStaff) - Number(a.isStaff) ||
-        a.name.localeCompare(b.name, "de")
-    )
+    .sort(byAccess)
 }

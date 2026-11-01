@@ -20,7 +20,6 @@ export default async function AccountPage() {
   const ctx = await getStaffContext()
   const [t, privacy] = await Promise.all([getTranslations("account"), getOwnPrivacy(ctx)])
   const me = viewerInfo(ctx, ctx.viewer)
-  const tr = await getTranslations("roles")
   return (
     <>
       <Topbar crumbs={[{ label: t("title") }]} />
@@ -38,15 +37,9 @@ export default async function AccountPage() {
               <dt className="text-muted-foreground">{t("roles")}</dt>
               <dd>
                 <ul className="flex flex-col gap-1">
-                  {me.roles.map((r, i) => (
-                    <li key={i}>
-                      {tr(r.role)}
-                      {r.stage || r.service ? (
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {r.stage ? `${r.service?.name} › ${r.stage.name}` : r.service?.name}
-                        </span>
-                      ) : null}
+                  {me.roles.map((r) => (
+                    <li key={r.id}>
+                      <bdi>{r.name}</bdi>
                     </li>
                   ))}
                 </ul>

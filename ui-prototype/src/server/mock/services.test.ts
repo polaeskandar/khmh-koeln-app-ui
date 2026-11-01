@@ -63,7 +63,7 @@ describe("services", () => {
     expect(t.s.services).toContain(created)
   })
 
-  test("a service leader edits the service they lead, and no other", () => {
+  test("a service leader edits services (roles hold in every service), but archives none", () => {
     const t = demo()
     const sundaySchool = t.service("Sunday School")
     updateService(t.s, t.leader, sundaySchool.id, {
@@ -72,7 +72,9 @@ describe("services", () => {
     })
     expect(sundaySchool.description).toBe("Classes after the Divine Liturgy.")
     const youth = t.service("Youth Meeting")
-    expect(statusOf(() => updateService(t.s, t.leader, youth.id, { name: "Youth" }))).toBe(403)
+    updateService(t.s, t.leader, youth.id, { name: "Youth Meeting", description: "Fridays." })
+    expect(youth.description).toBe("Fridays.")
+    expect(statusOf(() => archiveService(t.s, t.leader, youth.id))).toBe(403)
   })
 
   test("names are unique, ignoring case and extra spaces", () => {
@@ -113,17 +115,18 @@ describe("services", () => {
 })
 
 describe("dashboard", () => {
-  test("Today lists every meeting of the day in the viewer's services, their own first", async () => {
+  test("Today lists every meeting of the day; roles hold everywhere, so a servant may take each", async () => {
     const t = demo()
     const d = await getDashboard(contextFor(t.s, t.daniel))
     expect(d.todaySessions.map((x) => x.group)).toEqual([
-      "3rd Class",
       "Kindergarten",
       "1st Class",
       "2nd Class",
+      "3rd Class",
       "4th Class",
       "5th & 6th Class",
     ])
-    expect(d.todaySessions.filter((x) => x.can.record).map((x) => x.group)).toEqual(["3rd Class"])
+    expect(d.todaySessions.every((x) => x.can.record)).toBe(true)
+    expect(d.todaySessions.some((x) => x.can.manage)).toBe(false)
   })
 })

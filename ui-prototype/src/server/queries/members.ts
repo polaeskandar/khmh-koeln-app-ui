@@ -1,6 +1,6 @@
 import "server-only"
 
-import { can, canInService, isAdministrator } from "@/lib/domain/policy"
+import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import { today as clockToday } from "@/server/mock/clock"
 import { isArchived, isCurrentOn, serviceOf, stageOf, stagesOf } from "@/server/mock/selectors"
@@ -8,8 +8,12 @@ import type { Context } from "@/server/viewer"
 
 import { personRef, serviceRef, stageRef } from "./present"
 
+/** The member list, for accounts whose roles may see members; null for everyone else. */
 export async function listMembers(ctx: Context) {
   const { state: s, viewer } = ctx
+  if (!can(viewer, "read", "members")) return null
+  // Roles hold everywhere: whoever may change members may change anyone's.
+  const canEdit = can(viewer, "update", "members")
   const today = clockToday()
   const since = addDays(today, -28)
 
@@ -58,9 +62,7 @@ export async function listMembers(ctx: Context) {
         lastAttended: attended[0] ?? null,
         recentAttendance: attended.slice(0, 6),
         attendedLast4Weeks: attended.filter((x) => x.date >= since).length,
-        canEdit:
-          isAdministrator(viewer) ||
-          current.some((m) => can(viewer, "MANAGE_MEMBERS", m.serviceId, m.stageId)),
+        canEdit,
       }
     })
     .sort(
@@ -76,10 +78,10 @@ export async function listMembers(ctx: Context) {
       ...serviceRef(s, x),
       stages: stagesOf(s, x.id).map((st) => ({
         ...stageRef(st)!,
-        canManageMembers: can(viewer, "MANAGE_MEMBERS", x.id, st.id),
+        canManageMembers: canEdit,
       })),
-      canManageMembers: canInService(viewer, "MANAGE_MEMBERS", x.id),
-      canManageServiceLevel: can(viewer, "MANAGE_MEMBERS", x.id, null),
+      canManageMembers: canEdit,
+      canManageServiceLevel: canEdit,
     }))
 
   return {
@@ -90,11 +92,11 @@ export async function listMembers(ctx: Context) {
       active: rows.filter((r) => r.person.status === "active").length,
       inactive: rows.filter((r) => r.person.status === "inactive").length,
     },
-    canAdd: services.some((x) => x.canManageMembers),
+    canAdd: can(viewer, "create", "members"),
   }
 }
 
-export type MembersPage = Awaited<ReturnType<typeof listMembers>>
+export type MembersPage = NonNullable<Awaited<ReturnType<typeof listMembers>>>
 export type MemberRow = MembersPage["rows"][number]
 
 /** Everyone active, with where they belong today: for "add an existing person" pickers. */

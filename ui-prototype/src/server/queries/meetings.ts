@@ -130,7 +130,7 @@ export async function getAgenda(ctx: Context, params: { date?: string; service?:
     serviceId: scope.serviceId ?? null,
     days,
     services,
-    canCreateOneOff: services.some((x) => can(viewer, "MANAGE_SESSIONS", x.id)),
+    canCreateOneOff: can(viewer, "create", "sessions"),
   }
 }
 
@@ -183,7 +183,7 @@ export async function getSessionDetail(ctx: Context, id: Uuid) {
             title: lesson.title,
             status: lesson.status,
             href: `/services/${lesson.serviceId}/stages/${lesson.stageId}/lessons/${lesson.id}`,
-            canSee: can(viewer, "VIEW_SERVICE", lesson.serviceId),
+            canSee: can(viewer, "read", "lessons"),
           }
         : null,
     stageHref: session.stageId
@@ -227,7 +227,7 @@ export async function listSchedules(ctx: Context, params: { service?: string; st
     .map((x) => ({
       ...serviceRef(s, x),
       stages: stagesOf(s, x.id).map((st) => stageRef(st)!),
-      canManage: can(viewer, "MANAGE_SESSIONS", x.id),
+      canManage: can(viewer, "create", "sessions"),
     }))
   return {
     groups,
@@ -289,11 +289,7 @@ export function todaysSessions(ctx: Context): SessionCard[] {
   const today = clockToday()
   return sortSessions(
     s.sessions
-      .filter(
-        (x) =>
-          localDateOf(x.startsAt) === today &&
-          can(viewer, "RECORD_ATTENDANCE", x.serviceId, x.stageId)
-      )
+      .filter((x) => localDateOf(x.startsAt) === today && can(viewer, "create", "attendance"))
       .map((x) => sessionCard(s, viewer, x))
   )
 }
@@ -319,7 +315,7 @@ export function formServices(ctx: Context): FormService[] {
       id: x.id,
       name: x.name,
       tone: serviceRef(s, x).tone,
-      canManage: can(viewer, "MANAGE_SESSIONS", x.id),
+      canManage: can(viewer, "create", "sessions"),
       serviceLevelMembers: rosterOn(s, x.id, null, today).length,
       stages: stagesOf(s, x.id).map((st) => ({
         id: st.id,

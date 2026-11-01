@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fullName, initials, preferredName } from "@/lib/domain/names"
-import { can, isAdministrator, isMember, isStaff } from "@/lib/domain/policy"
+import { can, isMember, isParent, isStaff } from "@/lib/domain/policy"
 import { nextOccurrence } from "@/lib/domain/recurrence"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type {
@@ -9,6 +9,7 @@ import type {
   MeetingSchedule,
   MeetingSession,
   Person,
+  Role,
   Service,
   Stage,
   User,
@@ -32,6 +33,7 @@ import {
   currentGroupNames,
   isArchived,
   personOf,
+  roleOf,
   rosterOn,
   serviceOf,
   sessionCounts,
@@ -113,9 +115,9 @@ export function sessionCard(s: State, viewer: User, x: MeetingSession): SessionC
     closedAt: x.closedAt,
     closedBy: userRef(userOf(s, x.closedBy)),
     can: {
-      record: can(viewer, "RECORD_ATTENDANCE", x.serviceId, x.stageId),
-      manage: can(viewer, "MANAGE_SESSIONS", x.serviceId),
-      reopen: can(viewer, "REOPEN_SESSION", x.serviceId),
+      record: can(viewer, "create", "attendance"),
+      manage: can(viewer, "update", "sessions"),
+      reopen: can(viewer, "update", "sessions"),
     },
   }
 }
@@ -154,7 +156,7 @@ export function plannedOccurrence(
     rosterMode: sch.rosterMode,
     rosterSize: scheduleRosterSize(s, sch, date),
     createdOn: addDays(date, -1),
-    can: { manage: can(viewer, "MANAGE_SESSIONS", sch.serviceId) },
+    can: { manage: can(viewer, "update", "sessions") },
   }
 }
 
@@ -212,53 +214,60 @@ export function scheduleSummary(s: State, viewer: User, sch: MeetingSchedule): S
     active: sch.active,
     next,
     sessionCount: s.sessions.filter((x) => x.scheduleId === sch.id).length,
-    can: { manage: can(viewer, "MANAGE_SESSIONS", sch.serviceId) },
+    can: { manage: can(viewer, "update", "sessions") },
   }
+}
+
+/** The account's roles, the ones that allow the most first. */
+export function rolesOf(s: State, user: User): Role[] {
+  return user.roleIds
+    .map((id) => roleOf(s, id))
+    .filter((r): r is Role => !!r)
+    .sort(
+      (a, b) => b.permissions.length - a.permissions.length || a.name.localeCompare(b.name, "de")
+    )
+}
+
+/** "Service leader", or "Service leader +1" for an account with two roles. */
+export function roleList(roles: { name: string }[]): string {
+  return roles.length === 0
+    ? ""
+    : `${roles[0].name}${roles.length > 1 ? ` +${roles.length - 1}` : ""}`
 }
 
 /** How an account appears in menus, with a one-line summary of its roles in the request's language. */
 export function viewerInfo(ctx: Context, viewer: User): ViewerInfo {
   const { state: s, t, f } = ctx
-  const roles = viewer.roles.map((r) => ({
-    role: r.role,
-    service: r.serviceId ? serviceRef(s, serviceOf(s, r.serviceId)!) : null,
-    stage: stageRef(stageOf(s, r.stageId)),
-  }))
-  const admin = isAdministrator(viewer)
+  const roles = rolesOf(s, viewer).map((r) => ({ id: r.id, name: r.name }))
   const children = childrenOf(s, viewer.id)
   const member = personOf(s, viewer.personId)
   // The groups the member portal shows: none while the record is inactive.
   const groups = member?.status === "active" ? currentGroupNames(s, member.id, today()) : []
-  const staffRoles = roles.filter((r) => r.role === "service_leader" || r.role === "servant")
-  const first = staffRoles[0]
-  const roleSummary = admin
-    ? t("roles.administrator")
-    : first
-      ? t("roles.summary.staff", {
-          role: t(`roles.${first.role}`),
-          where: first.stage?.name ?? first.service?.name ?? "",
-          more: staffRoles.length - 1,
-        })
-      : children.length > 0
-        ? t("roles.summary.parentOf", {
-            children: f.list(children.map((c) => c.displayName ?? c.firstName)),
-          })
-        : roles.some((r) => r.role === "parent")
-          ? t("roles.summary.parentWaiting")
-          : member
-            ? groups.length > 0
-              ? t("roles.summary.memberOf", { groups: f.list(groups) })
-              : t("roles.summary.member")
-            : t("roles.summary.none")
+  const staff = isStaff(viewer)
+  const parent = isParent(viewer)
+  const roleSummary =
+    staff || (!parent && roles.length > 0)
+      ? roleList(roles)
+      : parent
+        ? children.length > 0
+          ? t("roles.summary.parentOf", {
+              children: f.list(children.map((c) => c.displayName ?? c.firstName)),
+            })
+          : t("roles.summary.parentWaiting")
+        : member
+          ? groups.length > 0
+            ? t("roles.summary.memberOf", { groups: f.list(groups) })
+            : t("roles.summary.member")
+          : t("roles.summary.none")
   return {
     ...userRef(viewer)!,
     email: viewer.email,
     roleSummary,
     roles,
-    isAdmin: admin,
-    isStaff: isStaff(viewer),
-    // Has a parent account, even while access to a child is still waiting for approval.
-    isParent: roles.some((r) => r.role === "parent"),
+    permissions: viewer.disabledAt ? [] : viewer.permissions,
+    isStaff: staff,
+    // Opens the parent portal, even while access to a child is still waiting for approval.
+    isParent: parent,
     isMember: isMember(viewer),
     memberGroups: groups.length,
   }

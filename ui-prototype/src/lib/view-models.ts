@@ -2,9 +2,9 @@ import type {
   Instant,
   LocalDate,
   LocalTime,
+  Permission,
   PersonStatus,
   Recurrence,
-  Role,
   RosterMode,
   SessionEventType,
   SessionStatus,
@@ -151,11 +151,13 @@ export type ViewerInfo = {
   initials: string
   email: string
   roleSummary: string
-  roles: { role: Role; service: ServiceRef | null; stage: StageRef | null }[]
-  isAdmin: boolean
-  /** Has a role in the church app (administrator, leader or servant). */
+  /** The account's roles, the ones that allow the most first. */
+  roles: { id: Uuid; name: string }[]
+  /** What its roles allow together; the UI hides what the account can't do. */
+  permissions: Permission[]
+  /** Its roles let it see the services, which opens the church app. */
   isStaff: boolean
-  /** Has approved access to at least one child in the parent portal. */
+  /** Its roles open the parent portal (which children it shows depends on parent access). */
   isParent: boolean
   /** The account is linked to the person's own member record: the member portal shows their groups. */
   isMember: boolean

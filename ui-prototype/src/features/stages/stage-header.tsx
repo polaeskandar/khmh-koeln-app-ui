@@ -6,7 +6,6 @@ import { LinkTabs } from "@/components/link-tabs"
 import { PageHeader } from "@/components/page-header"
 import { ServiceTag } from "@/components/service-tag"
 import { StatusBadge } from "@/components/status"
-import { useFormat } from "@/i18n/format"
 import type { StageHeader as StageHeaderData } from "@/server/queries/stage"
 
 import { StageActionsMenu } from "./stage-dialogs"
@@ -61,7 +60,6 @@ export function StageHeader({ h, active }: { h: StageHeaderData; active: StageTa
   const t = useTranslations("stages")
   const tc = useTranslations("counts")
   const tcommon = useTranslations("common")
-  const f = useFormat()
   const tabs = useTabLabels()
   const base = stageBase(h)
   return (
@@ -110,15 +108,6 @@ export function StageHeader({ h, active }: { h: StageHeaderData; active: StageTa
             <span className="inline-flex items-center gap-1.5">
               <MapPin className="size-3.5" aria-hidden="true" />
               {h.meets.location}
-            </span>
-          ) : null}
-          {h.servants.length > 0 ? (
-            <span>
-              {t("servants", {
-                names: h.servants
-                  .map((u) => (u.leader ? t("leader", { name: u.name }) : u.name))
-                  .join(f.locale === "ar" ? "، " : ", "),
-              })}
             </span>
           ) : null}
         </p>

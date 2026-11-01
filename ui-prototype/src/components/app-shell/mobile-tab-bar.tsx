@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import type { ViewerInfo } from "@/lib/view-models"
 
-import { isActive, NAV, SETTINGS, type NavItem } from "./nav"
+import { isActive, NAV, navAllowed, SETTINGS, type NavItem } from "./nav"
 import { PersonaMenuContent } from "./sidebar-parts"
 
 const byHref = (href: string) => NAV.find((i) => i.href === href)!
@@ -92,7 +92,9 @@ export function MobileTabBar({
           {t("attendance")}
         </span>
       </div>
-      <Tab item={byHref("/members")} active={isActive("/members", pathname)} />
+      {navAllowed("members", viewer?.permissions) ? (
+        <Tab item={byHref("/members")} active={isActive("/members", pathname)} />
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(

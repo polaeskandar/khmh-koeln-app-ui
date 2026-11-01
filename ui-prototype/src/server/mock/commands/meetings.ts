@@ -129,7 +129,7 @@ export function createSchedule(
   actor: User,
   input: ScheduleInput
 ): { schedule: MeetingSchedule; created: number } {
-  authorize(actor, "MANAGE_SESSIONS", input.serviceId)
+  authorize(actor, "create", "sessions")
   const data = validateSchedule(s, input)
   const ms = nowMs()
   const schedule: MeetingSchedule = {
@@ -155,7 +155,7 @@ export function updateSchedule(
   input: Omit<ScheduleInput, "serviceId">
 ): { schedule: MeetingSchedule; created: number } {
   const schedule = found(scheduleOf(s, id), "schedule")
-  authorize(actor, "MANAGE_SESSIONS", schedule.serviceId)
+  authorize(actor, "update", "sessions")
   const data = validateSchedule(s, { ...input, serviceId: schedule.serviceId }, schedule)
   Object.assign(schedule, data, { updatedAt: toInstant(nowMs()) })
   return { schedule, created: schedule.active ? generateNow(s).created : 0 }
@@ -163,7 +163,7 @@ export function updateSchedule(
 
 export function setScheduleActive(s: State, actor: User, id: Uuid, active: boolean) {
   const schedule = found(scheduleOf(s, id), "schedule")
-  authorize(actor, "MANAGE_SESSIONS", schedule.serviceId)
+  authorize(actor, "update", "sessions")
   if (schedule.active === active) return { schedule, created: 0 }
   if (active) {
     const service = serviceOf(s, schedule.serviceId)!
@@ -184,7 +184,7 @@ export function setScheduleActive(s: State, actor: User, id: Uuid, active: boole
 
 export function deleteSchedule(s: State, actor: User, id: Uuid): MeetingSchedule {
   const schedule = found(scheduleOf(s, id), "schedule")
-  authorize(actor, "MANAGE_SESSIONS", schedule.serviceId)
+  authorize(actor, "delete", "sessions")
   const sessions = s.sessions.filter((x) => x.scheduleId === id).length
   if (sessions > 0) {
     throw ruleViolation(msg("errors.meetings.scheduleHasSessions", { count: sessions }))
@@ -227,7 +227,7 @@ function assertStatus(
 
 export function openSession(s: State, actor: User, id: Uuid): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "RECORD_ATTENDANCE", { serviceId: session.serviceId, stageId: session.stageId })
+  authorize(actor, "create", "attendance")
   if (session.status === "active") return session
   assertStatus(
     session,
@@ -248,7 +248,7 @@ export function openSession(s: State, actor: User, id: Uuid): MeetingSession {
 
 export function closeSession(s: State, actor: User, id: Uuid): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "RECORD_ATTENDANCE", { serviceId: session.serviceId, stageId: session.stageId })
+  authorize(actor, "create", "attendance")
   assertStatus(session, "active", msg("errors.meetings.onlyActiveCanClose"))
   const ms = nowMs()
   session.status = "completed"
@@ -265,7 +265,7 @@ export function reopenSession(
   reason: string | null
 ): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "REOPEN_SESSION", session.serviceId, msg("errors.meetings.reopenLeadersOnly"))
+  authorize(actor, "update", "sessions", msg("errors.meetings.reopenNotAllowed"))
   assertStatus(session, "completed", msg("errors.meetings.onlyCompletedCanReopen"))
   const v = new Violations()
   const note = v.optionalText("reason", reason, 200)
@@ -282,7 +282,7 @@ export function cancelSession(
   reason: string | null
 ): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "MANAGE_SESSIONS", session.serviceId)
+  authorize(actor, "update", "sessions")
   assertStatus(session, "scheduled", msg("errors.meetings.onlyScheduledCanCancel"))
   const v = new Violations()
   const note = v.optionalText("reason", reason, 200)
@@ -314,7 +314,7 @@ function moveTimes(input: MoveInput) {
 /** Moves this one session. The schedule and its other sessions stay as they are. */
 export function moveSession(s: State, actor: User, id: Uuid, input: MoveInput): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "MANAGE_SESSIONS", session.serviceId)
+  authorize(actor, "update", "sessions")
   assertStatus(session, "scheduled", msg("errors.meetings.onlyScheduledCanMove"))
   const { startsAt, endsAt } = moveTimes(input)
   if (epochOf(startsAt) <= nowMs()) {
@@ -336,7 +336,7 @@ export function editSessionDetails(
   input: { title: string; location: string | null }
 ): MeetingSession {
   const session = sessionFor(s, id)
-  authorize(actor, "MANAGE_SESSIONS", session.serviceId)
+  authorize(actor, "update", "sessions")
   if (session.status === "canceled") throw ruleViolation(msg("errors.meetings.sessionCanceled"))
   const v = new Violations()
   const title = v.name("title", input.title, 120, msg("errors.meetings.titleRequired"))
@@ -361,7 +361,7 @@ export function materializeOccurrence(
   date: LocalDate
 ): MeetingSession {
   const schedule = found(scheduleOf(s, scheduleId), "schedule")
-  authorize(actor, "MANAGE_SESSIONS", schedule.serviceId)
+  authorize(actor, "update", "sessions")
   const existing = sessionForOccurrence(s, schedule.id, date)
   if (existing) return existing
   if (!occursOn(schedule.recurrence, date)) {
@@ -387,7 +387,7 @@ export type OneOffInput = {
 
 /** A session that does not come from a schedule, e.g. an extra rehearsal. */
 export function createOneOffSession(s: State, actor: User, input: OneOffInput): MeetingSession {
-  authorize(actor, "MANAGE_SESSIONS", input.serviceId)
+  authorize(actor, "create", "sessions")
   const v = new Violations()
   const service = serviceOf(s, input.serviceId)
   if (!service) v.add("serviceId", msg("errors.meetings.chooseService"))

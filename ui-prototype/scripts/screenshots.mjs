@@ -15,9 +15,13 @@
  * never met and creates a new one. Then someone registers, waits for approval
  * and is approved; the main screens are taken again in German, Arabic and dark
  * mode; and a family's request to erase a child's data is recorded and carried
- * out. At the end come the member accounts: Nevine (Bible Study and the Coptic
+ * out. Then come the member accounts: Nevine (Bible Study and the Coptic
  * course) ticks off her own homework, and Mina, a youth who shares his name
- * with a child in 3rd Class, registers and is linked to the right record.
+ * with a child in 3rd Class, registers and is linked to the right record. At
+ * the end, the administrator adds a role of the church's own ("Attendance
+ * helper"), gives it to Sara, and deletes a role nobody has; roles hold
+ * everywhere in the church, and Sara, the church office, sees only what her
+ * roles allow.
  *
  * It starts its own production server with a fresh in-memory data set and the
  * demo clock frozen at Sunday 8 November 2026, 12:08, so every run produces
@@ -444,7 +448,8 @@ async function mvpScreens() {
   )
 
   // Services are created, archived and deleted by administrators; service
-  // leaders only edit their own. The data-changing steps come at the end.
+  // leaders edit them (roles hold in every service). The data-changing steps
+  // come at the end.
   const admin = await signIn("Mariam Fahmy")
   await clickAndWait(
     admin,
@@ -938,6 +943,143 @@ async function memberPortal() {
   await admin.keyboard.press("Escape")
 }
 
+// ------------------------------------------------------- roles and permissions
+
+/**
+ * Roles are data and hold everywhere in the church: the backend's defaults
+ * (Administrator, Service leader, Servant, Parent), ordinary roles, and the
+ * church's own, such as "Church office". Mariam adds "Attendance helper" (see
+ * the services, take attendance) and gives it to Sara, approves a servant with
+ * the roles of her choice, and deletes "Lesson preparation", which nobody has.
+ * Taking "Roles: Change" from the administrator's role would leave nobody who
+ * can change roles, so the editor warns. Sara, the church office, handles
+ * accounts but doesn't see the roles.
+ */
+async function rolesAndPermissions() {
+  console.log("Roles: a new role, giving it, deleting an unused one")
+  const admin = await signIn("Mariam Fahmy")
+  await go(admin, "/settings")
+  const roles = admin.locator("section[aria-labelledby='roles']")
+  check(await text(roles, "Church office").first().isVisible(), "the church's own roles are listed")
+  await shot(admin, "admin", "roles", { locator: roles })
+
+  await clickAndWait(
+    admin,
+    roles.getByRole("link", { name: "New role" }),
+    /\/settings\/roles\/new$/
+  )
+  await label(admin, "Name").fill("Attendance helper")
+  await admin.getByRole("checkbox", { name: "Services: See" }).click()
+  await admin.getByRole("checkbox", { name: "Attendance: Add" }).click()
+  check(
+    await admin.getByRole("checkbox", { name: "Attendance: See" }).isChecked(),
+    "ticking Add ticks See too"
+  )
+  await shot(admin, "admin", "role-editor")
+  await clickAndWait(
+    admin,
+    admin.getByRole("button", { name: "Create role" }),
+    /\/settings\/roles\/[0-9a-f-]+$/
+  )
+  check(
+    await admin.getByRole("heading", { name: "Attendance helper", level: 1 }).count(),
+    "the new role opens after it is created"
+  )
+
+  await go(admin, "/settings")
+  await clickAndWait(
+    admin,
+    admin
+      .locator("section[aria-labelledby='roles']")
+      .getByRole("link", { name: "Church office", exact: true }),
+    /\/settings\/roles\/[0-9a-f-]+$/
+  )
+  await shot(admin, "admin", "role-church-office")
+
+  // Sara also helps at the door on Sundays. Roles hold everywhere: no service to choose.
+  await go(admin, "/settings")
+  const sara = admin
+    .locator("section[aria-labelledby='users'] li")
+    .filter({ hasText: "Sara Wissa" })
+  await sara.getByRole("button", { name: "Role", exact: true }).click()
+  const dialog = admin.getByRole("dialog")
+  await dialog.waitFor()
+  await dialog.getByLabel("Role", { exact: true }).selectOption({ label: "Attendance helper" })
+  await shot(admin, "admin", "dialog-give-role", { full: false })
+  await dialog.getByRole("button", { name: "Give role" }).click()
+  await dialog.waitFor({ state: "detached" })
+  await settle(admin)
+  check(await text(sara, "Attendance helper").first().isVisible(), "Sara has the new role")
+  await shot(admin, "admin", "staff-roles", {
+    locator: admin.locator("section[aria-labelledby='users']"),
+  })
+
+  // Approving a servant: the office chooses the roles, any of the church's.
+  const request = admin
+    .locator("section[aria-labelledby='account-requests'] li")
+    .filter({ hasText: "Fady Gerges" })
+  await request.getByRole("button", { name: "Approve…" }).click()
+  const approval = admin.getByRole("dialog")
+  await approval.waitFor()
+  check(
+    await approval.getByRole("checkbox", { name: /Attendance helper/ }).count(),
+    "the approval offers the church's own roles"
+  )
+  await approval.getByRole("checkbox", { name: /^Servant/ }).check()
+  await shot(admin, "admin", "dialog-approve-servant", { full: false })
+  await admin.keyboard.press("Escape")
+  await approval.waitFor({ state: "detached" })
+
+  // Deleting a role takes it from everyone who has it; nobody has this one.
+  await admin.getByRole("button", { name: "Actions for Lesson preparation" }).click()
+  await admin.getByRole("menuitem", { name: /^Delete/ }).click()
+  const confirm = admin.getByRole("alertdialog")
+  await confirm.waitFor()
+  await shot(admin, "admin", "dialog-delete-role", { full: false })
+  await confirm.getByRole("button", { name: "Delete role" }).click()
+  await confirm.waitFor({ state: "detached" })
+  await settle(admin)
+  check(
+    (await admin.getByRole("button", { name: "Actions for Lesson preparation" }).count()) === 0,
+    "the deleted role is gone"
+  )
+
+  // Mariam is the only one who can change roles: the editor warns before she locks everyone out.
+  await clickAndWait(
+    admin,
+    admin
+      .locator("section[aria-labelledby='roles']")
+      .getByRole("link", { name: "Administrator", exact: true }),
+    /\/settings\/roles\/[0-9a-f-]+$/
+  )
+  await admin.getByRole("checkbox", { name: "Roles: Change" }).click()
+  check(
+    await text(admin, "Nobody else can change roles").first().isVisible(),
+    "the editor warns before the last way to change roles goes"
+  )
+  await shot(admin, "admin", "role-locks-out")
+
+  // Sara, the church office: account requests and data protection, no roles.
+  const office = await signIn("Sara Wissa")
+  await go(office, "/settings")
+  check(
+    (await office.locator("section[aria-labelledby='roles']").count()) === 0,
+    "the church office doesn't see the roles"
+  )
+  check(
+    await office.locator("section[aria-labelledby='account-requests']").count(),
+    "the church office handles account requests"
+  )
+  await shot(office, "admin", "settings-church-office", { full: false })
+
+  for (const locale of ["de", "ar"]) {
+    const page = await signIn("Mariam Fahmy", desktop, { locale })
+    // The servant role: the backend's default id.
+    await go(page, "/settings/roles/019a3f00-0000-7000-8000-000000000003")
+    await shot(page, "languages", `${locale}-10-role-editor`)
+  }
+}
+
 // --------------------------------------------------------------------- run
 
 try {
@@ -956,6 +1098,7 @@ try {
   await languagesAndDarkMode(urls)
   await dataProtection()
   await memberPortal()
+  await rolesAndPermissions()
   if (problems.length) {
     console.error(`\nThe browser reported ${problems.length} problem(s):\n${problems.join("\n")}`)
     process.exitCode = 1

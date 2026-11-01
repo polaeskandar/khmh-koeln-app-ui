@@ -136,7 +136,16 @@ function LinkDialog({ access }: { access: Access }) {
   )
 }
 
-export function ParentAccess({ access, today }: { access: Access; today: LocalDate }) {
+export function ParentAccess({
+  access,
+  today,
+  canChange,
+}: {
+  access: Access
+  today: LocalDate
+  /** "Accounts: Change": approve, give and remove access. Without it the lists are read-only. */
+  canChange: boolean
+}) {
   const t = useTranslations("settings.parents")
   const f = useFormat()
   const approve = useServerAction(approveGuardianAction)
@@ -148,7 +157,7 @@ export function ParentAccess({ access, today }: { access: Access; today: LocalDa
         <p className="max-w-prose text-sm text-muted-foreground">
           {t("summary", { count: access.approved.length })}
         </p>
-        <LinkDialog access={access} />
+        {canChange ? <LinkDialog access={access} /> : null}
       </div>
 
       {access.pending.length > 0 ? (
@@ -178,24 +187,26 @@ export function ParentAccess({ access, today }: { access: Access; today: LocalDa
                     {l.parent.email} · {t("requested", { when: f.atLabel(l.createdAt, today) })}
                   </span>
                 </span>
-                <span className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => approve.execute(l.id)}
-                    disabled={approve.pending}
-                  >
-                    <Check data-icon="inline-start" />
-                    {t("approve")}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setRemoving({ link: l, pending: true })}
-                  >
-                    <X data-icon="inline-start" />
-                    {t("decline")}
-                  </Button>
-                </span>
+                {canChange ? (
+                  <span className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => approve.execute(l.id)}
+                      disabled={approve.pending}
+                    >
+                      <Check data-icon="inline-start" />
+                      {t("approve")}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setRemoving({ link: l, pending: true })}
+                    >
+                      <X data-icon="inline-start" />
+                      {t("decline")}
+                    </Button>
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -242,13 +253,15 @@ export function ParentAccess({ access, today }: { access: Access; today: LocalDa
                         : ""}
                 </TableCell>
                 <TableCell className="pe-4 text-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setRemoving({ link: l, pending: false })}
-                  >
-                    {t("remove")}
-                  </Button>
+                  {canChange ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setRemoving({ link: l, pending: false })}
+                    >
+                      {t("remove")}
+                    </Button>
+                  ) : null}
                 </TableCell>
               </TableRow>
             ))}

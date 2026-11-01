@@ -51,7 +51,7 @@ import { hasMemberPortal, type ViewerInfo } from "@/lib/view-models"
 import { signOutAction } from "@/server/actions/auth"
 import { resetDemoDataAction, switchPersonaAction } from "@/server/actions/prototype"
 
-import { isActive, NAV, SETTINGS } from "./nav"
+import { isActive, NAV, navAllowed, SETTINGS } from "./nav"
 
 export function SidebarBrand() {
   const t = useTranslations()
@@ -91,9 +91,12 @@ export function SidebarBrand() {
 export function SidebarNav({
   pathname,
   openSessions = 0,
+  permissions,
 }: {
   pathname?: string | null
   openSessions?: number
+  /** The viewer's permissions: items their roles don't allow are left out. */
+  permissions?: readonly string[]
 }) {
   const t = useTranslations("nav")
   const side = useInlineEnd()
@@ -102,7 +105,7 @@ export function SidebarNav({
       <SidebarGroup>
         <SidebarGroupContent>
           <SidebarMenu>
-            {NAV.map((item) => (
+            {NAV.filter((item) => navAllowed(item.key, permissions)).map((item) => (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
@@ -148,9 +151,15 @@ export function SidebarNav({
 }
 
 /** The navigation with the current page highlighted (needs the URL, so it renders at request time). */
-export function ActiveSidebarNav({ openSessions }: { openSessions?: number }) {
+export function ActiveSidebarNav({
+  openSessions,
+  permissions,
+}: {
+  openSessions?: number
+  permissions?: readonly string[]
+}) {
   const pathname = usePathname()
-  return <SidebarNav pathname={pathname} openSessions={openSessions} />
+  return <SidebarNav pathname={pathname} openSessions={openSessions} permissions={permissions} />
 }
 
 /** Static placeholder for the user menu (the shadcn menu skeleton uses a random width, which cannot be prerendered). */
