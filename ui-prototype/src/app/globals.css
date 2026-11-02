@@ -202,9 +202,9 @@
 }
 
 /* Fonts: the preset's Oxanium (text) and Geist (headings) come first; they have
-   no Arabic letters, so the browser takes those from Noto Kufi Arabic, letter by
+   no Arabic letters, so the browser takes those from Vazirmatn, letter by
    letter. Text that mixes both scripts (an Arabic page with a Latin name) keeps
-   each script in its own face. Noto Kufi also has Latin letters, which is why it
+   each script in its own face. Vazirmatn also has Latin letters, which is why it
    must not come first. */
 :root {
   --font-sans: var(--font-oxanium), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;

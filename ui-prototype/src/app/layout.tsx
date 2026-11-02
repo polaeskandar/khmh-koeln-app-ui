@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next"
-import { Geist, Noto_Kufi_Arabic, Oxanium } from "next/font/google"
+import { Geist, Oxanium, Vazirmatn } from "next/font/google"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getTranslations } from "next-intl/server"
 import { cn } from "cn"
@@ -12,10 +12,10 @@ import "./globals.css"
 // Preset b3a10z1gt0: Oxanium for text, Geist for headings (self-hosted by next/font at build time).
 const fontText = Oxanium({ subsets: ["latin", "latin-ext"], variable: "--font-oxanium" })
 const fontHeading = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-geist" })
-// Arabic letters: a Kufi face whose square forms match Oxanium. It comes after
-// the preset's fonts in the font stack, so it only draws Arabic (see globals.css);
-// only its Arabic subset is preloaded.
-const fontArabic = Noto_Kufi_Arabic({
+// Arabic letters: Vazirmatn, an open, modern Arabic sans that reads well at small
+// sizes. It comes after the preset's fonts in the font stack, so it only draws
+// Arabic (see globals.css); only its Arabic subset is preloaded.
+const fontArabic = Vazirmatn({
   subsets: ["arabic"],
   variable: "--font-arabic",
   adjustFontFallback: false,
