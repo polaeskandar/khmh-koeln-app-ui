@@ -6,6 +6,7 @@ import { cn } from "cn"
 
 import { Providers } from "@/components/providers"
 import { directionOf } from "@/i18n/config"
+import { fontStack } from "@/lib/font-stack"
 
 import "./globals.css"
 
@@ -20,6 +21,14 @@ const fontArabic = Vazirmatn({
   variable: "--font-arabic",
   adjustFontFallback: false,
 })
+
+// The stacks, set on <html>: Latin face, Vazirmatn, then next/font's Arial stand-ins, which
+// have Arabic letters on Macs and Windows (see fontStack). `adjustFontFallback: false` doesn't
+// remove them.
+const fontStacks = {
+  "--font-sans": fontStack(fontText, fontArabic),
+  "--font-heading": fontStack(fontHeading, fontArabic),
+} as React.CSSProperties
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta")
@@ -55,6 +64,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         fontArabic.variable,
         "font-sans"
       )}
+      style={fontStacks}
     >
       <body className="min-h-svh bg-background">
         <NextIntlClientProvider>

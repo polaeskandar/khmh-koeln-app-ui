@@ -205,11 +205,11 @@
    no Arabic letters, so the browser takes those from Vazirmatn, letter by
    letter. Text that mixes both scripts (an Arabic page with a Latin name) keeps
    each script in its own face. Vazirmatn also has Latin letters, which is why it
-   must not come first. */
-:root {
-  --font-sans: var(--font-oxanium), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-geist), var(--font-arabic), ui-sans-serif, system-ui, sans-serif;
-}
+   must not come first. The root layout sets the two stacks (--font-sans and
+   --font-heading) on <html>: next/font gives Oxanium and Geist a stand-in made
+   from Arial, and on Macs and Windows Arial has Arabic letters, so the stand-ins
+   must come after Vazirmatn, or Arial draws all Arabic text. Only the layout
+   knows their names (src/app/layout.tsx). */
 
 /* Arabic letters join: letter spacing would pull them apart, so the preset's
    tracked labels are set without it in Arabic. */
