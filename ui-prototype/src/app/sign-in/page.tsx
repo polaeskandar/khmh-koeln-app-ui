@@ -61,6 +61,13 @@ export default async function SignInPage() {
               {t("signIn.chooseDemo")}
               <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
+            <Link
+              href="/emails"
+              className="inline-flex items-center gap-1.5 self-start text-sm font-medium underline-offset-4 hover:underline"
+            >
+              {t("signIn.emails")}
+              <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
         </>
       }

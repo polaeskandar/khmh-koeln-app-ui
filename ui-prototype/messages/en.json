@@ -1687,7 +1687,8 @@
       "register": "Create an account",
       "prototypeTitle": "Prototype",
       "prototypeText": "All demo accounts use the password <password></password>, or you can skip typing:",
-      "chooseDemo": "Choose a demo account"
+      "chooseDemo": "Choose a demo account",
+      "emails": "See the emails the app sends"
     },
     "demo": {
       "title": "Choose a demo account",
@@ -1748,7 +1749,7 @@
       "title": "Thank you for registering",
       "text": "The church office checks every new account by hand, usually within a few days. Until then you can’t sign in.",
       "email": "You’ll get an email as soon as your account is ready.",
-      "prototype": "Prototype: no email is sent. An administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy.",
+      "prototype": "Prototype: no email is sent. An administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy. <link>See the “Your account is ready” email</link>",
       "back": "Back to sign-in"
     },
     "forgot": {
@@ -1759,7 +1760,7 @@
       "back": "Back to sign-in",
       "sent": "If there is an account for <email></email>, we’ve sent it a link to choose a new password.",
       "sentHint": "The link works for one hour. Check your spam folder too.",
-      "prototype": "Prototype: no email is sent."
+      "prototype": "Prototype: no email is sent. <link>See the email with the link</link>"
     }
   },
   "privacyNotice": {
@@ -2199,5 +2200,49 @@
         "description": "See: the roles and what they allow. Add, Change, Delete: create, change and delete roles."
       }
     }
+  },
+  "emails": {
+    "title": "Emails",
+    "intro": "The emails the app sends, in the language of each account. The backend sends them through Mailgun (backend #17); here they are filled with demo data and nothing is sent.",
+    "back": "Back to sign-in",
+    "all": "All emails",
+    "items": {
+      "password-link": {
+        "name": "Password link",
+        "when": "Someone needs a new password. At the launch the church office has the link sent, and it works for 24 hours; later people ask for it on the sign-in page, and it works for one hour.",
+        "tickets": "Template password_link, backend #30 at the launch and #97 after it"
+      },
+      "account-approved": {
+        "name": "Account approved",
+        "when": "The church office approves the registration of a parent or a servant. Declining a registration sends nothing.",
+        "tickets": "Template account_approved, backend #97 after the launch"
+      }
+    },
+    "language": "Language",
+    "link": "Who made the link",
+    "links": {
+      "office": "Church office, 24 hours",
+      "forgot": "Sign-in page, 1 hour"
+    },
+    "show": "Show",
+    "views": {
+      "desktop": "Computer",
+      "phone": "Phone",
+      "text": "Text"
+    },
+    "colors": "Colors",
+    "schemes": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "envelope": "Sender, recipient and subject",
+    "from": "From",
+    "to": "To",
+    "subject": "Subject",
+    "preheader": "Preview text",
+    "frame": "Preview: {name}",
+    "openHtml": "HTML on its own",
+    "openText": "Text on its own",
+    "notes": "Mail clients use the reader’s own font, so the email looks a little different on every device. Dark colors appear in clients that support them, such as Apple Mail; Gmail darkens emails by itself."
   }
 }

@@ -21,7 +21,8 @@
  * the end, the administrator adds a role of the church's own ("Attendance
  * helper"), gives it to Sara, and deletes a role nobody has; roles hold
  * everywhere in the church, and Sara, the church office, sees only what her
- * roles allow.
+ * roles allow. Last come the emails the backend will send: the prototype's
+ * Emails section, and each email as a mail client draws it.
  *
  * It starts its own production server with a fresh in-memory data set and the
  * demo clock frozen at Sunday 8 November 2026, 12:08, so every run produces
@@ -42,6 +43,7 @@ const out = {
   languages: path.resolve(app, "../ui-mockups/languages"),
   dark: path.resolve(app, "../ui-mockups/dark"),
   member: path.resolve(app, "../ui-mockups/member"),
+  emails: path.resolve(app, "../ui-mockups/emails"),
 }
 const PORT = Number(process.env.SCREENSHOT_PORT ?? 3210)
 const BASE = `http://localhost:${PORT}`
@@ -1080,6 +1082,56 @@ async function rolesAndPermissions() {
   }
 }
 
+// ------------------------------------------------------------------ emails
+
+/**
+ * The emails of backend #17, #30 and #97: the Emails section as someone opens it from the
+ * sign-in page, then each email's HTML part on its own, the way a mail client draws it (English,
+ * German, Arabic, on a phone, dark), and the password link as plain text.
+ */
+async function emails() {
+  console.log("Emails")
+  const visitor = await openBrowser("emails")
+  await go(visitor, "/sign-in")
+  await clickAndWait(
+    visitor,
+    visitor.getByRole("link", { name: "See the emails the app sends" }),
+    /\/emails$/
+  )
+  await shot(visitor, "emails", "emails")
+  await clickAndWait(
+    visitor,
+    visitor.getByRole("link", { name: /^Password link/ }),
+    /\/emails\/password-link$/
+  )
+  await visitor
+    .frameLocator("iframe[title='Preview: Password link']")
+    .getByRole("heading", { name: "Choose a new password" })
+    .waitFor()
+  await shot(visitor, "emails", "viewer")
+  await go(visitor, "/emails/password-link?lang=en&link=office&view=text&colors=light")
+  check(
+    await text(visitor, "The link works once and expires in 24 hours.").first().isVisible(),
+    "the text part says how long the link works"
+  )
+  await shot(visitor, "emails", "password-link-text")
+
+  const mail = { ...desktop, viewport: { width: 720, height: 900 } }
+  for (const id of ["password-link", "account-approved"]) {
+    for (const locale of ["en", "de", "ar"]) {
+      const page = await openBrowser(`${id} (${locale})`, mail)
+      await go(page, `/emails/${id}/html?lang=${locale}`)
+      await shot(page, "emails", locale === "en" ? id : `${id}-${locale}`)
+    }
+    const onPhone = await openBrowser(`${id} (phone)`, phone)
+    await go(onPhone, `/emails/${id}/html?lang=en`)
+    await shot(onPhone, "emails", `${id}-phone`)
+    const dark = await openBrowser(`${id} (dark)`, mail, { dark: true })
+    await go(dark, `/emails/${id}/html?lang=en`)
+    await shot(dark, "emails", `${id}-dark`)
+  }
+}
+
 // --------------------------------------------------------------------- run
 
 try {
@@ -1099,6 +1151,7 @@ try {
   await dataProtection()
   await memberPortal()
   await rolesAndPermissions()
+  await emails()
   if (problems.length) {
     console.error(`\nThe browser reported ${problems.length} problem(s):\n${problems.join("\n")}`)
     process.exitCode = 1

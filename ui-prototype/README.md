@@ -2,9 +2,9 @@
 
 A clickable prototype of the MVP: attendance, lessons, homework and the parent portal, with sign-in,
 registration and the data protection requests around them, in English, German and Arabic, light or dark. It
-also shows the member portal planned after the launch, for members with an account of their own.
-Every button works, on fictional demo data that the prototype keeps in memory. It is documentation for the tickets, not the
-product: the product is built in the `frontend` and `backend` repositories.
+also shows the member portal planned after the launch, for members with an account of their own, and the emails
+the backend sends (`/emails`). Every button works, on fictional demo data that the prototype keeps in memory. It is
+documentation for the tickets, not the product: the product is built in the `frontend` and `backend` repositories.
 
 The screenshots in [`../ui-mockups`](../ui-mockups) are taken from this app by a script that also checks
 the end-to-end scenario below. The mockups' README lists every screen with its route here.
@@ -31,12 +31,13 @@ version by itself, pnpm 10 can't). `pnpm screenshots` uses the Chromium that Pla
 | Rules and permissions | Checked in the mock layer (`src/server/mock`) on every action, the way the API will check them: permissions from roles, parent access, status changes, validation. Errors come back as problem details (403, 404, 409, 422). |
 | Roles | RBAC as in the backend (polaeskandar/khmh-koeln-app-backend#130): a permission is an action (create, read, update, delete) on a resource (users, roles, services, stages, sessions, attendance, members, lessons, homework, parentPortal), 40 in all (`PERMISSIONS` in `src/lib/domain/policy.ts`); a role is a name and some of them; an account has roles and may do what any of them allows. Roles are global: no service or stage, a role holds in every service. The church starts with the backend's defaults, Administrator, Service leader, Servant and Parent (`DEFAULT_ROLES`, same ids and permissions), which are ordinary roles: renamed, changed and deleted like the church's own. Settings › Roles lists them; `/settings/roles/new` and `/settings/roles/:role` show the See / Add / Change / Delete grid. Someone active must always keep "Roles: Change": a change that would leave nobody is refused (409 `roles.lastRoleManager`). The mock keeps each account's permissions in sync with its roles; the API resolves them on every request. |
 | Sign-in | Email and password, checked against salted hashes in the mock layer; the session is a cookie with the account id. Every demo account uses the password `khmk-demo`, and `/sign-in/demo` signs in without typing. The account menu ("Prototype: view the app as") switches accounts. |
-| Registration | Real flow on mock data: anyone can register as a parent, member or servant; the account can't be used until the office approves it in Settings (linking the children and giving roles, linking the member's own record after an age check, or giving roles). Declining deletes it. No emails are sent (confirmation, approval, password links). |
+| Registration | Real flow on mock data: anyone can register as a parent, member or servant; the account can't be used until the office approves it in Settings (linking the children and giving roles, linking the member's own record after an age check, or giving roles). Declining deletes it. No emails are sent; the approval email and the password link are designed in the Emails section (see below). |
 | Data protection | Requests to see or erase personal data (Settings › Data protection), with the one-month deadline, a review of what the app stores, a JSON copy, and erasure that keeps past attendance totals as anonymous numbers. Everyone can download their data and ask for deletion on their account page. The privacy notice is a draft. |
 | Languages and appearance | English, German and Arabic (right to left), and light, dark or like the device, chosen in the account menu or on the account page. The language is a cookie and is also stored on the account. |
 | Clock | Starts at Sunday 8 November 2026, 12:08 in Cologne and then runs in real time. `KHMK_DEMO_CLOCK=frozen` keeps it at the start (used for the screenshots). |
 | Session generator | Simulated. The backend job does not exist yet. The prototype runs the planned logic once per hour (at minute 5) on the demo clock, when a page is loaded. |
-| Emails, notifications, file uploads | Not in the prototype. Material links point to example addresses. |
+| Emails | Designed, never sent: `/emails` shows each email the backend sends, filled with demo data (see "The emails" below). |
+| Notifications, file uploads | Not in the prototype. Material links point to example addresses. |
 
 ## Demo accounts
 
@@ -94,11 +95,49 @@ It then takes the MVP screens as Christine (leader), Daniel (servant, also on th
     Servant when approving Fady, and deletes "Lesson preparation", which nobody has. Unticking "Roles:
     Change" on the Administrator role warns that nobody else could change roles. Sara (church office) sees
     account requests and data protection in Settings, but no roles.
+11. The Emails section is opened from the sign-in page. Each email is taken as a mail client draws it, in
+    English, German and Arabic, on a phone and in dark mode, and the password link also as plain text.
 
 Desktop screenshots are 1440 px wide at 2×, phone screenshots 390 × 844 at 3×.
 
 If a build shows styles from before a change in `globals.css`, delete `.next` and build again: Turbopack's
 cache has kept old CSS once.
+
+## The emails
+
+The backend sends emails through Symfony Mailer and Mailgun (polaeskandar/khmh-koeln-app-backend#17), in
+the account's language. `src/server/emails/` draws them the way its Twig templates will, so the backend can
+port the layout block by block; `messages/emails/{en,de,ar}.json` hold the texts (the backend's
+`translations/emails.*.yaml`, ICU format). The route `/emails` lists them; each email's page switches the
+language, the link's lifetime, computer, phone or plain text, and light or dark.
+`/emails/:email/html` and `/emails/:email/text` serve the raw parts (`?lang=de`, `&link=forgot`) for
+trying them in real mail clients.
+
+| Email | Template | Sent when | Ticket |
+| --- | --- | --- | --- |
+| Password link | `password_link` | The office has a link sent (works 24 hours; at the launch, `app:user:password-link`), or, after #97, someone asks on the sign-in page (1 hour). One template, the hours are a parameter. | backend #30, #97 |
+| Account approved | `account_approved` | The office approves a parent's or a servant's registration. Declining sends nothing. | backend #97 |
+
+How they are built, and what the backend should keep:
+
+- **One frame for all**: the church's mark and name, a title, a greeting with the account's name, the content
+  with one button, a quiet note, and a footer that says why the email came, that replies aren't read, and
+  where the privacy notice is. The only personal data are the recipient's name and address.
+- **Mail-client HTML**: a 560 px card of tables with inline styles (a conditional table keeps Outlook at
+  560 px), a button drawn by a table cell, the preview text hidden at the top. Phones get the card at full
+  width with 24 px padding.
+- **No web fonts**: the reader's system font (San Francisco, Segoe UI, Roboto and their Arabic faces).
+  Loading the app's fonts from a font service would tell it who opened the email.
+- **Colors**: preset `b3a10z1gt0` in hex (stone and emerald). Dark colors come in a second style block for
+  clients that honor `prefers-color-scheme`; the inline styles alone are a complete light email.
+- **The mark**: `public/email/khmk-mark.png` (108 px for 36 px), which the web app serves at
+  `FRONTEND_URL/email/khmk-mark.png`. Its cell is emerald, so the square stays when images are blocked.
+- **Arabic**: `dir="rtl"` on the document, the card and every text cell, text aligned right; addresses and
+  URLs stay left to right. Numbers are Western digits as in the app (in PHP, format the Arabic texts with
+  `ar@numbers=latn` if ICU chooses Arabic-Indic digits).
+- **Links**: the password link is `FRONTEND_URL/<language>/set-password/#token=…` (the token after `#`
+  never reaches a server log); sign-in and privacy links carry the language too.
+- **Plain text**: the same blocks, the button as its URL, and a signature.
 
 ## Where things live
 
@@ -108,6 +147,10 @@ cache has kept old CSS once.
 | `src/app/parent/` | Parent portal routes, with its own layout and navigation. |
 | `src/app/member/` | Member portal routes, with its own layout and navigation. |
 | `src/app/sign-in/`, `register/`, `forgot-password/`, `privacy/` | The pages before signing in. |
+| `src/app/emails/` | The Emails section: the list, one email's page, and the raw HTML and text parts. |
+| `src/server/emails/` | The emails: the shared layout (HTML and plain text) and each email's content. |
+| `messages/emails/` | The emails' texts in English, German and Arabic, checked by the same catalog test. |
+| `public/email/` | The mark the emails show, served by the web app. |
 | `src/features/` | Screen parts by area: attendance, meetings, stages, lessons, homework, parent, member, settings, … |
 | `src/components/` | Shared parts: app shell, data table, dialogs, form panels, status badges. `ui/` holds the shadcn/ui components of preset `b3a10z1gt0`. |
 | `src/server/actions/` | Server actions: validate input with zod, call the mock layer, return a result or a problem. |

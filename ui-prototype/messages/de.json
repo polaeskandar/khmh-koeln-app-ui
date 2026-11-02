@@ -1687,7 +1687,8 @@
       "register": "Konto anlegen",
       "prototypeTitle": "Prototyp",
       "prototypeText": "Alle Demokonten verwenden das Passwort <password></password>. Oder ganz ohne Tippen:",
-      "chooseDemo": "Demokonto auswählen"
+      "chooseDemo": "Demokonto auswählen",
+      "emails": "Die E-Mails der App ansehen"
     },
     "demo": {
       "title": "Demokonto auswählen",
@@ -1748,7 +1749,7 @@
       "title": "Vielen Dank für Ihre Registrierung",
       "text": "Das Gemeindebüro prüft jedes neue Konto von Hand, meist innerhalb weniger Tage. Bis dahin können Sie sich nicht anmelden.",
       "email": "Sie erhalten eine E-Mail, sobald Ihr Konto bereit ist.",
-      "prototype": "Prototyp: Es wird keine E-Mail verschickt. Ein Administrator gibt das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy.",
+      "prototype": "Prototyp: Es wird keine E-Mail verschickt. Ein Administrator gibt das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy. <link>Die E-Mail „Ihr Konto ist bereit“ ansehen</link>",
       "back": "Zurück zur Anmeldung"
     },
     "forgot": {
@@ -1759,7 +1760,7 @@
       "back": "Zurück zur Anmeldung",
       "sent": "Falls es ein Konto für <email></email> gibt, haben wir dorthin einen Link für ein neues Passwort geschickt.",
       "sentHint": "Der Link gilt eine Stunde. Sehen Sie auch im Spam-Ordner nach.",
-      "prototype": "Prototyp: Es wird keine E-Mail verschickt."
+      "prototype": "Prototyp: Es wird keine E-Mail verschickt. <link>Die E-Mail mit dem Link ansehen</link>"
     }
   },
   "privacyNotice": {
@@ -2199,5 +2200,49 @@
         "description": "Sehen: die Rollen und was sie erlauben. Anlegen, Ändern, Löschen: Rollen anlegen, ändern und löschen."
       }
     }
+  },
+  "emails": {
+    "title": "E-Mails",
+    "intro": "Die E-Mails, die die App verschickt, in der Sprache des jeweiligen Kontos. Das Backend verschickt sie über Mailgun (Backend #17); hier sind sie mit Demodaten gefüllt, und es wird nichts verschickt.",
+    "back": "Zurück zur Anmeldung",
+    "all": "Alle E-Mails",
+    "items": {
+      "password-link": {
+        "name": "Passwort-Link",
+        "when": "Jemand braucht ein neues Passwort. Zum Start lässt das Gemeindebüro den Link verschicken, er gilt 24 Stunden; später fordert man ihn auf der Anmeldeseite an, dann gilt er eine Stunde.",
+        "tickets": "Vorlage password_link, Backend #30 zum Start und #97 danach"
+      },
+      "account-approved": {
+        "name": "Konto freigegeben",
+        "when": "Das Gemeindebüro gibt die Registrierung eines Elternteils oder eines Dieners frei. Bei einer Ablehnung wird nichts verschickt.",
+        "tickets": "Vorlage account_approved, Backend #97 nach dem Start"
+      }
+    },
+    "language": "Sprache",
+    "link": "Wer den Link erstellt",
+    "links": {
+      "office": "Gemeindebüro, 24 Stunden",
+      "forgot": "Anmeldeseite, 1 Stunde"
+    },
+    "show": "Ansicht",
+    "views": {
+      "desktop": "Computer",
+      "phone": "Handy",
+      "text": "Text"
+    },
+    "colors": "Farben",
+    "schemes": {
+      "light": "Hell",
+      "dark": "Dunkel"
+    },
+    "envelope": "Absender, Empfänger und Betreff",
+    "from": "Von",
+    "to": "An",
+    "subject": "Betreff",
+    "preheader": "Vorschautext",
+    "frame": "Vorschau: {name}",
+    "openHtml": "Nur das HTML",
+    "openText": "Nur den Text",
+    "notes": "E-Mail-Programme zeigen die Schrift des Geräts, daher sieht die E-Mail überall etwas anders aus. Dunkle Farben erscheinen in Programmen, die sie unterstützen, etwa Apple Mail; Gmail dunkelt E-Mails selbst ab."
   }
 }

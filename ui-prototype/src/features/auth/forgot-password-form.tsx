@@ -33,7 +33,16 @@ export function ForgotPasswordForm() {
         </p>
         <p className="max-w-prose text-sm text-muted-foreground">{t("sentHint")}</p>
         <p className="max-w-prose border border-dashed p-4 text-sm text-muted-foreground">
-          {t("prototype")}
+          {t.rich("prototype", {
+            link: (chunks) => (
+              <Link
+                href="/emails/password-link?link=forgot"
+                className="font-medium text-foreground underline underline-offset-4"
+              >
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
         <Button variant="outline" asChild className="self-start">
           <Link href="/sign-in">{t("back")}</Link>

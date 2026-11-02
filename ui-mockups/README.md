@@ -6,8 +6,8 @@ Sunday 8 November 2026 at 12:08. All names and data are fictional.
 
 Desktop screenshots are 1440 px wide at 2×, phone screenshots 390 × 844 at 3×. `admin/` holds the staff app,
 `parent/` the parent portal, `member/` the member portal (planned after the launch), `auth/` the pages before
-signing in, `languages/` the main screens in German and Arabic (right to left), and `dark/` a few screens in
-dark mode. To regenerate them, see the prototype's README.
+signing in, `languages/` the main screens in German and Arabic (right to left), `dark/` a few screens in
+dark mode, and `emails/` the emails the backend sends. To regenerate them, see the prototype's README.
 
 ## Staff app
 
@@ -87,6 +87,18 @@ waiting page.
 | Waiting for approval | [04-waiting-for-approval](auth/04-waiting-for-approval.png) | `/sign-in/pending` |
 | Forgot password | [05-forgot-password](auth/05-forgot-password.png) | `/forgot-password` |
 | Privacy notice (draft) | [06-privacy-notice](auth/06-privacy-notice.png) | `/privacy` |
+
+## Emails
+
+The emails the backend sends through Mailgun (polaeskandar/khmh-koeln-app-backend#17), in the account's
+language, as a mail client draws them: 720 px wide at 2× (the email is a 560 px card), phones 390 px at 3×.
+The prototype's Emails section shows them with every option; its README describes how they are built.
+
+| Email | Screenshots | Template and ticket | Route in the prototype |
+| --- | --- | --- | --- |
+| Password link | [password-link](emails/password-link.png), [German](emails/password-link-de.png), [Arabic](emails/password-link-ar.png), [phone](emails/password-link-phone.png), [dark](emails/password-link-dark.png), [plain text](emails/password-link-text.png) | `password_link`, backend #30 (at the launch, 24-hour links from the office) and #97 (1-hour links from the sign-in page) | `/emails/password-link` |
+| Account approved | [account-approved](emails/account-approved.png), [German](emails/account-approved-de.png), [Arabic](emails/account-approved-ar.png), [phone](emails/account-approved-phone.png), [dark](emails/account-approved-dark.png) | `account_approved`, backend #97 (after the launch) | `/emails/account-approved` |
+| The Emails section | [emails](emails/emails.png), [one email with its options](emails/viewer.png) | | `/emails`, `/emails/:email` |
 
 ## German and Arabic
 

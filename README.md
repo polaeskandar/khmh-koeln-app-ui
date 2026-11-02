@@ -6,8 +6,8 @@ reference for screens, wording and behaviour.
 
 | Folder | What it is |
 | --- | --- |
-| [`ui-prototype`](ui-prototype) | The clickable prototype (Next.js, in-memory demo data). Every screen of the MVP works, and its mock layer checks the rules the API will enforce. |
-| [`ui-mockups`](ui-mockups) | Screenshots of the prototype for every screen, desktop and phone, with the route of each. |
+| [`ui-prototype`](ui-prototype) | The clickable prototype (Next.js, in-memory demo data). Every screen of the MVP works, and its mock layer checks the rules the API will enforce. Its Emails section (`/emails`) shows the emails the backend sends. |
+| [`ui-mockups`](ui-mockups) | Screenshots of the prototype for every screen and every email, desktop and phone, with the route of each. |
 
 ## The MVP
 
