@@ -12,9 +12,10 @@ import en from "../../../messages/emails/en.json"
  * The frame every email shares, the way the backend's Twig layout will draw it (backend #17):
  * the church's mark and name, a title, the content with one button, a quiet note, and a footer
  * that says why the email came. Mail clients need old HTML: tables for the layout, inline styles,
- * no web fonts (the reader's system font), and nothing that depends on an image (the mark's cell
- * is emerald even when images are blocked). The colors are preset b3a10z1gt0's, converted to hex;
- * clients that honor `prefers-color-scheme` (Apple Mail, Outlook for Mac) get the dark ones.
+ * the reader's system font (with Arabic letters in Vazirmatn where the client loads fonts), and
+ * nothing that depends on an image (the mark's cell is emerald even when images are blocked). The
+ * colors are preset b3a10z1gt0's, converted to hex; clients that honor `prefers-color-scheme`
+ * (Apple Mail, Outlook for Mac) get the dark ones.
  *
  * Every email also has a plain-text part with the same words, built from the same blocks.
  */
@@ -63,15 +64,39 @@ const DARK = {
 } as const
 
 /**
- * The reader's own sans-serif: San Francisco on Apple devices, Segoe UI on Windows, Roboto
- * (and Noto for Arabic) on Android. Fonts from a font service would tell it who opened the email.
+ * Arabic letters in Vazirmatn, the app's Arabic font, and everything else in the reader's own
+ * sans-serif: San Francisco on Apple devices, Segoe UI on Windows, Roboto on Android. Vazirmatn
+ * comes first, but its face only covers Arabic (see `arabicFontFace`), so Latin letters go on to
+ * the system fonts. Clients that don't load fonts (Gmail, Outlook for Windows) skip it and use
+ * their system's Arabic font.
  */
 const FONT =
-  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic', Tahoma, sans-serif"
+  "'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans Arabic', Tahoma, sans-serif"
 
 /**
- * Two style blocks: a client that can't read one (Gmail drops a block it doesn't understand)
- * keeps the other. The inline styles alone already make a complete email.
+ * The Arabic subset of Vazirmatn (variable, 100–900), served by the web app next to the mark.
+ * From the app's own server, never a font service, which would learn who opened the email. A
+ * client only downloads it for an email with Arabic letters.
+ */
+function arabicFontFace(assetsUrl: string) {
+  return (
+    "@font-face{font-family:'Vazirmatn';font-style:normal;font-weight:100 900;" +
+    `src:url('${assetsUrl}/email/vazirmatn-arabic.woff2') format('woff2');` +
+    "unicode-range:U+0600-06FF,U+0750-077F,U+0870-08FF,U+FB50-FDFF,U+FE70-FEFF;}"
+  )
+}
+
+/**
+ * Outlook for Windows takes the first font of a list and falls back to Times New Roman when it
+ * doesn't have it, so it gets one font it has, with Arabic letters too.
+ */
+const OUTLOOK_FONT =
+  "<!--[if mso]><style>body,table,td,p,a,h1{font-family:'Segoe UI',Arial,sans-serif!important;}</style><![endif]-->"
+
+/**
+ * Separate style blocks (with the font's in a third): a client that can't read one (Gmail drops
+ * a block it doesn't understand) keeps the others. The inline styles alone already make a
+ * complete email.
  */
 const CSS = [
   "body{margin:0;padding:0;width:100%!important;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;}" +
@@ -245,7 +270,8 @@ export function renderHtml(email: EmailContent): string {
 <meta name="color-scheme" content="light dark">
 <meta name="supported-color-schemes" content="light dark">
 <title>${escapeHtml(email.subject)}</title>
-${CSS.map((css) => `<style>${css}</style>`).join("\n")}
+${[arabicFontFace(email.assetsUrl.replace(/['"()\\<>\s]/g, "")), ...CSS].map((css) => `<style>${css}</style>`).join("\n")}
+${OUTLOOK_FONT}
 </head>
 <body class="k-canvas" dir="${dir}" style="margin:0;padding:0;background-color:${COLORS.canvas};">
 <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">${escapeHtml(email.preheader)}${previewPadding}</div>

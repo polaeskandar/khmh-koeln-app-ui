@@ -2243,6 +2243,6 @@
     "frame": "Vorschau: {name}",
     "openHtml": "Nur das HTML",
     "openText": "Nur den Text",
-    "notes": "E-Mail-Programme zeigen die Schrift des Geräts, daher sieht die E-Mail überall etwas anders aus. Dunkle Farben erscheinen in Programmen, die sie unterstützen, etwa Apple Mail; Gmail dunkelt E-Mails selbst ab."
+    "notes": "Lateinische Buchstaben erscheinen in der Schrift des Geräts, daher sieht die E-Mail überall etwas anders aus; arabische in Vazirmatn wie in der App, wo das Programm Schriften lädt (Apple Mail, iOS Mail, Outlook für Mac). Dunkle Farben erscheinen in Programmen, die sie unterstützen, etwa Apple Mail; Gmail dunkelt E-Mails selbst ab."
   }
 }

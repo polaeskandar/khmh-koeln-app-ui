@@ -50,6 +50,16 @@ describe.each(EMAIL_IDS)("the %s email", (id) => {
       `<span dir="ltr" style="unicode-bidi:embed;">${email.to.email}</span>`
     )
   })
+
+  test("sets Arabic letters in Vazirmatn from the app's server, and gives Outlook one font", () => {
+    const { html } = renderEmail(id, { locale: "ar", assetsUrl: ASSETS })
+    expect(html).toContain(`src:url('${ASSETS}/email/vazirmatn-arabic.woff2') format('woff2')`)
+    // Only Arabic: Latin letters keep the reader's system font.
+    expect(html).toMatch(/@font-face\{font-family:'Vazirmatn';[^}]*unicode-range:U\+0600-06FF,/)
+    expect(html).toContain("font-family:'Vazirmatn', -apple-system")
+    expect(html).toContain("<!--[if mso]><style>body,table,td,p,a,h1{font-family:'Segoe UI'")
+    expect(html).not.toMatch(/fonts\.googleapis|fonts\.gstatic/)
+  })
 })
 
 describe("the password link", () => {

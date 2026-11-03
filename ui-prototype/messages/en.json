@@ -2243,6 +2243,6 @@
     "frame": "Preview: {name}",
     "openHtml": "HTML on its own",
     "openText": "Text on its own",
-    "notes": "Mail clients use the reader’s own font, so the email looks a little different on every device. Dark colors appear in clients that support them, such as Apple Mail; Gmail darkens emails by itself."
+    "notes": "Latin letters appear in the reader’s own font, so the email looks a little different on every device; Arabic letters are in Vazirmatn, as in the app, where the client loads fonts (Apple Mail, iOS Mail, Outlook for Mac). Dark colors appear in clients that support them, such as Apple Mail; Gmail darkens emails by itself."
   }
 }

@@ -126,12 +126,20 @@ How they are built, and what the backend should keep:
 - **Mail-client HTML**: a 560 px card of tables with inline styles (a conditional table keeps Outlook at
   560 px), a button drawn by a table cell, the preview text hidden at the top. Phones get the card at full
   width with 24 px padding.
-- **No web fonts**: the reader's system font (San Francisco, Segoe UI, Roboto and their Arabic faces).
-  Loading the app's fonts from a font service would tell it who opened the email.
+- **Fonts**: Latin letters in the reader's system font (San Francisco, Segoe UI, Roboto). Arabic letters in
+  Vazirmatn, as in the app, where the client loads fonts (Apple Mail, iOS Mail, Outlook for Mac): an
+  `@font-face` limited to Arabic (`unicode-range`) points at `public/email/vazirmatn-arabic.woff2` (its
+  Arabic subset, 46 KB, OFL licence beside it), served by the web app at
+  `FRONTEND_URL/email/vazirmatn-arabic.woff2`, so only emails with Arabic letters download it. Gmail and
+  Outlook for Windows show their system's Arabic font; Outlook for Windows gets Segoe UI through a
+  conditional style, because it doesn't fall back along a font list. Never from a font service, which
+  would learn who opened the email.
 - **Colors**: preset `b3a10z1gt0` in hex (stone and emerald). Dark colors come in a second style block for
   clients that honor `prefers-color-scheme`; the inline styles alone are a complete light email.
 - **The mark**: `public/email/khmk-mark.png` (108 px for 36 px), which the web app serves at
   `FRONTEND_URL/email/khmk-mark.png`. Its cell is emerald, so the square stays when images are blocked.
+  The web app should serve `/email/*` with `Access-Control-Allow-Origin: *`, as fonts from another origin
+  need it.
 - **Arabic**: `dir="rtl"` on the document, the card and every text cell, text aligned right; addresses and
   URLs stay left to right. Numbers are Western digits as in the app (in PHP, format the Arabic texts with
   `ar@numbers=latn` if ICU chooses Arabic-Indic digits).
@@ -150,7 +158,7 @@ How they are built, and what the backend should keep:
 | `src/app/emails/` | The Emails section: the list, one email's page, and the raw HTML and text parts. |
 | `src/server/emails/` | The emails: the shared layout (HTML and plain text) and each email's content. |
 | `messages/emails/` | The emails' texts in English, German and Arabic, checked by the same catalog test. |
-| `public/email/` | The mark the emails show, served by the web app. |
+| `public/email/` | The mark and the Arabic font the emails load, served by the web app. |
 | `src/features/` | Screen parts by area: attendance, meetings, stages, lessons, homework, parent, member, settings, … |
 | `src/components/` | Shared parts: app shell, data table, dialogs, form panels, status badges. `ui/` holds the shadcn/ui components of preset `b3a10z1gt0`. |
 | `src/server/actions/` | Server actions: validate input with zod, call the mock layer, return a result or a problem. |

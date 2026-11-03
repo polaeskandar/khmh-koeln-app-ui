@@ -19,7 +19,8 @@ export function EmailThumbnail({
         srcDoc={html}
         title={title}
         tabIndex={-1}
-        sandbox=""
+        // Same origin only so the email can load its font; an email has no scripts.
+        sandbox="allow-same-origin"
         className="pointer-events-none absolute top-0 h-[1040px] w-[200%] scale-50 border-0 ltr:left-0 ltr:origin-top-left rtl:right-0 rtl:origin-top-right"
       />
     </div>
