@@ -10,6 +10,7 @@ import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS } from "@/i18n/config"
 import { msg } from "@/i18n/message"
 import { authenticate, confirmEmail, register } from "@/server/mock/commands/accounts"
 import { openState } from "@/server/mock/runtime"
+import { OUTCOME_COOKIE, rememberOutcome } from "@/server/outcome"
 import { homeOf } from "@/server/request"
 import { PERSONA_COOKIE } from "@/server/viewer"
 
@@ -35,12 +36,15 @@ export async function signInAction(input: {
   const t = await getTranslations("auth.signIn")
   const result = authenticate(openState(), email, password)
   if (!result.ok) {
-    if (result.reason === "unconfirmed") redirect("/sign-in/unconfirmed")
-    if (result.reason === "pending") redirect("/sign-in/pending")
+    if (result.reason === "unconfirmed" || result.reason === "pending") {
+      await rememberOutcome(result.reason)
+      redirect(`/sign-in/${result.reason}`)
+    }
     return { error: result.reason === "disabled" ? t("disabled") : t("wrong") }
   }
   const store = await cookies()
   store.set(PERSONA_COOKIE, result.user.id, SESSION_COOKIE)
+  store.delete(OUTCOME_COOKIE)
   // The language chosen on another device comes along.
   if (result.user.language && isLocale(result.user.language)) {
     store.set(LOCALE_COOKIE, result.user.language, LOCALE_COOKIE_OPTIONS)
@@ -68,10 +72,12 @@ const registration = z.object({
 export async function registerAction(input: z.input<typeof registration>) {
   const data = registration.parse(input)
   const locale = await getLocale()
-  return runPublic((s) => {
+  const result = await runPublic((s) => {
     const user = register(s, { ...data, language: isLocale(locale) ? locale : "en" })
     return { email: user.email, token: user.emailConfirmation?.token ?? null }
   }, msg("toast.registered"))
+  if (result.ok) await rememberOutcome("registered")
+  return result
 }
 
 /** Confirms a registration's email address with the token from its link. */

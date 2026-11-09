@@ -4,14 +4,19 @@ import { getTranslations } from "next-intl/server"
 
 import { Button } from "@/components/ui/button"
 import { AuthFrame, AuthHeading } from "@/features/auth/auth-frame"
+import { requireOutcome } from "@/server/outcome"
 
 export async function generateMetadata() {
   const t = await getTranslations("auth.pending")
   return { title: t("title") }
 }
 
-/** Shown when someone signs in with the right password before an administrator approved the account. */
+/**
+ * Shown right after someone signs in with the right password before an administrator approved
+ * the account; otherwise the 404 page (see requireOutcome).
+ */
 export default async function PendingPage() {
+  await requireOutcome("pending")
   const t = await getTranslations("auth.pending")
   return (
     <AuthFrame>

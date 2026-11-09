@@ -656,6 +656,9 @@ async function registrationAndApproval() {
     .first()
     .waitFor()
   await shot(visitor, "auth", "10-confirmation-link-invalid")
+  // Without a token there is nothing to confirm.
+  await go(visitor, "/confirm-email")
+  await text(visitor, "This page doesn’t exist").first().waitFor()
 
   await go(visitor, "/forgot-password")
   await label(visitor, "Email address").fill("marianne.fanous@example.org")
@@ -692,6 +695,11 @@ async function registrationAndApproval() {
   await label(visitor, "Password", { exact: true }).fill("our family in Cologne")
   await clickAndWait(visitor, visitor.getByRole("button", { name: "Sign in" }), /\/parent$/)
   check(await text(visitor, "Demi").first().isVisible(), "the approved parent sees Demiana")
+  // The status pages only follow what they describe: signed in, the waiting page is a 404.
+  check(
+    (await visitor.request.get(`${BASE}/sign-in/pending`)).status() === 404,
+    "the waiting page is a 404 once signed in"
+  )
 
   const leader = await signIn("Christine Adel")
   await go(leader, "/account")

@@ -5,13 +5,16 @@ import { getTranslations } from "next-intl/server"
 import { Button } from "@/components/ui/button"
 import { AuthFrame, AuthHeading } from "@/features/auth/auth-frame"
 import { ConfirmationLink } from "@/features/auth/confirm-email"
+import { requireOutcome } from "@/server/outcome"
 
 export async function generateMetadata() {
   const t = await getTranslations("auth.registered")
   return { title: t("title") }
 }
 
+/** Shown right after a registration; otherwise the 404 page (see requireOutcome). */
 export default async function RegisteredPage() {
+  await requireOutcome("registered")
   const t = await getTranslations("auth.registered")
   return (
     <AuthFrame>

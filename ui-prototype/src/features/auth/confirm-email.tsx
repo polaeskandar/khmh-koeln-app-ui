@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import { CircleCheck, Link2Off, MailCheck } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
@@ -17,6 +18,14 @@ const tokenInAddress = () => new URLSearchParams(window.location.hash.slice(1)).
 
 const subscribeNothing = () => () => {}
 
+type Outcome = "confirming" | "confirmed" | "invalid" | "missing"
+
+async function confirmAddress(token: string | null): Promise<Outcome> {
+  if (!token) return "missing"
+  const { confirmed } = await confirmEmailAction(token)
+  return confirmed ? "confirmed" : "invalid"
+}
+
 function StateIcon({ icon: Icon, className }: { icon: typeof MailCheck; className: string }) {
   return (
     <span className={cn("inline-flex size-11 items-center justify-center", className)}>
@@ -27,21 +36,23 @@ function StateIcon({ icon: Icon, className }: { icon: typeof MailCheck; classNam
 
 /**
  * The page the confirmation link opens: it confirms the address at once, so the registration
- * reaches the office. An unknown, used, replaced or expired link gets the same answer.
+ * reaches the office. An unknown, used, replaced or expired link gets the same answer. Without a
+ * token, nothing is sent and the page is the 404 page.
  */
 export function ConfirmEmail() {
   const t = useTranslations("auth.confirmEmail")
-  const [outcome, setOutcome] = useState<"confirming" | "confirmed" | "invalid">("confirming")
+  const [outcome, setOutcome] = useState<Outcome>("confirming")
   const sent = useRef(false)
 
   useEffect(() => {
     if (sent.current) return
     sent.current = true
     // Read in an effect: during a client navigation, rendering happens before the address changes.
-    void confirmEmailAction(tokenInAddress() ?? "").then(({ confirmed }) =>
-      setOutcome(confirmed ? "confirmed" : "invalid")
-    )
+    void confirmAddress(tokenInAddress()).then(setOutcome)
   }, [])
+
+  // The token never reaches the server, so only the browser can tell that it is missing.
+  if (outcome === "missing") notFound()
 
   if (outcome === "confirmed") {
     return (
