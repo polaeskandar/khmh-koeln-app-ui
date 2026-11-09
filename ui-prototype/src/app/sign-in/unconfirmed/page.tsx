@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 
 import { Button } from "@/components/ui/button"
 import { AuthFrame, AuthHeading } from "@/features/auth/auth-frame"
+import { requireOutcome } from "@/server/outcome"
 
 export async function generateMetadata() {
   const t = await getTranslations("auth.unconfirmed")
@@ -11,10 +12,12 @@ export async function generateMetadata() {
 }
 
 /**
- * Shown when someone signs in with the right password before opening the link the registration
- * sent to the address. Until then the office doesn't see the registration.
+ * Shown right after someone signs in with the right password before opening the link the
+ * registration sent to the address; otherwise the 404 page (see requireOutcome). Until then the
+ * office doesn't see the registration.
  */
 export default async function UnconfirmedPage() {
+  await requireOutcome("unconfirmed")
   const t = await getTranslations("auth.unconfirmed")
   return (
     <AuthFrame>

@@ -9,6 +9,7 @@ import { isActiveAccount } from "@/lib/domain/policy"
 import { resetClock } from "@/server/mock/clock"
 import { openState } from "@/server/mock/runtime"
 import { resetState } from "@/server/mock/state"
+import { OUTCOME_COOKIE } from "@/server/outcome"
 import { homeOf } from "@/server/request"
 import { PERSONA_COOKIE } from "@/server/viewer"
 
@@ -28,6 +29,7 @@ export async function signInAsAction(userId: string) {
   if (!user) redirect("/sign-in/demo")
   const store = await cookies()
   store.set(PERSONA_COOKIE, user.id, { httpOnly: true, sameSite: "lax", path: "/" })
+  store.delete(OUTCOME_COOKIE)
   revalidatePath("/", "layout")
   redirect(homeOf(user))
 }

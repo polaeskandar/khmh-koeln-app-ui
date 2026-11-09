@@ -78,7 +78,8 @@ they tick off themselves. Planned after the launch.
 A new registration reaches the office once its email address is confirmed with the link from the email (valid
 7 days). Then it waits for the office: parents are linked to their children and get the Parent role, members are
 linked to their own record, servants get their roles. Until then the email and password only lead to the
-page that asks for the link, then to the waiting page.
+page that asks for the link, then to the waiting page. These pages and the thank-you page open only right after
+what they describe; typed in, or for someone signed in, they are the 404 page.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
