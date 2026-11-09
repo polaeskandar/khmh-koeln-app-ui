@@ -8,7 +8,7 @@ import { z } from "zod"
 
 import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS } from "@/i18n/config"
 import { msg } from "@/i18n/message"
-import { authenticate, register } from "@/server/mock/commands/accounts"
+import { authenticate, confirmEmail, register } from "@/server/mock/commands/accounts"
 import { openState } from "@/server/mock/runtime"
 import { homeOf } from "@/server/request"
 import { PERSONA_COOKIE } from "@/server/viewer"
@@ -35,6 +35,7 @@ export async function signInAction(input: {
   const t = await getTranslations("auth.signIn")
   const result = authenticate(openState(), email, password)
   if (!result.ok) {
+    if (result.reason === "unconfirmed") redirect("/sign-in/unconfirmed")
     if (result.reason === "pending") redirect("/sign-in/pending")
     return { error: result.reason === "disabled" ? t("disabled") : t("wrong") }
   }
@@ -59,14 +60,26 @@ const registration = z.object({
   acceptPrivacy: z.boolean(),
 })
 
-/** Creates an account that waits for an administrator. Nothing is signed in. */
+/**
+ * Creates an account that waits for its email address to be confirmed, then for an administrator.
+ * Nothing is signed in. Prototype only: the answer carries the token of the confirmation link,
+ * which the thank-you page shows because no email is sent.
+ */
 export async function registerAction(input: z.input<typeof registration>) {
   const data = registration.parse(input)
   const locale = await getLocale()
   return runPublic((s) => {
     const user = register(s, { ...data, language: isLocale(locale) ? locale : "en" })
-    return { email: user.email }
+    return { email: user.email, token: user.emailConfirmation?.token ?? null }
   }, msg("toast.registered"))
+}
+
+/** Confirms a registration's email address with the token from its link. */
+export async function confirmEmailAction(token: string): Promise<{ confirmed: boolean }> {
+  const parsed = z.string().max(200).safeParse(token)
+  const confirmed = parsed.success && confirmEmail(openState(), parsed.data)
+  if (confirmed) revalidatePath("/", "layout")
+  return { confirmed }
 }
 
 /**

@@ -31,7 +31,7 @@ version by itself, pnpm 10 can't). `pnpm screenshots` uses the Chromium that Pla
 | Rules and permissions | Checked in the mock layer (`src/server/mock`) on every action, the way the API will check them: permissions from roles, parent access, status changes, validation. Errors come back as problem details (403, 404, 409, 422). |
 | Roles | RBAC as in the backend (polaeskandar/khmh-koeln-app-backend#130): a permission is an action (create, read, update, delete) on a resource (users, roles, services, stages, sessions, attendance, members, lessons, homework, parentPortal), 40 in all (`PERMISSIONS` in `src/lib/domain/policy.ts`); a role is a name and some of them; an account has roles and may do what any of them allows. Roles are global: no service or stage, a role holds in every service. The church starts with the backend's defaults, Administrator, Service leader, Servant and Parent (`DEFAULT_ROLES`, same ids and permissions), which are ordinary roles: renamed, changed and deleted like the church's own. Settings › Roles lists them; `/settings/roles/new` and `/settings/roles/:role` show the See / Add / Change / Delete grid. Someone active must always keep "Roles: Change": a change that would leave nobody is refused (409 `roles.lastRoleManager`). The mock keeps each account's permissions in sync with its roles; the API resolves them on every request. |
 | Sign-in | Email and password, checked against salted hashes in the mock layer; the session is a cookie with the account id. Every demo account uses the password `khmk-demo`, and `/sign-in/demo` signs in without typing. The account menu ("Prototype: view the app as") switches accounts. |
-| Registration | Real flow on mock data: anyone can register as a parent, member or servant; the account can't be used until the office approves it in Settings (linking the children and giving roles, linking the member's own record after an age check, or giving roles). Declining deletes it. No emails are sent; the approval email and the password link are designed in the Emails section (see below). |
+| Registration | Real flow on mock data: anyone can register as a parent, member or servant. The office sees a registration only once its email address is confirmed with the link from the email (`/confirm-email#token=…`, valid 7 days; registering again with the same address sends a new link that voids the older one, backend #84); signing in before that opens `/sign-in/unconfirmed`. No email is sent, so the thank-you page holds the link. The account can't be used until the office approves it in Settings (linking the children and giving roles, linking the member's own record after an age check, or giving roles). Declining deletes it. The approval email and the password link are designed in the Emails section (see below). |
 | Data protection | Requests to see or erase personal data (Settings › Data protection), with the one-month deadline, a review of what the app stores, a JSON copy, and erasure that keeps past attendance totals as anonymous numbers. Everyone can download their data and ask for deletion on their account page. The privacy notice is a draft. |
 | Languages and appearance | English, German and Arabic (right to left), and light, dark or like the device, chosen in the account menu or on the account page. The language is a cookie and is also stored on the account. |
 | Clock | Starts at Sunday 8 November 2026, 12:08 in Cologne and then runs in real time. `KHMK_DEMO_CLOCK=frozen` keeps it at the start (used for the screenshots). |
@@ -54,8 +54,8 @@ version by itself, pnpm 10 can't). `pnpm screenshots` uses the Chromium that Pla
 
 All of them sign in with their email address (for example `christine.adel@example.org`) and the password
 `khmk-demo`. `/sign-in/demo` lists every account, including the other servants and leaders. Two people have
-registered but wait for approval: Sandra (a parent) and Fady (a servant); their password is the same, and
-signing in shows the waiting page.
+registered and confirmed their email address but wait for approval: Sandra (a parent) and Fady (a servant);
+their password is the same, and signing in shows the waiting page.
 
 An account belongs to a member when an administrator links it to the person's own record (Settings › Member
 accounts). Staff and parents whose record is in a group (the servants are in the Servants' Preparation) get
@@ -79,8 +79,10 @@ end-to-end scenario and fails if a step does not work:
 It then takes the MVP screens as Christine (leader), Daniel (servant, also on the phone) and Mariam
 (administrator); Mariam deletes a service that never met and creates a new one. After that:
 
-5. Marianne registers as a parent, tries to sign in and lands on the waiting page. Mariam approves the
-   account, with Demiana, the child Marianne named, already chosen. Marianne signs in to the parent portal.
+5. Marianne registers as a parent and tries to sign in: she is asked to confirm her email address first.
+   She opens the link from the thank-you page, signs in and lands on the waiting page; the link doesn't
+   work a second time. Mariam approves the account, with Demiana, the child Marianne named, already
+   chosen. Marianne signs in to the parent portal.
 6. The main screens are taken again in German and Arabic, and some in dark mode.
 7. Samir asks the church office to erase his son Kirollos's data. Mariam records the request, reviews what
    the app stores (including a lesson note that names "Kiro"), and erases it. The attendance totals stay
@@ -88,9 +90,10 @@ It then takes the MVP screens as Christine (leader), Daniel (servant, also on th
 8. Nevine signs in to the member portal, sees that Wednesday's Bible Study is canceled (without the
    servants' reason), opens "Write the first eight letters" and marks it as done; Irene sees that she
    reported it with her own account. Hoda opens "My groups" from the parent portal.
-9. Mina, a youth who shares his name with a child in 3rd Class, registers as a member. Mariam chooses the
-   right record of the two, notes that his mother agreed because he is under 16, and approves the account;
-   Mina signs in to the member portal and sees the Youth Meeting and the Deacons' School.
+9. Mina, a youth who shares his name with a child in 3rd Class, registers as a member and confirms his
+   address. Mariam chooses the right record of the two, notes that his mother agreed because he is under
+   16, and approves the account; Mina signs in to the member portal and sees the Youth Meeting and the
+   Deacons' School.
 10. Mariam adds "Attendance helper" (Services: See, Attendance: See and Add), gives it to Sara, chooses
     Servant when approving Fady, and deletes "Lesson preparation", which nobody has. Unticking "Roles:
     Change" on the Administrator role warns that nobody else could change roles. Sara (church office) sees

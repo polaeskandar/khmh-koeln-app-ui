@@ -1701,6 +1701,14 @@
       "members": "Mitglieder",
       "membersHint": "Der Mitgliederbereich: eigene Gruppen und Hausaufgaben"
     },
+    "unconfirmed": {
+      "title": "Bestätigen Sie zuerst Ihre E-Mail-Adresse",
+      "text": "E-Mail-Adresse und Passwort stimmen, aber die Adresse ist noch nicht bestätigt. Das Gemeindebüro sieht Ihre Registrierung erst, wenn Sie den Link in der E-Mail öffnen, die wir Ihnen geschickt haben.",
+      "valid": "Der Link gilt 7 Tage. Sehen Sie auch im Spam-Ordner nach.",
+      "again": "Keine E-Mail bekommen, oder ist der Link abgelaufen? Registrieren Sie sich mit derselben Adresse erneut, um einen neuen Link zu erhalten.",
+      "register": "Erneut registrieren",
+      "back": "Zurück zur Anmeldung"
+    },
     "pending": {
       "title": "Ihr Konto wartet auf Freigabe",
       "text": "E-Mail-Adresse und Passwort stimmen, aber das Gemeindebüro hat das Konto noch nicht freigegeben. Jedes neue Konto wird von Hand geprüft, weil die App Angaben über Kinder zeigt.",
@@ -1747,9 +1755,19 @@
     },
     "registered": {
       "title": "Vielen Dank für Ihre Registrierung",
+      "confirm": "Wir haben Ihnen eine E-Mail geschickt. Öffnen Sie den Link darin, um Ihre Adresse zu bestätigen; erst dann sieht das Gemeindebüro Ihre Registrierung.",
       "text": "Das Gemeindebüro prüft jedes neue Konto von Hand, meist innerhalb weniger Tage. Bis dahin können Sie sich nicht anmelden.",
       "email": "Sie erhalten eine E-Mail, sobald Ihr Konto bereit ist.",
-      "prototype": "Prototyp: Es wird keine E-Mail verschickt. Ein Administrator gibt das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy. <link>Die E-Mail „Ihr Konto ist bereit“ ansehen</link>",
+      "prototype": "Prototyp: Es wird keine E-Mail verschickt. <confirm>Öffnen Sie den Link aus der E-Mail</confirm>, danach gibt ein Administrator das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy. <link>Die E-Mail „Ihr Konto ist bereit“ ansehen</link>",
+      "back": "Zurück zur Anmeldung"
+    },
+    "confirmEmail": {
+      "title": "E-Mail-Adresse bestätigen",
+      "confirming": "Ihre E-Mail-Adresse wird bestätigt …",
+      "confirmedTitle": "Ihre E-Mail-Adresse ist bestätigt",
+      "confirmedText": "Das Gemeindebüro prüft Ihre Registrierung jetzt von Hand, meist innerhalb weniger Tage, und sagt Ihnen Bescheid, sobald Ihr Konto bereit ist.",
+      "linkInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen. Registrieren Sie sich erneut, um einen neuen zu erhalten.",
+      "register": "Erneut registrieren",
       "back": "Zurück zur Anmeldung"
     },
     "forgot": {
