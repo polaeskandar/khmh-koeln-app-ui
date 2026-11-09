@@ -65,7 +65,9 @@
     "reason": "Grund",
     "loadingEllipsis": "Wird geladen …",
     "formerAccount": "Ehemaliges Konto",
-    "disabled": "Deaktiviert"
+    "disabled": "Deaktiviert",
+    "retry": "Erneut versuchen",
+    "unsupportedBrowser": "Dieser Browser ist zu alt für die App. Aktualisieren Sie ihn oder öffnen Sie die App in einer aktuellen Version von Safari, Chrome, Firefox oder Edge."
   },
   "ui": {
     "close": "Schließen",
@@ -99,14 +101,20 @@
       "user": "Dieses Konto existiert nicht oder wurde gelöscht.",
       "guardian": "Diese Eltern-Verknüpfung existiert nicht oder wurde entfernt.",
       "request": "Diese Anfrage existiert nicht oder wurde gelöscht.",
-      "role": "Diese Rolle existiert nicht oder wurde gelöscht."
+      "role": "Diese Rolle existiert nicht oder wurde gelöscht.",
+      "route": "Nicht gefunden. Laden Sie die Seite neu und versuchen Sie es noch einmal."
     },
     "validation": {
       "tooLong": "Höchstens {max} Zeichen.",
       "chooseDate": "Wählen Sie ein Datum.",
       "invalidDate": "Geben Sie ein gültiges Datum ein.",
       "chooseTime": "Wählen Sie eine Uhrzeit.",
-      "invalidTime": "Geben Sie eine Uhrzeit wie 18:30 ein."
+      "invalidTime": "Geben Sie eine Uhrzeit wie 18:30 ein.",
+      "invalidType": "Dieser Wert hat das falsche Format.",
+      "unexpectedField": "Dieses Feld ist hier nicht vorgesehen.",
+      "invalidRange": "Wählen Sie ein Ende am oder nach dem Beginn, höchstens {max} Tage später.",
+      "birthDateInFuture": "Das Geburtsdatum darf nicht in der Zukunft liegen.",
+      "addressIncomplete": "Geben Sie Straße, Postleitzahl und Ort an oder nichts davon."
     },
     "services": {
       "adminOnlyCreate": "Sie können keine Dienste anlegen.",
@@ -120,7 +128,8 @@
       "notArchived": "{name} ist nicht archiviert.",
       "takingAttendance": "In {name} wird gerade Anwesenheit erfasst. Schließen Sie zuerst die offenen Termine ab.",
       "hasHistory": "{name} hat schon Termine ({count, plural, one {# Termin} other {# Termine}}). Archivieren Sie den Dienst, statt ihn zu löschen.",
-      "archivedNoStageChanges": "{name} ist archiviert. Stellen Sie den Dienst wieder her, bevor Sie seine Stufen ändern."
+      "archivedNoStageChanges": "{name} ist archiviert. Stellen Sie den Dienst wieder her, bevor Sie seine Stufen ändern.",
+      "hasLessons": "{name} hat Lektionen ({count, plural, one {# Lektion} other {# Lektionen}}). Archivieren Sie den Dienst, statt ihn zu löschen."
     },
     "stages": {
       "nameRequired": "Geben Sie einen Namen für die Stufe ein.",
@@ -131,7 +140,8 @@
       "notArchived": "{name} ist nicht archiviert.",
       "takingAttendance": "In {name} wird gerade Anwesenheit erfasst. Schließen Sie zuerst den Termin ab.",
       "hasHistory": "{name} hat schon Termine ({count, plural, one {# Termin} other {# Termine}}). Archivieren Sie die Stufe, statt sie zu löschen.",
-      "hasMembers": "{count, plural, one {# Person ist} other {# Personen sind}} noch in {name}. Verschieben Sie sie zuerst in eine andere Stufe oder archivieren Sie die Stufe."
+      "hasMembers": "{count, plural, one {# Person ist} other {# Personen sind}} noch in {name}. Verschieben Sie sie zuerst in eine andere Stufe oder archivieren Sie die Stufe.",
+      "hasLessons": "{name} hat Lektionen ({count, plural, one {# Lektion} other {# Lektionen}}). Archivieren Sie die Stufe, statt sie zu löschen."
     },
     "meetings": {
       "chooseService": "Wählen Sie einen Dienst.",
@@ -156,7 +166,9 @@
       "titleRequired": "Geben Sie einen Titel ein.",
       "noMeetingOnDate": "Der Regeltermin hat an diesem Datum kein Treffen.",
       "scheduleInactive": "Dieser Regeltermin ist inaktiv. Aktivieren Sie ihn zuerst.",
-      "reopenNotAllowed": "Sie können keine Termine wieder öffnen."
+      "reopenNotAllowed": "Sie können keine Termine wieder öffnen.",
+      "reopenLeadersOnly": "Sie können abgeschlossene Termine nicht wieder öffnen.",
+      "dateInPast": "Wählen Sie heute oder ein späteres Datum."
     },
     "recurrence": {
       "interval": "Der Abstand muss zwischen 1 und 52 liegen.",
@@ -184,7 +196,12 @@
       "membershipEnded": "Diese Zugehörigkeit ist bereits beendet.",
       "addNotAllowed": "Sie können keine Personen hinzufügen.",
       "changeNotAllowed": "Sie können keine Personen oder ihre Stufen ändern.",
-      "removeNotAllowed": "Sie können keine Personen aus Stufen nehmen."
+      "removeNotAllowed": "Sie können keine Personen aus Stufen nehmen.",
+      "editOutsideServices": "Sie können nur Personen in den Diensten bearbeiten, in denen Sie dienen. {name} ist in keinem davon.",
+      "addOutsideServices": "Sie können Personen nur zu den Diensten und Stufen hinzufügen, in denen Sie dienen.",
+      "chooseJoinService": "Wählen Sie den Dienst, dem diese Person beitritt.",
+      "membershipOutsideServices": "Sie können Zugehörigkeiten nur in den Diensten und Stufen ändern, in denen Sie dienen.",
+      "moveOutsideStages": "Sie können Personen nur in Stufen verschieben, in denen Sie dienen."
     },
     "roles": {
       "adminOnly": "Sie können keine Rollen vergeben oder entziehen.",
@@ -197,7 +214,11 @@
       "createNotAllowed": "Sie können keine Rollen anlegen.",
       "updateNotAllowed": "Sie können keine Rollen ändern.",
       "deleteNotAllowed": "Sie können keine Rollen löschen.",
-      "unknown": "Diese Rolle gibt es nicht mehr. Wählen Sie eine andere."
+      "unknown": "Diese Rolle gibt es nicht mehr. Wählen Sie eine andere.",
+      "chooseService": "Wählen Sie den Dienst, für den diese Rolle gilt.",
+      "ownAdminRole": "Sie können Ihre eigene Administratorrolle nicht entfernen. Bitten Sie einen anderen Administrator darum.",
+      "stageOnlyForServants": "Nur Diener-Rollen können auf eine Stufe beschränkt werden.",
+      "lastAdministrator": "Der letzte aktive Administrator behält diese Rolle. Machen Sie zuerst jemand anderen zum Administrator."
     },
     "materials": {
       "labelTooLong": "Höchstens 120 Zeichen für die Bezeichnung.",
@@ -220,7 +241,9 @@
       "homeworkPublished": "Hausaufgaben dieser Lektion wurden für Eltern veröffentlicht. Archivieren Sie die Lektion stattdessen.",
       "createNotAllowed": "Sie können keine Lektionen vorbereiten.",
       "changeNotAllowed": "Sie können keine Lektionen ändern.",
-      "deleteNotAllowed": "Sie können keine Lektionen archivieren oder löschen."
+      "deleteNotAllowed": "Sie können keine Lektionen archivieren oder löschen.",
+      "prepareStageOnly": "Sie können für diese Stufe keine Lektionen vorbereiten.",
+      "changeStageOnly": "Sie können die Lektionen dieser Stufe nicht ändern."
     },
     "homework": {
       "titleRequired": "Geben Sie einen Titel ein, z. B. „Merkvers auswendig lernen“.",
@@ -240,7 +263,9 @@
       "otherClass": "Diese Hausaufgabe ist für eine andere Klasse als die von {name}.",
       "createNotAllowed": "Sie können keine Hausaufgaben geben.",
       "changeNotAllowed": "Sie können keine Hausaufgaben ändern.",
-      "deleteNotAllowed": "Sie können keine Hausaufgaben archivieren oder löschen."
+      "deleteNotAllowed": "Sie können keine Hausaufgaben archivieren oder löschen.",
+      "changeStageOnly": "Sie können die Hausaufgaben dieser Stufe nicht ändern.",
+      "assignStageOnly": "Sie können dieser Stufe keine Hausaufgaben geben."
     },
     "guardians": {
       "adminOnlyGrant": "Sie können Eltern keinen Zugang zu Kindern geben.",
@@ -270,7 +295,12 @@
       "chooseAge": "Wählen Sie, ob das Mitglied 16 oder älter ist oder unter 16 mit Zustimmung eines Elternteils.",
       "notLinked": "Dieses Konto ist mit keinem Mitgliedseintrag verknüpft.",
       "unlinkNotAllowed": "Sie können keine Mitgliederverknüpfungen entfernen.",
-      "notApproved": "Dieses Konto ist noch nicht freigegeben. Geben Sie es zuerst unter Kontoanfragen frei."
+      "notApproved": "Dieses Konto ist noch nicht freigegeben. Geben Sie es zuerst unter Kontoanfragen frei.",
+      "nameRequired": "Geben Sie den Namen ein, der für das Konto angezeigt wird.",
+      "chooseServiceForRole": "Wählen Sie den Dienst für diese Rolle.",
+      "stageNotInService": "Diese Stufe gehört nicht zum gewählten Dienst.",
+      "privacyNoticeOutdated": "Die Datenschutzhinweise haben sich geändert. Laden Sie die Seite neu, lesen Sie sie und bestätigen Sie erneut.",
+      "currentPasswordWrong": "Das ist nicht Ihr aktuelles Passwort."
     },
     "privacy": {
       "adminOnly": "Sie können keine Datenschutzanfragen bearbeiten.",
@@ -284,6 +314,24 @@
       "subjectGone": "Die Daten, um die es in dieser Anfrage geht, gibt es nicht mehr.",
       "ownAccount": "Sie können Ihr eigenes Konto nicht löschen. Bitten Sie jemand anderen, der Datenschutzanfragen bearbeitet.",
       "declineReasonRequired": "Geben Sie den Grund an. Die Person muss ihn erfahren und darauf hingewiesen werden, dass sie sich bei der Datenschutzaufsicht beschweren kann."
+    },
+    "loadFailed": "Das konnte nicht geladen werden.",
+    "notSaved": "Nicht gespeichert. Prüfen Sie Ihre Verbindung und versuchen Sie es noch einmal.",
+    "conflict": "Jemand anderes hat das gerade gleichzeitig geändert. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
+    "tooManyRequests": "Zu viele Anfragen. Warten Sie einen Moment und versuchen Sie es dann noch einmal.",
+    "internal": "Bei uns ist etwas schiefgelaufen. Versuchen Sie es später noch einmal.",
+    "unavailable": "Die App ist gerade nicht erreichbar. Versuchen Sie es in ein paar Minuten noch einmal.",
+    "network": "Keine Verbindung. Prüfen Sie Ihre Internetverbindung und versuchen Sie es noch einmal.",
+    "sessionExpired": "Sie wurden abgemeldet. Melden Sie sich erneut an, um weiterzumachen.",
+    "auth": {
+      "unauthenticated": "Bitte melden Sie sich an.",
+      "invalidCredentials": "E-Mail-Adresse oder Passwort stimmen nicht.",
+      "unconfirmed": "Bestätigen Sie zuerst Ihre E-Mail-Adresse: Öffnen Sie den Link, den wir Ihnen bei der Registrierung geschickt haben.",
+      "pending": "Ihr Konto wartet auf die Freigabe durch das Gemeindebüro.",
+      "disabled": "Mit diesem Konto ist keine Anmeldung mehr möglich. Wenden Sie sich an das Gemeindebüro, wenn Sie das für einen Fehler halten.",
+      "tooManyAttempts": "Zu viele Versuche. Warten Sie ein paar Minuten und versuchen Sie es dann noch einmal.",
+      "resetLinkInvalid": "Dieser Link funktioniert nicht mehr. Bitten Sie das Gemeindebüro um einen neuen.",
+      "confirmationLinkInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen. Registrieren Sie sich erneut, um einen neuen zu erhalten."
     }
   },
   "toast": {
@@ -1714,7 +1762,7 @@
       "text": "E-Mail-Adresse und Passwort stimmen, aber das Gemeindebüro hat das Konto noch nicht freigegeben. Jedes neue Konto wird von Hand geprüft, weil die App Angaben über Kinder zeigt.",
       "parents": "Bei Eltern verknüpft das Büro das Konto mit ihren Kindern.",
       "servants": "Diener erhalten die Rollen, die sie brauchen.",
-      "email": "Sie erhalten eine E-Mail, sobald das Konto bereit ist.",
+      "email": "Das Gemeindebüro sagt Ihnen Bescheid, sobald das Konto bereit ist.",
       "slow": "Dauert es länger als eine Woche? Fragen Sie im Gemeindebüro nach, zum Beispiel nach der Liturgie.",
       "back": "Zurück zur Anmeldung",
       "members": "Bei Mitgliedern verknüpft es das Konto mit ihrem eigenen Eintrag in den Gruppen der Gemeinde."
@@ -1746,7 +1794,7 @@
       "nextTitle": "Wie es weitergeht",
       "step1": "Sie legen Ihr Konto an. Nutzen können Sie es noch nicht.",
       "step2": "Das Gemeindebüro prüft Ihre Angaben: Eltern werden mit ihren Kindern verknüpft, Mitglieder mit ihrem eigenen Eintrag, Diener erhalten die Rollen, die sie brauchen.",
-      "step3": "Sie erhalten eine E-Mail und können sich anmelden.",
+      "step3": "Das Gemeindebüro sagt Ihnen Bescheid, wenn Ihr Konto bereit ist, und Sie können sich anmelden.",
       "childrenNoAccounts": "Kinder unter 16 bekommen ein eigenes Konto nur mit Zustimmung eines Elternteils. Bis dahin sehen ihre Eltern die Hausaufgaben.",
       "asMember": "Mitglied",
       "asMemberHint": "Ich nehme selbst an einem Dienst teil, zum Beispiel am Jugendtreffen oder am Koptischkurs, und möchte meine Gruppen und Hausaufgaben sehen.",
@@ -1757,7 +1805,7 @@
       "title": "Vielen Dank für Ihre Registrierung",
       "confirm": "Wir haben Ihnen eine E-Mail geschickt. Öffnen Sie den Link darin, um Ihre Adresse zu bestätigen; erst dann sieht das Gemeindebüro Ihre Registrierung.",
       "text": "Das Gemeindebüro prüft jedes neue Konto von Hand, meist innerhalb weniger Tage. Bis dahin können Sie sich nicht anmelden.",
-      "email": "Sie erhalten eine E-Mail, sobald Ihr Konto bereit ist.",
+      "email": "Das Gemeindebüro sagt Ihnen Bescheid, sobald Ihr Konto bereit ist.",
       "prototype": "Prototyp: Es wird keine E-Mail verschickt. <confirm>Öffnen Sie den Link aus der E-Mail</confirm>, danach gibt ein Administrator das Konto unter Einstellungen › Kontoanfragen frei, zum Beispiel mit dem Demokonto Mariam Fahmy. <link>Die E-Mail „Ihr Konto ist bereit“ ansehen</link>",
       "back": "Zurück zur Anmeldung"
     },
@@ -1779,6 +1827,28 @@
       "sent": "Falls es ein Konto für <email></email> gibt, haben wir dorthin einen Link für ein neues Passwort geschickt.",
       "sentHint": "Der Link gilt eine Stunde. Sehen Sie auch im Spam-Ordner nach.",
       "prototype": "Prototyp: Es wird keine E-Mail verschickt. <link>Die E-Mail mit dem Link ansehen</link>"
+    },
+    "forgotOffice": {
+      "title": "Passwort vergessen?",
+      "text": "Bitten Sie das Gemeindebüro um einen Link für ein neues Passwort, zum Beispiel nach der Liturgie. Das Büro prüft, wer fragt, und gibt Ihnen einen einmaligen Link.",
+      "valid": "Der Link funktioniert einmal und 24 Stunden lang. Damit wählen Sie selbst ein neues Passwort.",
+      "back": "Zurück zur Anmeldung"
+    },
+    "setPassword": {
+      "title": "Neues Passwort wählen",
+      "intro": "Wählen Sie das Passwort, mit dem Sie sich ab jetzt anmelden.",
+      "password": "Neues Passwort",
+      "passwordHint": "Mindestens {min, number} Zeichen. Ein kurzer Satz lässt sich gut merken.",
+      "submit": "Passwort speichern",
+      "successTitle": "Ihr Passwort ist gespeichert",
+      "successText": "Melden Sie sich mit Ihrer E-Mail-Adresse und dem neuen Passwort an.",
+      "signIn": "Anmelden",
+      "linkInvalid": "Dieser Link funktioniert nicht mehr; bitten Sie das Gemeindebüro um einen neuen."
+    },
+    "noRole": {
+      "title": "Ihr Konto hat noch keine Rolle",
+      "text": "Ihr Konto ist freigegeben, hat aber noch keine Rolle. Bitten Sie das Gemeindebüro, Ihnen eine zu geben, und laden Sie die Seite dann neu.",
+      "signOut": "Abmelden"
     }
   },
   "privacyNotice": {
@@ -1846,7 +1916,13 @@
       "title": "Passwort",
       "text": "Wir schicken Ihnen per E-Mail einen Link, mit dem Sie ein neues Passwort wählen.",
       "send": "Link senden",
-      "sent": "Wir haben Ihnen einen Link geschickt. (Prototyp: Es wird keine E-Mail verschickt.)"
+      "sent": "Wir haben Ihnen einen Link geschickt. (Prototyp: Es wird keine E-Mail verschickt.)",
+      "intro": "Ändern Sie das Passwort, mit dem Sie sich anmelden.",
+      "current": "Aktuelles Passwort",
+      "new": "Neues Passwort",
+      "newHint": "Mindestens {min, number} Zeichen.",
+      "submit": "Passwort ändern",
+      "saved": "Ihr Passwort wurde geändert."
     },
     "data": "Ihre Daten",
     "dataDescription": "Was die App über Sie speichert, und Ihre Rechte nach der DSGVO."

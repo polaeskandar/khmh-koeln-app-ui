@@ -65,7 +65,9 @@
     "reason": "Reason",
     "loadingEllipsis": "Loading…",
     "formerAccount": "Former account",
-    "disabled": "Disabled"
+    "disabled": "Disabled",
+    "retry": "Try again",
+    "unsupportedBrowser": "This browser is too old for the app. Update it, or open the app in a current version of Safari, Chrome, Firefox or Edge."
   },
   "ui": {
     "close": "Close",
@@ -99,14 +101,20 @@
       "user": "This account does not exist or was deleted.",
       "guardian": "This parent link does not exist or was removed.",
       "request": "This request does not exist or was deleted.",
-      "role": "This role does not exist or was deleted."
+      "role": "This role does not exist or was deleted.",
+      "route": "Not found. Reload the page and try again."
     },
     "validation": {
       "tooLong": "Use at most {max} characters.",
       "chooseDate": "Choose a date.",
       "invalidDate": "Enter a valid date.",
       "chooseTime": "Choose a time.",
-      "invalidTime": "Enter a time like 18:30."
+      "invalidTime": "Enter a time like 18:30.",
+      "invalidType": "This value has the wrong format.",
+      "unexpectedField": "This field isn’t accepted here.",
+      "invalidRange": "Choose an end on or after the start, at most {max} days later.",
+      "birthDateInFuture": "The birth date can’t be in the future.",
+      "addressIncomplete": "Enter street, postal code and city, or none of them."
     },
     "services": {
       "adminOnlyCreate": "You can’t create services.",
@@ -120,7 +128,8 @@
       "notArchived": "{name} is not archived.",
       "takingAttendance": "{name} is taking attendance right now. Close the open sessions first.",
       "hasHistory": "{name} has meeting history ({count, plural, one {# session} other {# sessions}}). Archive it instead of deleting it.",
-      "archivedNoStageChanges": "{name} is archived. Restore it before changing its stages."
+      "archivedNoStageChanges": "{name} is archived. Restore it before changing its stages.",
+      "hasLessons": "{name} has lessons ({count, plural, one {# lesson} other {# lessons}}). Archive it instead of deleting it."
     },
     "stages": {
       "nameRequired": "Enter a name for the stage.",
@@ -131,7 +140,8 @@
       "notArchived": "{name} is not archived.",
       "takingAttendance": "{name} is taking attendance right now. Close the session first.",
       "hasHistory": "{name} has meeting history ({count, plural, one {# session} other {# sessions}}). Archive it instead of deleting it.",
-      "hasMembers": "{count, plural, one {# person is} other {# people are}} still in {name}. Move them to another stage first, or archive the stage."
+      "hasMembers": "{count, plural, one {# person is} other {# people are}} still in {name}. Move them to another stage first, or archive the stage.",
+      "hasLessons": "{name} has lessons ({count, plural, one {# lesson} other {# lessons}}). Archive it instead of deleting it."
     },
     "meetings": {
       "chooseService": "Choose a service.",
@@ -156,7 +166,9 @@
       "titleRequired": "Enter a title.",
       "noMeetingOnDate": "The schedule has no meeting on that date.",
       "scheduleInactive": "This schedule is inactive. Activate it first.",
-      "reopenNotAllowed": "You can’t reopen meetings."
+      "reopenNotAllowed": "You can’t reopen meetings.",
+      "reopenLeadersOnly": "You can’t reopen closed sessions.",
+      "dateInPast": "Choose today or a later date."
     },
     "recurrence": {
       "interval": "The interval must be between 1 and 52.",
@@ -184,7 +196,12 @@
       "membershipEnded": "This membership has already ended.",
       "addNotAllowed": "You can’t add people.",
       "changeNotAllowed": "You can’t change people or their stages.",
-      "removeNotAllowed": "You can’t take people out of stages."
+      "removeNotAllowed": "You can’t take people out of stages.",
+      "editOutsideServices": "You can only edit people in the services you serve in. {name} is not in any of them.",
+      "addOutsideServices": "You can only add people to the services and stages you serve in.",
+      "chooseJoinService": "Choose the service this person joins.",
+      "membershipOutsideServices": "You can only change memberships in the services and stages you serve in.",
+      "moveOutsideStages": "You can only move people into stages you serve in."
     },
     "roles": {
       "adminOnly": "You can’t give or remove roles.",
@@ -197,7 +214,11 @@
       "createNotAllowed": "You can’t add roles.",
       "updateNotAllowed": "You can’t change roles.",
       "deleteNotAllowed": "You can’t delete roles.",
-      "unknown": "This role doesn’t exist any more. Choose another one."
+      "unknown": "This role doesn’t exist any more. Choose another one.",
+      "chooseService": "Choose the service this role applies to.",
+      "ownAdminRole": "You can’t remove your own administrator role. Ask another administrator.",
+      "stageOnlyForServants": "Only servant roles can be limited to a stage.",
+      "lastAdministrator": "The last active administrator keeps this role. Make someone else an administrator first."
     },
     "materials": {
       "labelTooLong": "Use at most 120 characters for the label.",
@@ -220,7 +241,9 @@
       "homeworkPublished": "Homework of this lesson was published to parents. Archive the lesson instead.",
       "createNotAllowed": "You can’t prepare lessons.",
       "changeNotAllowed": "You can’t change lessons.",
-      "deleteNotAllowed": "You can’t archive or delete lessons."
+      "deleteNotAllowed": "You can’t archive or delete lessons.",
+      "prepareStageOnly": "You can’t prepare lessons for this stage.",
+      "changeStageOnly": "You can’t change lessons of this stage."
     },
     "homework": {
       "titleRequired": "Enter a title, e.g. “Learn the memory verse”.",
@@ -240,7 +263,9 @@
       "otherClass": "This homework is for another class than {name}’s.",
       "createNotAllowed": "You can’t give homework.",
       "changeNotAllowed": "You can’t change homework.",
-      "deleteNotAllowed": "You can’t archive or delete homework."
+      "deleteNotAllowed": "You can’t archive or delete homework.",
+      "changeStageOnly": "You can’t change homework of this stage.",
+      "assignStageOnly": "You can’t give homework to this stage."
     },
     "guardians": {
       "adminOnlyGrant": "You can’t give parents access to children.",
@@ -270,7 +295,12 @@
       "chooseAge": "Choose whether the member is 16 or older, or under 16 with a parent’s agreement.",
       "notLinked": "This account isn’t linked to a member record.",
       "unlinkNotAllowed": "You can’t remove member links.",
-      "notApproved": "This account hasn’t been approved yet. Approve it under Account requests first."
+      "notApproved": "This account hasn’t been approved yet. Approve it under Account requests first.",
+      "nameRequired": "Enter the name to show for the account.",
+      "chooseServiceForRole": "Choose the service for this role.",
+      "stageNotInService": "This stage doesn’t belong to the chosen service.",
+      "privacyNoticeOutdated": "The privacy notice has changed. Reload the page, read it and confirm again.",
+      "currentPasswordWrong": "This is not your current password."
     },
     "privacy": {
       "adminOnly": "You can’t handle data protection requests.",
@@ -284,6 +314,24 @@
       "subjectGone": "The data this request is about no longer exists.",
       "ownAccount": "You can’t erase your own account. Ask someone else who handles data protection requests.",
       "declineReasonRequired": "Give the reason. The person must be told why, and that they can complain to the data protection authority."
+    },
+    "loadFailed": "This couldn’t be loaded.",
+    "notSaved": "Not saved. Check your connection and try again.",
+    "conflict": "Someone else changed this at the same time. Reload the page and try again.",
+    "tooManyRequests": "Too many requests. Wait a moment and try again.",
+    "internal": "Something went wrong on our side. Try again later.",
+    "unavailable": "The app can’t be reached right now. Try again in a few minutes.",
+    "network": "No connection. Check your internet connection and try again.",
+    "sessionExpired": "You were signed out. Sign in again to continue.",
+    "auth": {
+      "unauthenticated": "Please sign in.",
+      "invalidCredentials": "The email address or the password is not right.",
+      "unconfirmed": "Confirm your email address first: open the link we sent you when you registered.",
+      "pending": "Your account is waiting for approval by the church office.",
+      "disabled": "This account can no longer sign in. Ask the church office if you think this is a mistake.",
+      "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
+      "resetLinkInvalid": "This link no longer works. Ask the church office for a new one.",
+      "confirmationLinkInvalid": "This confirmation link is invalid or has expired. Register again to get a new one."
     }
   },
   "toast": {
@@ -1714,7 +1762,7 @@
       "text": "Your email address and password are right, but the church office hasn’t approved the account yet. Every new account is checked by hand, because the app shows information about children.",
       "parents": "For parents, the office links the account to their children.",
       "servants": "For servants, it gives them the roles they need.",
-      "email": "You’ll get an email as soon as the account is ready.",
+      "email": "The church office tells you when the account is ready.",
       "slow": "Taking longer than a week? Ask in the church office, for example after the liturgy.",
       "back": "Back to sign-in",
       "members": "For members, it links the account to their own record in the church’s groups."
@@ -1746,7 +1794,7 @@
       "nextTitle": "What happens next",
       "step1": "You create your account. You can’t use it yet.",
       "step2": "The church office checks your details: parents are linked to their children, members to their own record, servants get the roles they need.",
-      "step3": "You get an email and can sign in.",
+      "step3": "The church office tells you when your account is ready, and you can sign in.",
       "childrenNoAccounts": "Children under 16 get an account of their own only with a parent’s agreement. Until then, their parents see their homework.",
       "asMember": "Member",
       "asMemberHint": "I take part in a service myself, for example the Youth Meeting or the Coptic course, and want to see my groups and homework.",
@@ -1757,7 +1805,7 @@
       "title": "Thank you for registering",
       "confirm": "We’ve sent you an email. Open the link in it to confirm your address; only then does the church office see your registration.",
       "text": "The church office checks every new account by hand, usually within a few days. Until then you can’t sign in.",
-      "email": "You’ll get an email as soon as your account is ready.",
+      "email": "The church office tells you when your account is ready.",
       "prototype": "Prototype: no email is sent. <confirm>Open the link from the email</confirm>, then an administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy. <link>See the “Your account is ready” email</link>",
       "back": "Back to sign-in"
     },
@@ -1779,6 +1827,28 @@
       "sent": "If there is an account for <email></email>, we’ve sent it a link to choose a new password.",
       "sentHint": "The link works for one hour. Check your spam folder too.",
       "prototype": "Prototype: no email is sent. <link>See the email with the link</link>"
+    },
+    "forgotOffice": {
+      "title": "Forgot your password?",
+      "text": "Ask the church office for a new password link, for example after the liturgy. The office checks who is asking and gives you a one-time link.",
+      "valid": "The link works once, for 24 hours. With it you choose a new password yourself.",
+      "back": "Back to sign-in"
+    },
+    "setPassword": {
+      "title": "Choose a new password",
+      "intro": "Choose the password you’ll sign in with from now on.",
+      "password": "New password",
+      "passwordHint": "At least {min, number} characters. A short sentence is easy to remember.",
+      "submit": "Save password",
+      "successTitle": "Your password is saved",
+      "successText": "Sign in with your email address and the new password.",
+      "signIn": "Sign in",
+      "linkInvalid": "This link no longer works; ask the church office for a new one."
+    },
+    "noRole": {
+      "title": "Your account has no role yet",
+      "text": "Your account is approved, but it has no role yet. Ask the church office to give you one, then reload this page.",
+      "signOut": "Sign out"
     }
   },
   "privacyNotice": {
@@ -1846,7 +1916,13 @@
       "title": "Password",
       "text": "We’ll email you a link to choose a new password.",
       "send": "Send link",
-      "sent": "We’ve sent you a link. (Prototype: no email is sent.)"
+      "sent": "We’ve sent you a link. (Prototype: no email is sent.)",
+      "intro": "Change the password you sign in with.",
+      "current": "Current password",
+      "new": "New password",
+      "newHint": "At least {min, number} characters.",
+      "submit": "Change password",
+      "saved": "Your password is changed."
     },
     "data": "Your data",
     "dataDescription": "What the app stores about you, and your rights under data protection law (DSGVO)."
