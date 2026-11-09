@@ -12,12 +12,13 @@
  *   3. The servant sees the completion in the stage's homework overview.
  *
  * Then it takes the MVP screens. An administrator deletes a service that
- * never met and creates a new one. Then someone registers, waits for approval
- * and is approved; the main screens are taken again in German, Arabic and dark
- * mode; and a family's request to erase a child's data is recorded and carried
- * out. Then come the member accounts: Nevine (Bible Study and the Coptic
- * course) ticks off her own homework, and Mina, a youth who shares his name
- * with a child in 3rd Class, registers and is linked to the right record. At
+ * never met and creates a new one. Then someone registers, confirms the email
+ * address, waits for approval and is approved; the main screens are taken
+ * again in German, Arabic and dark mode; and a family's request to erase a
+ * child's data is recorded and carried out. Then come the member accounts:
+ * Nevine (Bible Study and the Coptic course) ticks off her own homework, and
+ * Mina, a youth who shares his name with a child in 3rd Class, registers,
+ * confirms his address and is linked to the right record. At
  * the end, the administrator adds a role of the church's own ("Attendance
  * helper"), gives it to Sara, and deletes a role nobody has; roles hold
  * everywhere in the church, and Sara, the church office, sees only what her
@@ -613,9 +614,30 @@ async function registrationAndApproval() {
   await clickAndWait(
     visitor,
     visitor.getByRole("button", { name: "Create account" }),
-    /\/register\/done$/
+    /\/register\/done#token=/
   )
   await shot(visitor, "auth", "03-registered")
+  // No email is sent: the thank-you page holds the link the email would.
+  const confirmationLink = await visitor
+    .getByRole("link", { name: "Open the link from the email" })
+    .getAttribute("href")
+  check(confirmationLink?.startsWith("/confirm-email#token="), "the thank-you page has the link")
+
+  // Signing in before the address is confirmed asks for the link first.
+  await go(visitor, "/sign-in")
+  await label(visitor, "Email address").fill("marianne.fanous@example.org")
+  await label(visitor, "Password", { exact: true }).fill("our family in Cologne")
+  await clickAndWait(
+    visitor,
+    visitor.getByRole("button", { name: "Sign in" }),
+    /\/sign-in\/unconfirmed$/
+  )
+  await shot(visitor, "auth", "08-confirm-email-first")
+
+  // The link confirms the address.
+  await go(visitor, confirmationLink)
+  await text(visitor, "Your email address is confirmed").first().waitFor()
+  await shot(visitor, "auth", "09-email-confirmed")
 
   // Signing in before the approval explains what happens next.
   await go(visitor, "/sign-in")
@@ -627,6 +649,13 @@ async function registrationAndApproval() {
     /\/sign-in\/pending$/
   )
   await shot(visitor, "auth", "04-waiting-for-approval")
+
+  // A link works once.
+  await go(visitor, confirmationLink)
+  await text(visitor, /This confirmation link is invalid or has expired/)
+    .first()
+    .waitFor()
+  await shot(visitor, "auth", "10-confirmation-link-invalid")
 
   await go(visitor, "/forgot-password")
   await label(visitor, "Email address").fill("marianne.fanous@example.org")
@@ -887,8 +916,15 @@ async function memberPortal() {
   await clickAndWait(
     visitor,
     visitor.getByRole("button", { name: "Create account" }),
-    /\/register\/done$/
+    /\/register\/done#token=/
   )
+  // He opens the link, so the office sees his registration.
+  await clickAndWait(
+    visitor,
+    visitor.getByRole("link", { name: "Open the link from the email" }),
+    /\/confirm-email/
+  )
+  await text(visitor, "Your email address is confirmed").first().waitFor()
 
   // Two people are called Mina Hanna: the administrator picks the youth, who is 15.
   const admin = await signIn("Mariam Fahmy")

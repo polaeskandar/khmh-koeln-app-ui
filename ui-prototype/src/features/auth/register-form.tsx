@@ -53,7 +53,9 @@ export function RegisterForm({
     setForm((f) => ({ ...f, [key]: value }))
   const submit = useServerAction(registerAction, {
     toastOnSuccess: false,
-    onSuccess: () => router.push("/register/done"),
+    // Prototype only: the thank-you page shows the link the email would hold.
+    onSuccess: ({ token }) =>
+      router.push(token ? `/register/done#token=${token}` : "/register/done"),
   })
   const errors = submit.fieldErrors
   const kinds: { value: As; title: string; description: string }[] = [

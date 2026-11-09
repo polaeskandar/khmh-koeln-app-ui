@@ -53,14 +53,15 @@ function linkableMembers(s: State) {
 }
 
 /**
- * Accounts people registered themselves, waiting for the office. Accounts that may see accounts
- * get the list; approving and declining needs "Accounts: Add". Null for everyone else.
+ * Accounts people registered themselves, waiting for the office: only those whose email address is
+ * confirmed. Accounts that may see accounts get the list; approving and declining needs
+ * "Accounts: Add". Null for everyone else.
  */
 export async function getAccountRequests(ctx: Context) {
   const { state: s, viewer } = ctx
   if (!can(viewer, "read", "users")) return null
   const requests = s.users
-    .filter((u) => u.approvedAt === null && u.disabledAt === null)
+    .filter((u) => u.approvedAt === null && u.disabledAt === null && u.emailConfirmedAt !== null)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
     .map((u) => ({
       id: u.id,

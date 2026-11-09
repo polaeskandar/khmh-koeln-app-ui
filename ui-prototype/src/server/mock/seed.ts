@@ -560,6 +560,8 @@ export function seed(): State {
     passwordHash: demoPasswordHash(),
     language: null,
     registration: null,
+    emailConfirmedAt: toInstant(createdMs),
+    emailConfirmation: null,
     privacyAcceptedAt: toInstant(createdMs),
     privacyVersion: PRIVACY_VERSION,
     approvedAt: toInstant(createdMs),
@@ -1553,8 +1555,9 @@ export function seed(): State {
   )
 
   // ------------------------------------------------------- account requests
-  // People who registered themselves. Their accounts can't be used until an administrator approves
-  // them, linking the children (parents) or giving a role (servants); declined ones are deleted.
+  // People who registered themselves and opened the link in the email minutes later. Their accounts
+  // can't be used until an administrator approves them, linking the children (parents) or giving a
+  // role (servants); declined ones are deleted.
   const registered = (
     first: string,
     last: string,
@@ -1573,6 +1576,8 @@ export function seed(): State {
       passwordHash: demoPasswordHash(),
       language,
       registration,
+      emailConfirmedAt: toInstant(ms + 12 * MIN),
+      emailConfirmation: null,
       privacyAcceptedAt: toInstant(ms),
       privacyVersion: PRIVACY_VERSION,
       approvedAt: null,
@@ -1691,6 +1696,8 @@ export function seed(): State {
     passwordHash: demoPasswordHash(),
     language: null,
     registration: null,
+    emailConfirmedAt: toInstant(nevineRegistered + 5 * MIN),
+    emailConfirmation: null,
     privacyAcceptedAt: toInstant(nevineRegistered),
     privacyVersion: PRIVACY_VERSION,
     approvedAt: toInstant(at("2026-10-20", "09:15")),

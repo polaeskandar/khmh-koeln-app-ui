@@ -1701,6 +1701,14 @@
       "members": "Members",
       "membersHint": "The member portal: their own groups and homework"
     },
+    "unconfirmed": {
+      "title": "Confirm your email address first",
+      "text": "Your email address and password are right, but the address isn’t confirmed yet. The church office only sees your registration once you open the link in the email we sent you.",
+      "valid": "The link works for 7 days. Check your spam folder too.",
+      "again": "No email, or the link has expired? Register again with the same address to get a new link.",
+      "register": "Register again",
+      "back": "Back to sign-in"
+    },
     "pending": {
       "title": "Your account is waiting for approval",
       "text": "Your email address and password are right, but the church office hasn’t approved the account yet. Every new account is checked by hand, because the app shows information about children.",
@@ -1747,9 +1755,19 @@
     },
     "registered": {
       "title": "Thank you for registering",
+      "confirm": "We’ve sent you an email. Open the link in it to confirm your address; only then does the church office see your registration.",
       "text": "The church office checks every new account by hand, usually within a few days. Until then you can’t sign in.",
       "email": "You’ll get an email as soon as your account is ready.",
-      "prototype": "Prototype: no email is sent. An administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy. <link>See the “Your account is ready” email</link>",
+      "prototype": "Prototype: no email is sent. <confirm>Open the link from the email</confirm>, then an administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy. <link>See the “Your account is ready” email</link>",
+      "back": "Back to sign-in"
+    },
+    "confirmEmail": {
+      "title": "Confirm your email address",
+      "confirming": "Confirming your email address…",
+      "confirmedTitle": "Your email address is confirmed",
+      "confirmedText": "The church office now checks your registration by hand, usually within a few days, and tells you when your account is ready.",
+      "linkInvalid": "This confirmation link is invalid or has expired. Register again to get a new one.",
+      "register": "Register again",
       "back": "Back to sign-in"
     },
     "forgot": {

@@ -1,15 +1,21 @@
 /**
- * Registration, sign-in and approval: a new account can't be used until an
- * administrator approves it, and declined registrations leave nothing behind.
+ * Registration, sign-in and approval: a new registration reaches the office once its email
+ * address is confirmed, the account can't be used until an administrator approves it, and
+ * declined registrations leave nothing behind.
  */
-import { describe, expect, test } from "vitest"
+import { describe, expect, test, vi } from "vitest"
 
 import { DEFAULT_ROLES, isActiveAccount } from "@/lib/domain/policy"
+import type { User } from "@/lib/domain/types"
 import { ProblemError } from "@/server/errors"
+import { getAccountRequests } from "@/server/queries/accounts"
+import { contextFor } from "@/test/context"
 
+import { DEMO_START, resetClock } from "./clock"
 import {
   approveAccount,
   authenticate,
+  confirmEmail,
   declineAccount,
   register,
   type RegistrationInput,
@@ -53,8 +59,15 @@ const parent: RegistrationInput = {
   acceptPrivacy: true,
 }
 
+const tokenOf = (user: User) => user.emailConfirmation!.token
+
+async function requestedNames(t: ReturnType<typeof demo>) {
+  const requests = await getAccountRequests(contextFor(t.s, t.admin))
+  return requests!.requests.map((r) => r.name)
+}
+
 describe("registration", () => {
-  test("a new account waits for approval and can't sign in yet", () => {
+  test("a new account confirms its email address, then waits for approval", async () => {
     const t = demo()
     const user = register(t.s, parent)
     expect(user.email).toBe("sara.hanna@example.org")
@@ -63,8 +76,63 @@ describe("registration", () => {
     expect(isActiveAccount(user)).toBe(false)
     expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password")).toEqual({
       ok: false,
+      reason: "unconfirmed",
+    })
+    expect(await requestedNames(t)).not.toContain("Sara Hanna")
+
+    expect(confirmEmail(t.s, tokenOf(user))).toBe(true)
+    expect(user.emailConfirmation).toBeNull()
+    expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password")).toEqual({
+      ok: false,
       reason: "pending",
     })
+    expect(await requestedNames(t)).toContain("Sara Hanna")
+  })
+
+  test("a link works once and for 7 days", () => {
+    vi.useFakeTimers()
+    vi.stubEnv("KHMK_DEMO_CLOCK", "running")
+    try {
+      vi.setSystemTime(DEMO_START)
+      resetClock()
+      const t = demo()
+      const late = register(t.s, parent)
+      const onTime = register(t.s, { ...parent, email: "hanna.family@example.org" })
+      const lateToken = tokenOf(late)
+      const onTimeToken = tokenOf(onTime)
+
+      vi.setSystemTime(DEMO_START + 7 * 86_400_000 - 60_000)
+      expect(confirmEmail(t.s, onTimeToken)).toBe(true)
+      expect(confirmEmail(t.s, onTimeToken)).toBe(false)
+      vi.setSystemTime(DEMO_START + 7 * 86_400_000)
+      expect(confirmEmail(t.s, lateToken)).toBe(false)
+      expect(confirmEmail(t.s, "")).toBe(false)
+      expect(late.emailConfirmedAt).toBeNull()
+    } finally {
+      vi.useRealTimers()
+      vi.unstubAllEnvs()
+    }
+  })
+
+  test("registering again sends a new link that voids the older one", async () => {
+    const t = demo()
+    const user = register(t.s, parent)
+    const first = tokenOf(user)
+    const count = t.s.users.length
+    const again = register(t.s, { ...parent, firstName: "Sarah", password: "another password" })
+    expect(again).toBe(user)
+    expect(t.s.users.length).toBe(count)
+    expect(user.displayName).toBe("Sara Hanna")
+    expect(tokenOf(user)).not.toBe(first)
+
+    expect(confirmEmail(t.s, first)).toBe(false)
+    expect(confirmEmail(t.s, tokenOf(user))).toBe(true)
+    expect(authenticate(t.s, user.email, "a long enough password")).toEqual({
+      ok: false,
+      reason: "pending",
+    })
+    const problem = problemOf(() => register(t.s, parent))
+    expect(Object.keys(problem?.fieldErrors ?? {})).toEqual(["email"])
   })
 
   test("a wrong password and an unknown email get the same answer", () => {

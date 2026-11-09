@@ -75,15 +75,18 @@ they tick off themselves. Planned after the launch.
 
 ## Signing in and registering
 
-New accounts wait for the office: parents are linked to their children and get the Parent role, members are
+A new registration reaches the office once its email address is confirmed with the link from the email (valid
+7 days). Then it waits for the office: parents are linked to their children and get the Parent role, members are
 linked to their own record, servants get their roles. Until then the email and password only lead to the
-waiting page.
+page that asks for the link, then to the waiting page.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |
 | Sign in | [01-sign-in](auth/01-sign-in.png) | `/sign-in` (demo accounts: `/sign-in/demo`) |
 | Register | [02-register](auth/02-register.png), [as a member](auth/07-register-as-member.png) | `/register` |
 | Registered | [03-registered](auth/03-registered.png) | `/register/done` |
+| Confirm the email address first | [08-confirm-email-first](auth/08-confirm-email-first.png) | `/sign-in/unconfirmed` |
+| Email address confirmed | [09-email-confirmed](auth/09-email-confirmed.png), [link invalid or expired](auth/10-confirmation-link-invalid.png) | `/confirm-email#token=…` |
 | Waiting for approval | [04-waiting-for-approval](auth/04-waiting-for-approval.png) | `/sign-in/pending` |
 | Forgot password | [05-forgot-password](auth/05-forgot-password.png) | `/forgot-password` |
 | Privacy notice (draft) | [06-privacy-notice](auth/06-privacy-notice.png) | `/privacy` |

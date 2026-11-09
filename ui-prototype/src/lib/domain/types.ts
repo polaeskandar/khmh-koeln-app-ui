@@ -195,6 +195,15 @@ export type Registration = {
 }
 
 /**
+ * Prototype only: the link that confirms a registration's email address, valid 7 days. The
+ * backend keeps a hash of the token in a table of its own and emails the link.
+ */
+export type EmailConfirmation = {
+  token: string
+  expiresAt: Instant
+}
+
+/**
  * A sign-in account. Accounts people register themselves wait for an
  * administrator (approvedAt null) and can't be used until then; accounts the
  * office creates are approved at once. Declined registrations are deleted.
@@ -227,6 +236,13 @@ export type User = {
   language: Language | null
   /** Kept until the account is approved or declined, then deleted (only needed for the decision). */
   registration: Registration | null
+  /**
+   * When the person opened the link sent to the address. Until then a registration doesn't reach
+   * the office. Accounts the office creates count as confirmed.
+   */
+  emailConfirmedAt: Instant | null
+  /** The newest confirmation link while the address is unconfirmed; a new one voids the older. */
+  emailConfirmation: EmailConfirmation | null
   /** When they accepted the privacy notice, and which version. */
   privacyAcceptedAt: Instant | null
   privacyVersion: string | null

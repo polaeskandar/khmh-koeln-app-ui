@@ -1,9 +1,11 @@
 import "server-only"
 
+import { randomBytes } from "node:crypto"
+
 import { msg } from "@/i18n/message"
 import { permissionsOf } from "@/lib/domain/policy"
 import { PRIVACY_VERSION } from "@/lib/domain/privacy"
-import { toInstant } from "@/lib/domain/time"
+import { epochOf, toInstant } from "@/lib/domain/time"
 import type { AgeCheck, GuardianRelationship, Language, User, Uuid } from "@/lib/domain/types"
 import { ruleViolation } from "@/server/errors"
 
@@ -17,10 +19,12 @@ import type { State } from "../state"
 /**
  * Accounts: registration, sign-in and the administrator's approval.
  *
- * Anyone can register, but a new account can't be used until the office
- * approves it: for a parent by linking their children and giving roles (Parent),
- * for a servant by giving roles, for a member by linking the account to their
- * own member record (under 16 only with a parent's or guardian's agreement).
+ * Anyone can register. The office sees a registration only once the person has
+ * opened the link sent to the address (backend #84), and the account can't be
+ * used until the office approves it: for a parent by linking their children and
+ * giving roles (Parent), for a servant by giving roles, for a member by linking
+ * the account to their own member record (under 16 only with a parent's or
+ * guardian's agreement).
  * Declined registrations are deleted, with everything the person entered
  * (data minimisation, DSGVO Art. 5(1)(c)).
  */
@@ -44,15 +48,37 @@ export const normalizeEmail = (email: string) => email.trim().toLowerCase()
 export const accountByEmail = (s: State, email: string) =>
   s.users.find((u) => u.email.toLowerCase() === normalizeEmail(email))
 
+/** A registration whose address nobody has confirmed yet. The office doesn't see it. */
+export const isUnconfirmed = (u: User) => u.approvedAt === null && u.emailConfirmedAt === null
+
+/** How long a confirmation link works. Registering again sends a new one. */
+const CONFIRMATION_LINK_DAYS = 7
+
+/**
+ * Makes the link the registration email holds: a token of 32 random bytes in base64url, like the
+ * backend's. It replaces the older link, which then no longer works.
+ */
+function newConfirmationLink(user: User) {
+  user.emailConfirmation = {
+    token: randomBytes(32).toString("base64url"),
+    expiresAt: toInstant(nowMs() + CONFIRMATION_LINK_DAYS * 86_400_000),
+  }
+}
+
+/**
+ * Registers an account with an unconfirmed address and sends the link to confirm it. Registering
+ * again with an address that is still unconfirmed changes nothing but the link.
+ */
 export function register(s: State, input: RegistrationInput): User {
   const v = new Violations()
   const first = v.name("firstName", input.firstName, 80, msg("errors.accounts.firstNameRequired"))
   const last = v.name("lastName", input.lastName, 80, msg("errors.accounts.lastNameRequired"))
   const email = normalizeEmail(input.email)
+  const existing = accountByEmail(s, email)
   if (email === "") v.add("email", msg("errors.accounts.emailRequired"))
   else if (!EMAIL.test(email) || email.length > 180)
     v.add("email", msg("errors.accounts.emailInvalid"))
-  else if (accountByEmail(s, email)) v.add("email", msg("errors.accounts.emailTaken"))
+  else if (existing && !isUnconfirmed(existing)) v.add("email", msg("errors.accounts.emailTaken"))
   if (input.password.length < MIN_PASSWORD_LENGTH) {
     v.add("password", msg("errors.accounts.passwordTooShort", { min: MIN_PASSWORD_LENGTH }))
   } else if (input.password.length > 200) {
@@ -79,6 +105,12 @@ export function register(s: State, input: RegistrationInput): User {
   if (!input.acceptPrivacy) v.add("acceptPrivacy", msg("errors.accounts.acceptPrivacy"))
   v.throwIfAny()
 
+  // Hashed either way, so the answer takes as long whether or not the address has an account.
+  const passwordHash = hashPassword(input.password)
+  if (existing) {
+    newConfirmationLink(existing)
+    return existing
+  }
   const ms = nowMs()
   const user: User = {
     id: uuidv7(ms),
@@ -87,9 +119,11 @@ export function register(s: State, input: RegistrationInput): User {
     personId: null,
     roleIds: [],
     permissions: [],
-    passwordHash: hashPassword(input.password),
+    passwordHash,
     language: input.language,
     registration: { as: input.as, details, serviceId },
+    emailConfirmedAt: null,
+    emailConfirmation: null,
     privacyAcceptedAt: toInstant(ms),
     privacyVersion: PRIVACY_VERSION,
     approvedAt: null,
@@ -99,14 +133,28 @@ export function register(s: State, input: RegistrationInput): User {
     disabledAt: null,
     createdAt: toInstant(ms),
   }
+  newConfirmationLink(user)
   s.users.push(user)
   return user
+}
+
+/**
+ * Confirms a registration's address with the token of its link: the office now sees the
+ * registration. False for an unknown, used, voided or expired link, which the page can't tell apart.
+ */
+export function confirmEmail(s: State, token: string): boolean {
+  const ms = nowMs()
+  const user = s.users.find((u) => u.emailConfirmation?.token === token)
+  if (!user?.emailConfirmation || epochOf(user.emailConfirmation.expiresAt) <= ms) return false
+  user.emailConfirmedAt = toInstant(ms)
+  user.emailConfirmation = null
+  return true
 }
 
 export type SignInResult =
   | { ok: true; user: User }
   /** wrong: unknown email or wrong password (never says which); the others only after a correct password. */
-  | { ok: false; reason: "wrong" | "pending" | "disabled" }
+  | { ok: false; reason: "wrong" | "unconfirmed" | "pending" | "disabled" }
 
 export function authenticate(s: State, email: string, password: string): SignInResult {
   const user = accountByEmail(s, email)
@@ -114,6 +162,7 @@ export function authenticate(s: State, email: string, password: string): SignInR
     return { ok: false, reason: "wrong" }
   }
   if (user.disabledAt) return { ok: false, reason: "disabled" }
+  if (isUnconfirmed(user)) return { ok: false, reason: "unconfirmed" }
   if (!user.approvedAt) return { ok: false, reason: "pending" }
   return { ok: true, user }
 }
