@@ -216,6 +216,7 @@ export function seed(): State {
     attendance: [],
     users: [],
     roles: [],
+    assignments: [],
     guardians: [],
     lessons: [],
     homework: [],
@@ -539,8 +540,8 @@ export function seed(): State {
 
   // ------------------------------------------------------------------- users
   const user = {} as Record<UserKey, User>
-  // The roles the church started with: the backend's defaults, with its ids. Roles are global,
-  // so a servant's role says what they may do, not where: they may do it in every service.
+  // The roles the church started with: the backend's defaults, with its ids. A servant's role says
+  // what they may do; their assignments (at the end of the seed) say where.
   const churchStart = toInstant(at("2026-08-28", "20:00"))
   for (const r of DEFAULT_ROLES) {
     state.roles.push({
@@ -588,7 +589,7 @@ export function seed(): State {
   addUser("mariam", [administrator])
   // Christine leads Sunday School and the summer club, Mark the Youth Meeting, Maged the Bible
   // Study and the servants' meeting, Peter the Deacons' School, Irene the Coptic course; the
-  // others serve in a class or a service. Nothing records where: the roles hold everywhere.
+  // others serve in a class or a service. Their assignments say where, at the end of the seed.
   addUser("christine", [serviceLeader])
   addUser("daniel", [servant])
   addUser("rebecca", [servant])
@@ -1821,6 +1822,7 @@ export function seed(): State {
       id: id(ms),
       name,
       permissions: inCatalogOrder(permissions),
+      scope: "church",
       createdAt: toInstant(ms),
       updatedAt: toInstant(ms),
     }
@@ -1864,6 +1866,36 @@ export function seed(): State {
     ...officeAccount(saraCreated),
     disabledAt: null,
   })
+
+  // ------------------------------------------------------------- assignments
+  // Where the servants serve (backend #318): Service leader and Servant hold only there. A leader
+  // is assigned to the whole service, which covers all its stages; a servant to their class.
+  // Mariam assigned everyone when the Coptic course was added. Samuel's account is disabled and has
+  // none; Fady, who waits for approval, gets his with the approval.
+  const assign = (who: UserKey, serviceKey: ServiceKey, stageKey: string | null = null) => {
+    const ms = at("2026-09-01", "21:00") + state.assignments.length * MIN
+    state.assignments.push({
+      id: id(ms),
+      userId: user[who].id,
+      serviceId: service[serviceKey].id,
+      stageId: stageKey ? stage[stageKey].id : null,
+      createdAt: toInstant(ms),
+    })
+  }
+  assign("christine", "sunday-school")
+  assign("daniel", "sunday-school", "c3")
+  assign("rebecca", "sunday-school", "kg")
+  assign("youssef", "sunday-school", "c1")
+  assign("youssef", "coptic", "level1")
+  assign("marina", "sunday-school", "c2")
+  assign("george", "sunday-school", "c4")
+  assign("mark", "youth")
+  assign("bishoy", "youth")
+  assign("bishoy", "deacons", "beginners")
+  assign("maged", "bible-study")
+  assign("maged", "servants")
+  assign("peter", "deacons")
+  assign("irene", "coptic")
 
   return state
 }

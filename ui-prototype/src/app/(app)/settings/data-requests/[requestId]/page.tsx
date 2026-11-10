@@ -30,6 +30,7 @@ const ERASED: ErasedKind[] = [
   "guardianLinks",
   "account",
   "roles",
+  "assignments",
   "notes",
 ]
 const KEPT: KeptKind[] = [

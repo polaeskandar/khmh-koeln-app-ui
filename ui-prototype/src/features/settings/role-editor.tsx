@@ -1,16 +1,17 @@
 "use client"
 
 /**
- * Adds or changes a role: its name and what it allows, as a grid of the permission catalog —
- * one row per resource, one column per action (See, Add, Change, Delete). Roles hold everywhere
- * in the church, so there is nothing else to choose. The aside lists who has the role, since
- * every change reaches them at once.
+ * Adds or changes a role: its name, where it applies (everywhere in the church, or only in the
+ * groups an account is assigned to) and what it allows, as a grid of the permission catalog —
+ * one row per resource, one column per action (See, Add, Change, Delete). The aside lists who
+ * has the role, since every change reaches them at once.
  */
 import { Fragment, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ShieldAlert, Trash2, TriangleAlert } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { cn } from "cn"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
 import { TextField } from "@/components/form-fields"
@@ -19,15 +20,21 @@ import { MemberAvatar } from "@/components/member-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { FieldError } from "@/components/ui/field"
+import { FieldError, FieldLabel } from "@/components/ui/field"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { useServerAction } from "@/hooks/use-server-action"
 import { useFormat } from "@/i18n/format"
 import { nameKey } from "@/lib/domain/names"
 import { ACTIONS, inCatalogOrder, permissionOf, PERMISSIONS, RESOURCES } from "@/lib/domain/policy"
-import type { Action, Permission, Resource } from "@/lib/domain/types"
+import type { Action, Permission, Resource, RoleScope } from "@/lib/domain/types"
 import { createRoleAction, deleteRoleAction, updateRoleAction } from "@/server/actions/roles"
 import type { RoleEditorData } from "@/server/queries/roles"
+
+const SCOPES: { value: RoleScope; label: "scopeChurch" | "scopeAssigned" }[] = [
+  { value: "church", label: "scopeChurch" },
+  { value: "assignedGroups", label: "scopeAssigned" },
+]
 
 /** Rows that let people change who may do what, or see everyone's personal data. */
 const SENSITIVE: Resource[] = ["members", "users", "roles"]
@@ -153,6 +160,7 @@ export function RoleEditor({ data }: { data: RoleEditorData }) {
   const readOnly = !data.can.edit
   const [name, setName] = useState(role?.name ?? "")
   const [chosen, setChosen] = useState<Permission[]>(role?.permissions ?? [])
+  const [scope, setScope] = useState<RoleScope>(role?.scope ?? "church")
   const [deleting, setDeleting] = useState(false)
 
   const create = useServerAction(createRoleAction, {
@@ -176,7 +184,7 @@ export function RoleEditor({ data }: { data: RoleEditorData }) {
   const locksOut = data.onlyWayToChangeRoles && !chosen.includes("roles:update")
 
   const submit = () => {
-    const input = { name, permissions: chosen }
+    const input = { name, permissions: chosen, scope }
     if (role) update.execute(role.id, input)
     else create.execute(input)
   }
@@ -207,6 +215,36 @@ export function RoleEditor({ data }: { data: RoleEditorData }) {
             description={t("nameHint")}
             error={nameError}
           />
+        </FormPanel>
+
+        <FormPanel title={t("scope")}>
+          <RadioGroup
+            value={scope}
+            onValueChange={(v) => setScope(v as RoleScope)}
+            disabled={readOnly}
+            className="grid gap-2"
+            aria-label={t("scope")}
+          >
+            {SCOPES.map((option) => (
+              <FieldLabel
+                key={option.value}
+                className={cn(
+                  "flex w-full cursor-pointer items-start gap-3 border p-3 text-sm font-normal tracking-normal normal-case",
+                  scope === option.value && "border-primary bg-primary/5",
+                  readOnly && "cursor-default"
+                )}
+              >
+                <RadioGroupItem value={option.value} className="mt-0.5" />
+                <span className="flex flex-col gap-0.5">
+                  <span className="font-medium">{t(option.label)}</span>
+                  <span className="text-xs text-pretty text-muted-foreground">
+                    {t(`${option.label}Hint`)}
+                  </span>
+                </span>
+              </FieldLabel>
+            ))}
+          </RadioGroup>
+          {action.fieldErrors.scope ? <FieldError>{action.fieldErrors.scope}</FieldError> : null}
         </FormPanel>
 
         <FormPanel

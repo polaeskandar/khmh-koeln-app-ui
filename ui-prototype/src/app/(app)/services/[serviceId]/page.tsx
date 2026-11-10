@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/empty"
 import { ScheduleDialog } from "@/features/meetings/schedule-dialog"
 import { ScheduleList } from "@/features/meetings/schedule-list"
+import { ServantsSection } from "@/features/services/servants"
 import { ServiceActionsMenu, ServiceFormDialog } from "@/features/services/service-dialogs"
 import { StageFormDialog } from "@/features/stages/stage-dialogs"
 import { getFormat, getSessionLines } from "@/i18n/server"
@@ -337,6 +338,15 @@ export default async function ServiceDetailPage({ params }: PageProps<"/services
                 </ul>
               )}
             </Section>
+
+            <ServantsSection
+              service={{
+                id: service.id,
+                name: service.name,
+                stages: d.stages.map((st) => ({ id: st.id, name: st.name })),
+              }}
+              servants={d.servants}
+            />
           </div>
         </div>
       </PageBody>

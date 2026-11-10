@@ -1,6 +1,5 @@
 import "server-only"
 
-import { can } from "@/lib/domain/policy"
 import { occurrencesBetween } from "@/lib/domain/recurrence"
 import { addDays, datesBetween, localDateOf } from "@/lib/domain/time"
 import type { LocalDate, MeetingSession, Uuid } from "@/lib/domain/types"
@@ -23,10 +22,12 @@ import {
   stagesOf,
   userOf,
 } from "@/server/mock/selectors"
+import { canIn, canInService, canSomewhere, isUnassigned } from "@/server/mock/reach"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
 import {
+  inGroups,
   isGenerating,
   plannedOccurrence,
   scheduleRosterSize,
@@ -73,6 +74,7 @@ export function upcomingFor(
   ctx: Context,
   opts: Scope & { days: number; includeCanceled?: boolean }
 ): AgendaItem[] {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   const to = addDays(today, opts.days)
@@ -93,6 +95,7 @@ export function upcomingFor(
 }
 
 export async function getAgenda(ctx: Context, params: { date?: string; service?: string }) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   const from = addDays(today, -6)
@@ -130,7 +133,8 @@ export async function getAgenda(ctx: Context, params: { date?: string; service?:
     serviceId: scope.serviceId ?? null,
     days,
     services,
-    canCreateOneOff: can(viewer, "create", "sessions"),
+    canCreateOneOff: canSomewhere(s, viewer, "create", "sessions"),
+    unassigned: isUnassigned(s, viewer),
   }
 }
 
@@ -159,6 +163,7 @@ export function sessionHistory(s: State, session: MeetingSession): HistoryEntry[
 }
 
 export async function getSessionDetail(ctx: Context, id: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const session = sessionOf(s, id)
   if (!session) return null
@@ -183,7 +188,7 @@ export async function getSessionDetail(ctx: Context, id: Uuid) {
             title: lesson.title,
             status: lesson.status,
             href: `/services/${lesson.serviceId}/stages/${lesson.stageId}/lessons/${lesson.id}`,
-            canSee: can(viewer, "read", "lessons"),
+            canSee: canIn(s, viewer, "read", "lessons", lesson),
           }
         : null,
     stageHref: session.stageId
@@ -194,6 +199,7 @@ export async function getSessionDetail(ctx: Context, id: Uuid) {
 }
 
 export async function listSchedules(ctx: Context, params: { service?: string; status?: string }) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const status = params.status === "inactive" || params.status === "all" ? params.status : "active"
   const serviceId = params.service && serviceOf(s, params.service) ? params.service : null
@@ -227,7 +233,7 @@ export async function listSchedules(ctx: Context, params: { service?: string; st
     .map((x) => ({
       ...serviceRef(s, x),
       stages: stagesOf(s, x.id).map((st) => stageRef(st)!),
-      canManage: can(viewer, "create", "sessions"),
+      canManage: canInService(s, viewer, "create", "sessions", x.id),
     }))
   return {
     groups,
@@ -239,10 +245,12 @@ export async function listSchedules(ctx: Context, params: { service?: string; st
     },
     services,
     canCreate: services.some((x) => x.canManage),
+    unassigned: isUnassigned(s, viewer),
   }
 }
 
 export async function getScheduleDetail(ctx: Context, id: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const sch = scheduleOf(s, id)
   if (!sch) return null
@@ -285,11 +293,14 @@ export async function getScheduleDetail(ctx: Context, id: Uuid) {
 
 /** Today's sessions the viewer can take attendance for: the attendance page's "Today". */
 export function todaysSessions(ctx: Context): SessionCard[] {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   return sortSessions(
     s.sessions
-      .filter((x) => localDateOf(x.startsAt) === today && can(viewer, "create", "attendance"))
+      .filter(
+        (x) => localDateOf(x.startsAt) === today && canIn(s, viewer, "create", "attendance", x)
+      )
       .map((x) => sessionCard(s, viewer, x))
   )
 }
@@ -306,6 +317,7 @@ export type FormService = {
 
 /** Services, stages and roster sizes for the schedule and one-off session forms. */
 export function formServices(ctx: Context): FormService[] {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   return s.services
@@ -315,7 +327,7 @@ export function formServices(ctx: Context): FormService[] {
       id: x.id,
       name: x.name,
       tone: serviceRef(s, x).tone,
-      canManage: can(viewer, "create", "sessions"),
+      canManage: canInService(s, viewer, "create", "sessions", x.id),
       serviceLevelMembers: rosterOn(s, x.id, null, today).length,
       stages: stagesOf(s, x.id).map((st) => ({
         id: st.id,

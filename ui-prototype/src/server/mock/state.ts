@@ -18,6 +18,7 @@ import type {
   Service,
   SessionEvent,
   Stage,
+  StaffAssignment,
   User,
   Uuid,
 } from "@/lib/domain/types"
@@ -56,6 +57,8 @@ export type State = {
   users: User[]
   /** The church's roles. Each account keeps what its roles allow in `permissions`. */
   roles: Role[]
+  /** Where staff accounts serve; roles with the `assignedGroups` scope hold only there. */
+  assignments: StaffAssignment[]
   guardians: GuardianRelationship[]
   lessons: Lesson[]
   homework: HomeworkAssignment[]

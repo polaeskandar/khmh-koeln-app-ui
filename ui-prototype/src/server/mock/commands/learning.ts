@@ -1,9 +1,10 @@
 import "server-only"
 
 import { fullName } from "@/lib/domain/names"
-import { can, canReportFor } from "@/lib/domain/policy"
+import { canReportFor } from "@/lib/domain/policy"
 import { addDays, isValidLocalDate, toInstant } from "@/lib/domain/time"
 import type {
+  Group,
   GuardianRelationship,
   HomeworkAssignment,
   HomeworkCompletion,
@@ -20,6 +21,7 @@ import { forbidden, ProblemError, ruleViolation } from "@/server/errors"
 import { nowMs, today } from "../clock"
 import { authorize, found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
+import { authorizeIn, canIn } from "../reach"
 import { lessonMeeting } from "../lesson-meeting"
 import {
   currentCompletion,
@@ -80,9 +82,12 @@ function validateMaterials(
   return out
 }
 
-/** Can this account be responsible for a lesson or help with it? Anyone whose roles may change lessons. */
-function canPrepare(user: User | undefined) {
-  return !!user && can(user, "update", "lessons")
+/**
+ * Can this account be responsible for a lesson or help with it? Anyone whose roles may change
+ * lessons in the stage.
+ */
+function canPrepare(s: State, user: User | undefined, group: Group) {
+  return !!user && canIn(s, user, "update", "lessons", group)
 }
 
 function validateLesson(
@@ -141,11 +146,12 @@ function validateLesson(
   }
 
   const responsible = userOf(s, input.responsibleId)
-  if (!canPrepare(responsible)) v.add("responsibleId", msg("errors.lessons.chooseResponsible"))
+  if (!canPrepare(s, responsible, { serviceId, stageId }))
+    v.add("responsibleId", msg("errors.lessons.chooseResponsible"))
   const collaboratorIds = [...new Set(input.collaboratorIds ?? [])].filter(
     (uid) => uid !== input.responsibleId
   )
-  if (collaboratorIds.some((uid) => !canPrepare(userOf(s, uid)))) {
+  if (collaboratorIds.some((uid) => !canPrepare(s, userOf(s, uid), { serviceId, stageId }))) {
     v.add("collaboratorIds", msg("errors.lessons.helpersInStage"))
   }
   const data = {
@@ -173,7 +179,15 @@ export function createLesson(
   status: "draft" | "ready" = "draft"
 ): Lesson {
   const { stage, service } = stageFor(s, stageId)
-  authorize(actor, "create", "lessons", msg("errors.lessons.createNotAllowed"))
+  authorizeIn(
+    s,
+    actor,
+    "create",
+    "lessons",
+    { serviceId: service.id, stageId: stage.id },
+    "stage",
+    msg("errors.lessons.createNotAllowed")
+  )
   if (isArchived(service) || isArchived(stage)) {
     throw ruleViolation(msg("errors.lessons.stageArchived", { name: stage.name }))
   }
@@ -197,10 +211,13 @@ export function createLesson(
 /** The lesson, if the actor may change it ("update") or archive and delete it ("delete"). */
 function lessonFor(s: State, actor: User, id: Uuid, action: "update" | "delete" = "update") {
   const lesson = found(lessonOf(s, id), "lesson")
-  authorize(
+  authorizeIn(
+    s,
     actor,
     action,
     "lessons",
+    lesson,
+    "lesson",
     msg(action === "update" ? "errors.lessons.changeNotAllowed" : "errors.lessons.deleteNotAllowed")
   )
   return lesson
@@ -294,9 +311,12 @@ function validateHomework(input: HomeworkInput, lesson: Lesson, existing?: Homew
 /** The homework, if the actor may change it ("update") or archive and delete it ("delete"). */
 function homeworkFor(s: State, actor: User, id: Uuid, action: "update" | "delete" = "update") {
   const hw = found(homeworkOf(s, id), "homework")
-  authorize(
+  authorizeIn(
+    s,
     actor,
     action,
+    "homework",
+    hw,
     "homework",
     msg(
       action === "update" ? "errors.homework.changeNotAllowed" : "errors.homework.deleteNotAllowed"
@@ -314,7 +334,15 @@ export function createHomework(
 ): HomeworkAssignment {
   const lesson = found(lessonOf(s, lessonId), "lesson")
   if (!lesson.stageId) throw ruleViolation(msg("errors.homework.lessonWithoutStage"))
-  authorize(actor, "create", "homework", msg("errors.homework.createNotAllowed"))
+  authorizeIn(
+    s,
+    actor,
+    "create",
+    "homework",
+    lesson,
+    "lesson",
+    msg("errors.homework.createNotAllowed")
+  )
   if (lesson.archivedAt) throw ruleViolation(msg("errors.lessons.archived"))
   const data = validateHomework(input, lesson)
   const ms = nowMs()

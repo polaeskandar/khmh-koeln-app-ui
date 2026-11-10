@@ -2,7 +2,9 @@ import "server-only"
 
 import { occurrencesBetween } from "@/lib/domain/recurrence"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
+import { covers, isActiveAccount } from "@/lib/domain/policy"
 import type {
+  Group,
   LocalDate,
   LocalTime,
   Membership,
@@ -59,6 +61,11 @@ export type MemberGroup = {
     endTime: LocalTime | null
     location: string | null
   }[]
+  /**
+   * Who serves the group: the active staff accounts with a role for assigned groups whose
+   * assignments cover it, leaders (assigned to the whole service) first. Names only.
+   */
+  servants: string[]
   /** The last lesson taught to the stage (never a draft), with what parents see of it too. */
   lastLesson: {
     title: string
@@ -125,6 +132,25 @@ function lastLessonOf(s: State, stageId: Uuid | null, today: LocalDate) {
     : null
 }
 
+/** The member's "your servants" for one group (`GET /api/member/servants`, backend #318). */
+function servantsOf(s: State, group: Group): string[] {
+  const forGroups = new Set(s.roles.filter((r) => r.scope === "assignedGroups").map((r) => r.id))
+  const serving = s.assignments.filter((a) => covers([a], group))
+  return s.users
+    .filter(
+      (u) =>
+        isActiveAccount(u) &&
+        u.roleIds.some((id) => forGroups.has(id)) &&
+        serving.some((a) => a.userId === u.id)
+    )
+    .map((u) => ({
+      name: u.displayName,
+      leads: serving.some((a) => a.userId === u.id && a.stageId === null),
+    }))
+    .sort((a, b) => Number(b.leads) - Number(a.leads) || a.name.localeCompare(b.name, "de"))
+    .map((x) => x.name)
+}
+
 function groupOf(s: State, m: Membership, service: Service, stage: Stage | null, today: LocalDate) {
   return {
     id: m.id,
@@ -144,6 +170,7 @@ function groupOf(s: State, m: Membership, service: Service, stage: Stage | null,
         endTime: sch.endTime,
         location: sch.location,
       })),
+    servants: servantsOf(s, m),
     lastLesson: lastLessonOf(s, m.stageId, today),
   } satisfies MemberGroup
 }

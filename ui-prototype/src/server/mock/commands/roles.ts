@@ -4,7 +4,7 @@ import { msg } from "@/i18n/message"
 import { nameKey } from "@/lib/domain/names"
 import { inCatalogOrder, isActiveAccount, isPermission, permissionsOf } from "@/lib/domain/policy"
 import { toInstant } from "@/lib/domain/time"
-import type { Permission, Role, User, Uuid } from "@/lib/domain/types"
+import type { Permission, Role, RoleScope, User, Uuid } from "@/lib/domain/types"
 import { invalid, ruleViolation } from "@/server/errors"
 
 import { nowMs } from "../clock"
@@ -14,16 +14,22 @@ import { holdersOf, roleOf, userOf } from "../selectors"
 import type { State } from "../state"
 
 /**
- * Roles are data (RBAC): a name and permissions from the fixed catalog, the same everywhere in
- * the church. Administrator, Service leader, Servant and Parent are where a church starts, and
- * ordinary roles like any other. Two rules protect the church from itself:
+ * Roles are data (RBAC): a name, permissions from the fixed catalog, and where they hold:
+ * everywhere in the church, or only in the groups an account is assigned to. Administrator,
+ * Service leader, Servant and Parent are where a church starts, and ordinary roles like any
+ * other. Two rules protect the church from itself:
  *
  * - Someone active must always be able to change roles (`roles:update`), so access can be
  *   repaired: a change that would leave nobody is refused with `roles.lastRoleManager`.
  * - Deleting a role takes it away from everyone who has it, after the UI said how many.
  */
 
-export type RoleInput = { name?: string | null; permissions: string[] }
+export type RoleInput = {
+  name?: string | null
+  permissions: string[]
+  /** Where the permissions hold; everywhere when left out, as in the API. */
+  scope?: RoleScope
+}
 
 /** Every account gets what its roles allow now. Run after any change to roles or role lists. */
 export function syncPermissions(s: State) {
@@ -45,6 +51,7 @@ function keepingRoleManagers<T>(s: State, change: () => T): T {
     r,
     name: r.name,
     permissions: r.permissions,
+    scope: r.scope,
     at: r.updatedAt,
   }))
   const roleIds = new Map(s.users.map((u) => [u.id, u.roleIds]))
@@ -52,8 +59,8 @@ function keepingRoleManagers<T>(s: State, change: () => T): T {
   const result = change()
   syncPermissions(s)
   if (before > 0 && roleManagers(s).length === 0) {
-    s.roles = roles.map(({ r, name, permissions, at }) =>
-      Object.assign(r, { name, permissions, updatedAt: at })
+    s.roles = roles.map(({ r, name, permissions, scope, at }) =>
+      Object.assign(r, { name, permissions, scope, updatedAt: at })
     )
     for (const u of s.users) u.roleIds = roleIds.get(u.id) ?? u.roleIds
     syncPermissions(s)
@@ -88,6 +95,7 @@ export function createRole(s: State, actor: User, input: RoleInput): Role {
     id: uuidv7(ms),
     name,
     permissions,
+    scope: input.scope ?? "church",
     createdAt: toInstant(ms),
     updatedAt: toInstant(ms),
   }
@@ -95,7 +103,10 @@ export function createRole(s: State, actor: User, input: RoleInput): Role {
   return role
 }
 
-/** Renames a role and sets its permissions. The change reaches everyone with the role at once. */
+/**
+ * Renames a role and sets its permissions and where they hold. The change reaches everyone with
+ * the role at once.
+ */
 export function updateRole(s: State, actor: User, roleId: Uuid, input: RoleInput): Role {
   authorize(actor, "update", "roles", msg("errors.roles.updateNotAllowed"))
   const role = found(roleOf(s, roleId), "role")
@@ -106,6 +117,7 @@ export function updateRole(s: State, actor: User, roleId: Uuid, input: RoleInput
   return keepingRoleManagers(s, () => {
     role.name = name
     role.permissions = permissions
+    role.scope = input.scope ?? role.scope
     role.updatedAt = toInstant(nowMs())
     return role
   })
@@ -130,7 +142,10 @@ function approvedAccount(s: State, userId: Uuid): User {
   return user
 }
 
-/** Gives an account a role. Roles hold everywhere, so there is nothing more to choose. */
+/**
+ * Gives an account a role. Where a role for assigned groups holds is up to the account's
+ * assignments, given separately.
+ */
 export function giveRole(s: State, actor: User, userId: Uuid, roleId: string): User {
   authorize(actor, "update", "users", msg("errors.roles.adminOnly"))
   const user = approvedAccount(s, userId)

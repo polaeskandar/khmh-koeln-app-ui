@@ -1,11 +1,13 @@
 import "server-only"
 
 import { nameKey } from "@/lib/domain/names"
-import { can } from "@/lib/domain/policy"
+import { can, isActiveAccount, isStaff } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import type { LocalDate, Service, Stage, Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
+import { mayAssign } from "@/server/mock/commands/assignments"
 import { serviceImpact, stageImpact } from "@/server/mock/commands/services"
+import { canIn, canInService, isUnassigned } from "@/server/mock/reach"
 import {
   isArchived,
   isCurrentOn,
@@ -15,12 +17,21 @@ import {
   sessionCounts,
   stageOf,
   stagesOf,
+  userOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
 import { upcomingFor } from "./meetings"
-import { personRef, scheduleSummary, serviceRef, sessionCard, stageRef } from "./present"
+import {
+  inGroups,
+  personRef,
+  scheduleSummary,
+  serviceRef,
+  sessionCard,
+  stageRef,
+  userRef,
+} from "./present"
 
 /** Distinct active people with a current membership in the service (or one stage of it). */
 export function memberCount(
@@ -102,8 +113,8 @@ function serviceRow(ctx: Context, service: Service) {
     canDelete: impact.sessions === 0,
     impact,
     can: {
-      edit: can(viewer, "update", "services"),
-      archive: can(viewer, "delete", "services"),
+      edit: canIn(s, viewer, "update", "services", { serviceId: service.id, stageId: null }),
+      archive: canIn(s, viewer, "delete", "services", { serviceId: service.id, stageId: null }),
     },
   }
 }
@@ -111,12 +122,14 @@ function serviceRow(ctx: Context, service: Service) {
 export type ServiceRow = ReturnType<typeof serviceRow>
 
 export async function listServices(ctx: Context) {
+  ctx = inGroups(ctx)
   const rows = [...ctx.state.services]
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
     .map((service) => serviceRow(ctx, service))
   return {
     rows,
     canCreate: can(ctx.viewer, "create", "services"),
+    unassigned: isUnassigned(ctx.state, ctx.viewer),
     existingNames: ctx.state.services.map((x) => ({
       key: nameKey(x.name),
       name: x.name,
@@ -125,7 +138,67 @@ export async function listServices(ctx: Context) {
   }
 }
 
+/**
+ * The servants of a service: the accounts assigned to the whole service (its leaders, first) or
+ * to one of the stages the viewer sees. Those who may assign there (administrators, and the
+ * service's leaders) also get the staff accounts to choose from.
+ */
+function servantsOf(ctx: Context, serviceId: Uuid) {
+  const { state: s, viewer } = ctx
+  const position = (stageId: Uuid | null) => stageOf(s, stageId)?.position ?? -1
+  const visible = s.assignments
+    .filter((a) => a.serviceId === serviceId && (a.stageId === null || stageOf(s, a.stageId)))
+    .sort((a, b) => position(a.stageId) - position(b.stageId))
+  const people = new Map<Uuid, NonNullable<ReturnType<typeof userOf>>>()
+  for (const a of visible) {
+    const user = userOf(s, a.userId)
+    if (user && isActiveAccount(user)) people.set(user.id, user)
+  }
+  const rows = [...people.values()]
+    .map((user) => {
+      const groups = visible
+        .filter((a) => a.userId === user.id)
+        .map((a) => ({
+          id: a.id,
+          stage: stageRef(stageOf(s, a.stageId)),
+          canRemove: mayAssign(s, viewer, a),
+        }))
+      return {
+        ...userRef(user)!,
+        email: user.email,
+        leads: groups.some((g) => g.stage === null),
+        groups,
+      }
+    })
+    .sort(
+      (a, b) =>
+        Number(b.leads) - Number(a.leads) ||
+        position(a.groups[0]?.stage?.id ?? null) - position(b.groups[0]?.stage?.id ?? null) ||
+        a.name.localeCompare(b.name, "de")
+    )
+  const canAssign = mayAssign(s, viewer, { serviceId, stageId: null })
+  return {
+    rows,
+    canAssign,
+    accounts: canAssign
+      ? s.users
+          .filter((u) => isActiveAccount(u) && isStaff(u))
+          .map((u) => ({
+            id: u.id,
+            name: u.displayName,
+            groups: s.assignments
+              .filter((a) => a.userId === u.id && a.serviceId === serviceId)
+              .map((a) => a.stageId),
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name, "de"))
+      : [],
+  }
+}
+
+export type ServiceServants = ReturnType<typeof servantsOf>
+
 export async function getServiceDetail(ctx: Context, id: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const service = serviceOf(s, id)
   if (!service) return null
@@ -171,11 +244,12 @@ export async function getServiceDetail(ctx: Context, id: Uuid) {
       trend: attendanceTrend(s, { serviceId: id }),
     },
     impact: serviceImpact(s, id),
+    servants: servantsOf(ctx, id),
     can: {
-      edit: can(viewer, "update", "services"),
-      archive: can(viewer, "delete", "services"),
-      structure: can(viewer, "update", "stages"),
-      sessions: can(viewer, "create", "sessions"),
+      edit: canIn(s, viewer, "update", "services", { serviceId: id, stageId: null }),
+      archive: canIn(s, viewer, "delete", "services", { serviceId: id, stageId: null }),
+      structure: canIn(s, viewer, "update", "stages", { serviceId: id, stageId: null }),
+      sessions: canInService(s, viewer, "create", "sessions", id),
     },
   }
 }
@@ -223,6 +297,7 @@ function stageRow(ctx: Context, stage: Stage) {
 export type StageRow = ReturnType<typeof stageRow>
 
 export async function getStageManagement(ctx: Context, serviceId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const service = serviceOf(s, serviceId)
   if (!service) return null
@@ -233,11 +308,15 @@ export async function getStageManagement(ctx: Context, serviceId: Uuid) {
       .filter(isArchived)
       .map((x) => ({ ...stageRow(ctx, x), archivedAt: x.archivedAt })),
     serviceLevelMembers: rosterOn(s, serviceId, null, clockToday()).length,
-    can: { structure: can(viewer, "update", "stages") && !isArchived(service) },
+    can: {
+      structure:
+        canIn(s, viewer, "update", "stages", { serviceId, stageId: null }) && !isArchived(service),
+    },
   }
 }
 
 export async function getStageDetail(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const service = serviceOf(s, serviceId)
   const stage = stageOf(s, stageId)
@@ -288,9 +367,13 @@ export async function getStageDetail(ctx: Context, serviceId: Uuid, stageId: Uui
     upcoming: upcomingFor(ctx, { serviceId, stageId, days: 21 }).slice(0, 5),
     recent,
     can: {
-      structure: can(viewer, "update", "stages") && !isArchived(service),
-      members: can(viewer, "update", "members") && !isArchived(service) && !isArchived(stage),
-      sessions: can(viewer, "create", "sessions"),
+      structure:
+        canIn(s, viewer, "update", "stages", { serviceId, stageId: null }) && !isArchived(service),
+      members:
+        canIn(s, viewer, "update", "members", { serviceId, stageId }) &&
+        !isArchived(service) &&
+        !isArchived(stage),
+      sessions: canIn(s, viewer, "create", "sessions", { serviceId, stageId }),
     },
   }
 }

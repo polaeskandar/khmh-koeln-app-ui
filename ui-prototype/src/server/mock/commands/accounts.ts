@@ -15,6 +15,7 @@ import { uuidv7 } from "../ids"
 import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "../passwords"
 import { isArchived, personOf, roleOf, serviceOf, userOf } from "../selectors"
 import type { State } from "../state"
+import { addAssignments, type AssignmentInput, checkedGroups } from "./assignments"
 
 /**
  * Accounts: registration, sign-in and the administrator's approval.
@@ -176,8 +177,13 @@ export type ApprovalInput =
     }
   | {
       as: "servant"
-      /** The roles the account gets. They hold everywhere: there is no service to choose. */
+      /** The roles the account gets. */
       roleIds: Uuid[]
+      /**
+       * Where they serve: services or stages, created with the approval. Roles for assigned
+       * groups hold only there.
+       */
+      assignments?: AssignmentInput[]
     }
   | {
       as: "member"
@@ -209,8 +215,8 @@ function chosenRoles(s: State, v: Violations, roleIds: Uuid[]): Uuid[] {
 }
 
 /**
- * Approves a registration: links the children, gives the roles or links the member record, then
- * the account can be used.
+ * Approves a registration: links the children, gives the roles (and, for a servant, the groups
+ * they serve in) or links the member record, then the account can be used.
  */
 export function approveAccount(s: State, actor: User, userId: Uuid, input: ApprovalInput): User {
   const user = pendingAccount(s, actor, userId)
@@ -262,7 +268,9 @@ export function approveAccount(s: State, actor: User, userId: Uuid, input: Appro
   } else {
     const roleIds = chosenRoles(s, v, input.roleIds)
     v.throwIfAny()
+    const groups = checkedGroups(s, actor, input.assignments ?? [])
     user.roleIds = roleIds
+    addAssignments(s, user, groups, ms)
   }
   user.permissions = permissionsOf(s.roles, user.roleIds)
   user.approvedAt = toInstant(ms)

@@ -12,8 +12,8 @@ dark mode, and `emails/` the emails the backend sends. To regenerate them, see t
 ## Staff app
 
 `…/stages/:stage` stands for `/services/:service/stages/:stage`. Screens 02 and 03 show an administrator:
-the Administrator role creates, archives and deletes services, while a service leader edits them. Roles hold
-everywhere in the church, so a servant sees and works in every service.
+the Administrator role creates, archives and deletes services, while a service leader edits the services they lead.
+Service leaders and servants see and work only in the services and stages they are assigned to.
 
 | Screen | Screenshot | Route in the prototype |
 | --- | --- | --- |

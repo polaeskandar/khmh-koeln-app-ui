@@ -1,7 +1,7 @@
 import "server-only"
 
 import { ACTIONS, can, isActiveAccount, permissionOf, RESOURCES } from "@/lib/domain/policy"
-import type { Instant, Permission, Resource, Role, Uuid } from "@/lib/domain/types"
+import type { Instant, Permission, Resource, Role, RoleScope, Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
 import { roleManagers } from "@/server/mock/commands/roles"
 import { holdersOf, roleOf } from "@/server/mock/selectors"
@@ -26,6 +26,7 @@ export type RoleRow = {
   name: string
   permissions: number
   resources: Resource[]
+  scope: RoleScope
   /** Accounts that have the role, disabled ones included. */
   holders: number
 }
@@ -39,6 +40,7 @@ export function getRoleList(ctx: Context) {
     name: r.name,
     permissions: r.permissions.length,
     resources: resourcesOf(r.permissions),
+    scope: r.scope,
     holders: holdersOf(s, r.id).length,
   }))
   return {
@@ -64,6 +66,8 @@ export type AssignableRole = {
   staff: boolean
   /** Its permissions open the parent portal. */
   parent: boolean
+  /** Holds only in the account's assigned groups, so the account needs some. */
+  scope: RoleScope
 }
 
 export function getAssignableRoles(ctx: Context): AssignableRole[] {
@@ -73,6 +77,7 @@ export function getAssignableRoles(ctx: Context): AssignableRole[] {
     resources: resourcesOf(r.permissions),
     staff: r.permissions.includes("services:read"),
     parent: r.permissions.includes("parentPortal:read"),
+    scope: r.scope,
   }))
 }
 
@@ -81,6 +86,7 @@ export type RoleEditorData = {
     id: Uuid
     name: string
     permissions: Permission[]
+    scope: RoleScope
     createdAt: Instant
     updatedAt: Instant
   } | null
@@ -136,6 +142,7 @@ export function getRoleEditor(
           id: role.id,
           name: role.name,
           permissions: role.permissions,
+          scope: role.scope,
           createdAt: role.createdAt,
           updatedAt: role.updatedAt,
         }

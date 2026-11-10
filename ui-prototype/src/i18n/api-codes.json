@@ -26,6 +26,7 @@
   "notFound.user": [],
   "notFound.guardian": [],
   "notFound.request": [],
+  "notFound.assignment": [],
   "notFound.route": [],
   "validation.tooLong": [
     "max"
@@ -244,6 +245,11 @@
   "accounts.stageNotInService": [],
   "accounts.privacyNoticeOutdated": [],
   "accounts.currentPasswordWrong": [],
+  "assignments.alreadyAssigned": [
+    "name",
+    "where"
+  ],
+  "assignments.notAllowed": [],
   "privacy.adminOnly": [],
   "privacy.chooseSubject": [],
   "privacy.requestedByRequired": [],

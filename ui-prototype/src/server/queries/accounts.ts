@@ -19,6 +19,7 @@ import type { Context } from "@/server/viewer"
 
 import { serviceRef, viewerInfo } from "./present"
 import { getAssignableRoles } from "./roles"
+import { assignableGroups } from "./settings"
 
 /** Children in a stage today, for linking them to a parent account. */
 function linkableChildren(s: State) {
@@ -84,6 +85,8 @@ export async function getAccountRequests(ctx: Context) {
     members: linkableMembers(s),
     // Approving a parent or a servant gives the account its roles.
     roles: getAssignableRoles(ctx),
+    // Approving a servant also says where they serve.
+    groups: assignableGroups(ctx),
     canDecide: can(viewer, "create", "users"),
     today: clockToday(),
   }

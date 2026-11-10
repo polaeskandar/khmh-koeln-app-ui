@@ -3,13 +3,13 @@
 /**
  * Account requests: people who registered themselves. Their accounts can't be
  * used until the office approves them — a parent by linking their children and
- * giving roles (Parent), a servant by giving roles, a member by linking the
+ * giving roles (Parent), a servant by giving roles and the groups they serve in, a member by linking the
  * account to their own member record (under 16 only with a parent's or
  * guardian's agreement). Declining deletes the account and everything the
  * person entered.
  */
 import { useId, useMemo, useState } from "react"
-import { Check, Search, UserRoundCheck, X } from "lucide-react"
+import { Check, Layers, Plus, Search, UserRoundCheck, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
@@ -39,6 +39,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { type ChosenGroup, GroupFields } from "@/features/assignments/group-choice"
 import { useServerAction } from "@/hooks/use-server-action"
 import { LOCALE_NAMES } from "@/i18n/config"
 import { useFormat } from "@/i18n/format"
@@ -289,9 +290,8 @@ function MemberApproval({
 }
 
 /**
- * The roles an approved account gets, at least one. Roles hold everywhere in the church, so
- * there is no service or stage to choose. Parents start with the roles that only open the
- * parent portal; for servants the office chooses.
+ * The roles an approved account gets, at least one. Parents start with the roles that only open
+ * the parent portal; for servants the office chooses, and chooses their groups below.
  */
 function RolesChoice({
   roles,
@@ -349,6 +349,81 @@ function RolesChoice({
   )
 }
 
+const sameGroup = (a: ChosenGroup, b: ChosenGroup) =>
+  a.serviceId === b.serviceId && a.stageId === b.stageId
+
+/**
+ * Where an approved servant serves: services or stages, created with the approval. Roles for
+ * assigned groups hold only there. Starts with the service they named when registering.
+ */
+function GroupsChoice({
+  services,
+  selected,
+  onChange,
+  errors,
+}: {
+  services: Data["groups"]
+  selected: ChosenGroup[]
+  onChange: (groups: ChosenGroup[]) => void
+  errors: Record<string, string | undefined>
+}) {
+  const t = useTranslations("accountRequests.approve")
+  const [draft, setDraft] = useState<ChosenGroup>({ serviceId: "", stageId: null })
+  const nameOf = (g: ChosenGroup) => {
+    const service = services.find((x) => x.id === g.serviceId)
+    const stage = service?.stages.find((x) => x.id === g.stageId)
+    return stage ? `${service?.name} · ${stage.name}` : (service?.name ?? "")
+  }
+  const add = () => {
+    if (!draft.serviceId) return
+    if (!selected.some((g) => sameGroup(g, draft))) onChange([...selected, draft])
+    setDraft({ serviceId: "", stageId: null })
+  }
+  return (
+    <FieldSet data-invalid={errors.serviceId || errors.stageId ? true : undefined}>
+      <FieldLegend variant="label">{t("groups")}</FieldLegend>
+      <FieldDescription>{t("groupsHint")}</FieldDescription>
+      {selected.length > 0 ? (
+        <ul className="flex flex-wrap gap-1.5">
+          {selected.map((g) => (
+            <li
+              key={`${g.serviceId}-${g.stageId}`}
+              className="inline-flex h-7 items-center gap-1.5 border border-dashed px-2 text-xs"
+            >
+              <Layers className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <bdi>{nameOf(g)}</bdi>
+              <button
+                type="button"
+                className="-me-1 text-muted-foreground hover:text-foreground"
+                aria-label={t("removeGroup", { group: nameOf(g) })}
+                onClick={() => onChange(selected.filter((x) => !sameGroup(x, g)))}
+              >
+                <X className="size-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-muted-foreground">{t("noGroups")}</p>
+      )}
+      <div className="flex flex-col gap-3 border p-3">
+        <GroupFields services={services} value={draft} onChange={setDraft} errors={errors} />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="self-start"
+          disabled={!draft.serviceId}
+          onClick={add}
+        >
+          <Plus data-icon="inline-start" />
+          {t("addGroup")}
+        </Button>
+      </div>
+    </FieldSet>
+  )
+}
+
 function ApproveDialog({
   request,
   data,
@@ -369,6 +444,11 @@ function ApproveDialog({
   // Parents start with the roles that open the parent portal and nothing else.
   const [roleIds, setRoleIds] = useState(() =>
     request.as === "parent" ? data.roles.filter((r) => r.parent && !r.staff).map((r) => r.id) : []
+  )
+  const [groups, setGroups] = useState<ChosenGroup[]>(() =>
+    request.service && data.groups.some((x) => x.id === request.service?.id)
+      ? [{ serviceId: request.service.id, stageId: null }]
+      : []
   )
   const approve = useServerAction(approveAccountAction, { onSuccess: () => onOpenChange(false) })
   const errors = approve.fieldErrors
@@ -409,7 +489,7 @@ function ApproveDialog({
                       ageCheck,
                       guardianConsentNote: ageCheck === "guardianConsent" ? note : null,
                     }
-                  : { as: "servant", roleIds }
+                  : { as: "servant", roleIds, assignments: groups }
             )
           }}
         >
@@ -454,6 +534,14 @@ function ApproveDialog({
                 onChange={setRoleIds}
                 error={errors.roleIds}
               />
+              {data.groups.length > 0 ? (
+                <GroupsChoice
+                  services={data.groups}
+                  selected={groups}
+                  onChange={setGroups}
+                  errors={errors}
+                />
+              ) : null}
             </FieldGroup>
           )}
         </form>

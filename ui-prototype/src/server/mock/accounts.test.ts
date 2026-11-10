@@ -194,7 +194,7 @@ describe("approval", () => {
     expect(result.ok).toBe(true)
   })
 
-  test("approving a servant gives the chosen roles, which hold in every service", () => {
+  test("approving a servant gives the chosen roles", () => {
     const t = demo()
     const user = register(t.s, { ...parent, as: "servant", serviceId: t.youth.id })
     const none = problemOf(() =>

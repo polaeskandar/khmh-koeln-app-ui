@@ -161,18 +161,41 @@ export type Attendance = {
 }
 
 /**
- * A role: a name and the permissions it allows. Roles and permissions are global: a role allows
- * the same everywhere in the church, in every service. The church starts with Administrator,
- * Service leader, Servant and Parent; they are ordinary roles, renamed, changed and deleted like
- * the ones the office adds (such as "Church office").
+ * Where a role's permissions hold: everywhere in the church, or only in the groups the account
+ * is assigned to (polaeskandar/khmh-koeln-app-backend#318).
+ */
+export type RoleScope = "church" | "assignedGroups"
+
+/**
+ * A role: a name, the permissions it allows and where they hold. The church starts with
+ * Administrator and Parent (everywhere) and Service leader and Servant (in the account's assigned
+ * groups); they are ordinary roles, renamed, changed and deleted like the ones the office adds
+ * (such as "Church office").
  */
 export type Role = {
   id: Uuid
   /** At most 80 characters; unique, ignoring case and extra spaces. */
   name: string
   permissions: Permission[]
+  scope: RoleScope
   createdAt: Instant
   updatedAt: Instant
+}
+
+/** A roster: a stage of a service, or the service's own roster (stageId null). */
+export type Group = { serviceId: Uuid; stageId: Uuid | null }
+
+/**
+ * Where a staff account serves: a whole service (stageId null), which covers the service's own
+ * roster and all its stages, or one stage. Roles with the `assignedGroups` scope hold only in the
+ * groups an account's assignments cover. One per account and group.
+ */
+export type StaffAssignment = {
+  id: Uuid
+  userId: Uuid
+  serviceId: Uuid
+  stageId: Uuid | null
+  createdAt: Instant
 }
 
 /** The languages of the app. Stored with an account so emails go out in the person's language. */

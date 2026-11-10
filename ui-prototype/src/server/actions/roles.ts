@@ -17,6 +17,7 @@ import { id, run } from "./run"
 const roleInput = z.object({
   name: z.string().max(500).nullable().optional(),
   permissions: z.array(z.string().max(40)).max(PERMISSIONS.length),
+  scope: z.enum(["church", "assignedGroups"]).optional(),
 })
 
 /** Adds a role. Returns its id, so the editor can open it. */

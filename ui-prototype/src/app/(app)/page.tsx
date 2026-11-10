@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
 import { PageHeader, Section } from "@/components/page-header"
+import { NotAssigned } from "@/components/not-assigned"
 import { AgendaRow, SessionCardView, sessionHref } from "@/components/session-bits"
 import { ServiceSwatch } from "@/components/service-tag"
 import { Button } from "@/components/ui/button"
@@ -28,6 +29,21 @@ export default async function DashboardPage() {
     getFormat(),
     getSessionLines(),
   ])
+  if (d.unassigned) {
+    return (
+      <>
+        <Topbar crumbs={[{ label: tn("dashboard") }]} />
+        <PageBody>
+          <PageHeader
+            title={d.greeting}
+            description={`${f.longDate(d.today)} · ${f.copticDate(d.today)}`}
+          />
+          <NotAssigned />
+        </PageBody>
+      </>
+    )
+  }
+
   const open = d.todaySessions.filter((s) => s.status === "active").length
   const notOpened = d.todaySessions.filter((s) => s.status === "scheduled").length
 

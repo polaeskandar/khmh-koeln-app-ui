@@ -4,11 +4,12 @@ import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type { LocalDate, LocalTime, SessionStatus, Uuid } from "@/lib/domain/types"
 import { compareAgenda, type AgendaItem, type ServiceRef } from "@/lib/view-models"
 import { nowMs, today as clockToday } from "@/server/mock/clock"
+import { isUnassigned } from "@/server/mock/reach"
 import { isArchived, personOf, serviceOf, stagesOf } from "@/server/mock/selectors"
 import type { Context } from "@/server/viewer"
 
 import { upcomingFor } from "./meetings"
-import { serviceRef, sessionCard, sortSessions } from "./present"
+import { inGroups, serviceRef, sessionCard, sortSessions } from "./present"
 import { attendanceTrend, memberCount } from "./services"
 
 export type UpcomingEntry = {
@@ -92,10 +93,11 @@ function greeting(hour: number) {
 }
 
 export async function getDashboard(ctx: Context) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   const tomorrow = addDays(today, 1)
-  // Roles hold in every service, so the dashboard covers every active service.
+  // The active services the viewer sees: all of them, or those of its groups.
   const myServiceIds: Uuid[] = s.services.filter((x) => !isArchived(x)).map((x) => x.id)
   const mine = (x: { serviceId: Uuid }) => myServiceIds.includes(x.serviceId)
 
@@ -162,6 +164,7 @@ export async function getDashboard(ctx: Context) {
     attention,
     recent,
     services,
+    unassigned: isUnassigned(s, viewer),
   }
 }
 

@@ -71,12 +71,15 @@ export function RolesOverview({ list }: { list: RoleList }) {
             {list.rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="min-w-44 ps-4 align-top whitespace-normal">
-                  <Link
-                    href={`/settings/roles/${r.id}`}
-                    className="block py-1 font-medium underline-offset-4 hover:underline"
-                  >
-                    <bdi>{r.name}</bdi>
-                  </Link>
+                  <span className="flex flex-col gap-0.5 py-1">
+                    <Link
+                      href={`/settings/roles/${r.id}`}
+                      className="font-medium underline-offset-4 hover:underline"
+                    >
+                      <bdi>{r.name}</bdi>
+                    </Link>
+                    <span className="text-xs text-muted-foreground">{t(`scope.${r.scope}`)}</span>
+                  </span>
                 </TableCell>
                 <TableCell className="max-w-md min-w-64 align-top text-sm whitespace-normal">
                   <span className="flex flex-col gap-0.5 py-1">
