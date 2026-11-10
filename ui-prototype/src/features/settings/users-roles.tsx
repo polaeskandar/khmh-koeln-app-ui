@@ -1,13 +1,14 @@
 "use client"
 
 /**
- * Accounts and their roles. Adapted from the shadcnblocks "settings-members2" block (member list
- * with role chips and an invite dialog). Roles hold everywhere in the church, so giving one is
- * choosing it, nothing more; the dialog offers the roles the account doesn't have yet.
+ * Accounts, their roles and the groups they serve in. Adapted from the shadcnblocks
+ * "settings-members2" block (member list with role chips and an invite dialog). The role dialog
+ * offers the roles the account doesn't have yet. Roles for assigned groups hold only in the
+ * account's groups: a service covers its own roster and all its stages, a stage that stage.
  */
 import { useState } from "react"
 import Link from "next/link"
-import { Plus, X } from "lucide-react"
+import { Layers, Plus, X } from "lucide-react"
 import { useTranslations } from "next-intl"
 
 import { ConfirmDialog } from "@/components/confirm-dialog"
@@ -25,12 +26,15 @@ import {
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Spinner } from "@/components/ui/spinner"
+import { AssignGroupDialog, type GroupOption } from "@/features/assignments/group-choice"
 import { useServerAction } from "@/hooks/use-server-action"
+import { removeAssignmentAction } from "@/server/actions/accounts"
 import { giveRoleAction, removeRoleAction } from "@/server/actions/roles"
 import type { AssignableRole } from "@/server/queries/roles"
 import type { StaffAccount } from "@/server/queries/settings"
 
 type RoleChip = StaffAccount["roles"][number]
+type GroupChip = StaffAccount["groups"][number]
 
 function GiveRoleDialog({
   user,
@@ -121,17 +125,24 @@ function GiveRoleDialog({
 export function UsersRoles({
   users,
   roles,
+  groups,
   canGive,
 }: {
   users: StaffAccount[]
   roles: AssignableRole[]
+  /** The services the viewer may assign accounts to; empty when it may assign nowhere. */
+  groups: GroupOption[]
   canGive: boolean
 }) {
   const t = useTranslations("settings.users")
+  const ta = useTranslations("assignments")
   const tc = useTranslations("common")
   const [giveTo, setGiveTo] = useState<StaffAccount | null>(null)
+  const [assignTo, setAssignTo] = useState<StaffAccount | null>(null)
   const [removing, setRemoving] = useState<{ user: StaffAccount; role: RoleChip } | null>(null)
+  const [leaving, setLeaving] = useState<{ user: StaffAccount; group: GroupChip } | null>(null)
   const remove = useServerAction(removeRoleAction)
+  const removeGroup = useServerAction(removeAssignmentAction)
   return (
     <>
       <ul className="divide-y border-y">
@@ -149,37 +160,72 @@ export function UsersRoles({
                 </span>
               </span>
             </span>
-            <span className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5 ps-11 sm:ps-0">
-              {u.roles.map((r) => (
-                <span
-                  key={r.id}
-                  className="inline-flex h-7 items-center gap-1.5 border px-2 text-xs"
-                >
-                  <bdi>{r.name}</bdi>
-                  {canGive ? (
-                    <button
-                      type="button"
-                      className="-me-1 text-muted-foreground hover:text-foreground"
-                      aria-label={t("removeRoleLabel", { role: r.name, name: u.name })}
-                      onClick={() => setRemoving({ user: u, role: r })}
+            <span className="flex min-w-0 flex-1 flex-col gap-1.5 ps-11 sm:ps-0">
+              <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                {u.roles.map((r) => (
+                  <span
+                    key={r.id}
+                    className="inline-flex h-7 items-center gap-1.5 border px-2 text-xs"
+                  >
+                    <bdi>{r.name}</bdi>
+                    {canGive ? (
+                      <button
+                        type="button"
+                        className="-me-1 text-muted-foreground hover:text-foreground"
+                        aria-label={t("removeRoleLabel", { role: r.name, name: u.name })}
+                        onClick={() => setRemoving({ user: u, role: r })}
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    ) : null}
+                  </span>
+                ))}
+              </span>
+              {u.groups.length > 0 ? (
+                <span className="flex min-w-0 flex-wrap items-center gap-1.5">
+                  {u.groups.map((g) => (
+                    <span
+                      key={g.id}
+                      className="inline-flex h-7 items-center gap-1.5 border border-dashed px-2 text-xs text-muted-foreground"
                     >
-                      <X className="size-3.5" />
-                    </button>
-                  ) : null}
+                      <Layers className="size-3.5 shrink-0" aria-hidden="true" />
+                      <bdi>{g.name}</bdi>
+                      {g.canRemove ? (
+                        <button
+                          type="button"
+                          className="-me-1 hover:text-foreground"
+                          aria-label={ta("removeLabel", { name: u.name, where: g.name })}
+                          onClick={() => setLeaving({ user: u, group: g })}
+                        >
+                          <X className="size-3.5" />
+                        </button>
+                      ) : null}
+                    </span>
+                  ))}
                 </span>
-              ))}
+              ) : u.needsGroups && !u.disabled ? (
+                <span className="text-xs text-muted-foreground">{t("noGroups")}</span>
+              ) : null}
             </span>
-            {canGive && roles.some((r) => !u.roles.some((x) => x.id === r.id)) ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="self-start sm:self-center"
-                onClick={() => setGiveTo(u)}
-              >
-                <Plus data-icon="inline-start" />
-                {t("addRole")}
-              </Button>
-            ) : null}
+            <span className="flex gap-1 self-start sm:self-center">
+              {canGive && roles.some((r) => !u.roles.some((x) => x.id === r.id)) ? (
+                <Button variant="ghost" size="sm" onClick={() => setGiveTo(u)}>
+                  <Plus data-icon="inline-start" />
+                  {t("addRole")}
+                </Button>
+              ) : null}
+              {groups.length > 0 && !u.disabled ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t("addGroupLabel", { name: u.name })}
+                  onClick={() => setAssignTo(u)}
+                >
+                  <Plus data-icon="inline-start" />
+                  {t("addGroup")}
+                </Button>
+              ) : null}
+            </span>
           </li>
         ))}
       </ul>
@@ -192,6 +238,26 @@ export function UsersRoles({
           onOpenChange={(open) => !open && setGiveTo(null)}
         />
       ) : null}
+      {assignTo ? (
+        <AssignGroupDialog
+          key={assignTo.id}
+          user={assignTo}
+          services={groups}
+          open
+          onOpenChange={(open) => !open && setAssignTo(null)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={!!leaving}
+        onOpenChange={(open) => !open && setLeaving(null)}
+        title={
+          leaving ? ta("removeTitle", { name: leaving.user.name, where: leaving.group.name }) : ""
+        }
+        description={ta("removeDescription")}
+        tone="destructive"
+        confirmLabel={ta("remove")}
+        onConfirm={async () => (leaving ? (await removeGroup.execute(leaving.group.id)).ok : true)}
+      />
       <ConfirmDialog
         open={!!removing}
         onOpenChange={(open) => !open && setRemoving(null)}

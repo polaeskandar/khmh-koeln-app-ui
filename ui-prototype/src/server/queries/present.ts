@@ -1,7 +1,7 @@
 import "server-only"
 
 import { fullName, initials, preferredName } from "@/lib/domain/names"
-import { can, isMember, isParent, isStaff } from "@/lib/domain/policy"
+import { isMember, isParent, isStaff } from "@/lib/domain/policy"
 import { nextOccurrence } from "@/lib/domain/recurrence"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
 import type {
@@ -28,6 +28,7 @@ import {
 } from "@/lib/view-models"
 import { today } from "@/server/mock/clock"
 import { occurrenceOn } from "@/server/mock/generator"
+import { canIn, groupView } from "@/server/mock/reach"
 import {
   childrenOf,
   currentGroupNames,
@@ -43,6 +44,16 @@ import {
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
+
+/**
+ * The context as the viewer sees it: the services, stages, meetings, members, lessons and homework
+ * of the groups its roles hold in (`groupView`). Every read model of groups starts here, so lists
+ * leave the other groups out and their pages are not found, as with the API.
+ */
+export function inGroups(ctx: Context): Context {
+  const state = groupView(ctx.state, ctx.viewer)
+  return state === ctx.state ? ctx : { ...ctx, state }
+}
 
 /** Identity colour slot (1–8), fixed when the service was created. */
 export function serviceTone(s: State, id: Uuid): number {
@@ -115,9 +126,9 @@ export function sessionCard(s: State, viewer: User, x: MeetingSession): SessionC
     closedAt: x.closedAt,
     closedBy: userRef(userOf(s, x.closedBy)),
     can: {
-      record: can(viewer, "create", "attendance"),
-      manage: can(viewer, "update", "sessions"),
-      reopen: can(viewer, "update", "sessions"),
+      record: canIn(s, viewer, "create", "attendance", x),
+      manage: canIn(s, viewer, "update", "sessions", x),
+      reopen: canIn(s, viewer, "update", "sessions", x),
     },
   }
 }
@@ -156,7 +167,7 @@ export function plannedOccurrence(
     rosterMode: sch.rosterMode,
     rosterSize: scheduleRosterSize(s, sch, date),
     createdOn: addDays(date, -1),
-    can: { manage: can(viewer, "update", "sessions") },
+    can: { manage: canIn(s, viewer, "update", "sessions", sch) },
   }
 }
 
@@ -214,7 +225,7 @@ export function scheduleSummary(s: State, viewer: User, sch: MeetingSchedule): S
     active: sch.active,
     next,
     sessionCount: s.sessions.filter((x) => x.scheduleId === sch.id).length,
-    can: { manage: can(viewer, "update", "sessions") },
+    can: { manage: canIn(s, viewer, "update", "sessions", sch) },
   }
 }
 

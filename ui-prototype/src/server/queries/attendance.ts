@@ -1,8 +1,7 @@
 import "server-only"
 
-import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
-import type { Attendance, Uuid } from "@/lib/domain/types"
+import type { Attendance, MeetingSession, Uuid } from "@/lib/domain/types"
 import type { AttendanceEntry, PersonRef } from "@/lib/view-models"
 import { today as clockToday } from "@/server/mock/clock"
 import {
@@ -15,11 +14,12 @@ import {
   stageOf,
   userOf,
 } from "@/server/mock/selectors"
+import { canIn, canSomewhere, isUnassigned } from "@/server/mock/reach"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
 import { sessionHistory, todaysSessions } from "./meetings"
-import { personRef, sessionCard, sortSessions, userRef } from "./present"
+import { inGroups, personRef, sessionCard, sortSessions, userRef } from "./present"
 
 function entry(s: State, a: Attendance, rosterIds: Set<Uuid>): AttendanceEntry {
   return {
@@ -52,15 +52,16 @@ function placementsOf(s: State, personId: Uuid): string[] {
 }
 
 export async function getAttendanceHome(ctx: Context) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   const sessions = todaysSessions(ctx)
-  const record = can(viewer, "create", "attendance")
+  const record = (x: MeetingSession) => canIn(s, viewer, "create", "attendance", x)
   const earlier = sortSessions(
     s.sessions
       .filter(
         (x) =>
-          record &&
+          record(x) &&
           localDateOf(x.startsAt) < today &&
           localDateOf(x.startsAt) >= addDays(today, -21) &&
           (x.status === "scheduled" || x.status === "active")
@@ -68,7 +69,7 @@ export async function getAttendanceHome(ctx: Context) {
       .map((x) => sessionCard(s, viewer, x))
   )
   const closed = s.sessions
-    .filter((x) => record && x.status === "completed" && x.closedAt)
+    .filter((x) => record(x) && x.status === "completed" && x.closedAt)
     .sort((a, b) => b.closedAt!.localeCompare(a.closedAt!))
     .slice(0, 6)
     .map((x) => sessionCard(s, viewer, x))
@@ -77,11 +78,13 @@ export async function getAttendanceHome(ctx: Context) {
     sessions,
     earlier,
     closed,
-    canRecordAnywhere: record,
+    canRecordAnywhere: canSomewhere(s, viewer, "create", "attendance"),
+    unassigned: isUnassigned(s, viewer),
   }
 }
 
 export async function getAttendanceBoard(ctx: Context, sessionId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const session = sessionOf(s, sessionId)
   if (!session) return null
@@ -120,9 +123,9 @@ export async function getAttendanceBoard(ctx: Context, sessionId: Uuid) {
     history: sessionHistory(s, session),
     today: clockToday(),
     can: {
-      record: can(viewer, "create", "attendance"),
-      reopen: can(viewer, "update", "sessions"),
-      manage: can(viewer, "update", "sessions"),
+      record: canIn(s, viewer, "create", "attendance", session),
+      reopen: canIn(s, viewer, "update", "sessions", session),
+      manage: canIn(s, viewer, "update", "sessions", session),
     },
   }
 }
@@ -130,6 +133,7 @@ export async function getAttendanceBoard(ctx: Context, sessionId: Uuid) {
 export type AttendanceBoard = NonNullable<Awaited<ReturnType<typeof getAttendanceBoard>>>
 
 export async function getAttendanceSummary(ctx: Context, sessionId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const session = sessionOf(s, sessionId)
   if (!session) return null

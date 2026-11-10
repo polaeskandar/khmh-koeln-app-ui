@@ -4,8 +4,11 @@ import { z } from "zod"
 
 import { msg } from "@/i18n/message"
 import { approveAccount, declineAccount, unlinkMember } from "@/server/mock/commands/accounts"
+import { assignGroup, assignmentNames, removeAssignment } from "@/server/mock/commands/assignments"
 
 import { id, optionalId, run } from "./run"
+
+const assignment = z.object({ serviceId: optionalId, stageId: optionalId })
 
 const approval = z.discriminatedUnion("as", [
   z.object({
@@ -13,7 +16,11 @@ const approval = z.discriminatedUnion("as", [
     childIds: z.array(id).max(20),
     roleIds: z.array(id).max(20),
   }),
-  z.object({ as: z.literal("servant"), roleIds: z.array(id).max(20) }),
+  z.object({
+    as: z.literal("servant"),
+    roleIds: z.array(id).max(20),
+    assignments: z.array(assignment).max(20).optional(),
+  }),
   z.object({
     as: z.literal("member"),
     personId: optionalId,
@@ -44,5 +51,25 @@ export async function unlinkMemberAction(userId: string) {
   return run(
     ({ state, viewer }) => unlinkMember(state, viewer, id.parse(userId)).displayName,
     (name) => msg("toast.memberUnlinked", { name })
+  )
+}
+
+/** Assigns an account to a service (and all its stages) or to one stage. */
+export async function assignGroupAction(userId: string, input: z.input<typeof assignment>) {
+  return run(
+    ({ state, viewer }) => {
+      const created = assignGroup(state, viewer, id.parse(userId), assignment.parse(input))
+      return { id: created.id, ...assignmentNames(state, created) }
+    },
+    ({ name, where }) => msg("toast.groupAssigned", { name, where })
+  )
+}
+
+/** Takes an account out of a service or stage. */
+export async function removeAssignmentAction(assignmentId: string) {
+  return run(
+    ({ state, viewer }) =>
+      assignmentNames(state, removeAssignment(state, viewer, id.parse(assignmentId))),
+    ({ name, where }) => msg("toast.groupRemoved", { name, where })
   )
 }

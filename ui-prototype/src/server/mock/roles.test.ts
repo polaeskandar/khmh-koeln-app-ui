@@ -1,6 +1,7 @@
 /**
  * Roles and permissions (RBAC): roles are data, a name and permissions from the fixed catalog
- * (an action on a resource), and they hold everywhere in the church. The defaults are the
+ * (an action on a resource), and they hold everywhere in the church or only in the account's
+ * assigned groups (`assignments.test.ts` has the groups). The defaults are the
  * backend's seed and ordinary roles. Someone active must always be able to change roles.
  */
 import { describe, expect, test } from "vitest"
@@ -82,7 +83,7 @@ describe("the roles a church starts with", () => {
     expect(t.parent.permissions).toEqual(["parentPortal:read"])
   })
 
-  test("hold everywhere: a servant may take attendance and prepare lessons in any service", () => {
+  test("say what an account may do: a servant takes attendance and prepares lessons", () => {
     const t = demo()
     expect(can(t.daniel, "create", "attendance")).toBe(true)
     expect(can(t.daniel, "create", "lessons")).toBe(true)

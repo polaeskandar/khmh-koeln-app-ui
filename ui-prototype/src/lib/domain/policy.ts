@@ -1,4 +1,13 @@
-import type { Action, GuardianRelationship, Permission, Resource, User, Uuid } from "./types"
+import type {
+  Action,
+  Group,
+  GuardianRelationship,
+  Permission,
+  Resource,
+  RoleScope,
+  User,
+  Uuid,
+} from "./types"
 
 export type { Action, Permission, Resource } from "./types"
 
@@ -7,9 +16,13 @@ export type { Action, Permission, Resource } from "./types"
  * enforces it in every server action, and the UI only uses it to hide what a person cannot do.
  *
  * Permissions are fixed by the code: one action (create, read, update, delete) on one resource,
- * 40 in all. Roles are data: a name and some of those permissions. An account has roles, and may
- * do what any of them allows. Roles and permissions are global: there is no "where" — a role
- * that allows taking attendance allows it in every service and every stage.
+ * 40 in all. Roles are data: a name, some of those permissions and a scope. An account has roles,
+ * and may do what any of them allows, where it holds: a `church` role everywhere, an
+ * `assignedGroups` role only in the services and stages the account is assigned to (a service
+ * covers its own roster and all its stages). The group checks live in the mock layer
+ * (`src/server/mock/reach.ts`), which knows the assignments; `can` here only says whether one of
+ * the account's roles allows the action somewhere. Users, roles, data requests and parent access
+ * have no group: they are checked by permission alone, as before.
  *
  * Which children a parent sees still follows from approved parent access, not from roles: the
  * Parent role only opens the parent portal. A member sees their own record's groups and
@@ -65,13 +78,20 @@ function crud(...resources: Resource[]): Permission[] {
 
 /**
  * The roles a church starts with: the backend's seed (polaeskandar/khmh-koeln-app-backend#130,
- * migration Version20261101141611), with the same ids, names and permissions. They are ordinary
- * roles: the church may rename, change and delete them.
+ * migration Version20261101141611), with the same ids, names and permissions. Service leader and
+ * Servant hold only in the account's assigned groups (backend #318); Administrator and Parent
+ * everywhere. They are ordinary roles: the church may rename, change and delete them.
  */
-export const DEFAULT_ROLES: { id: Uuid; name: string; permissions: Permission[] }[] = [
+export const DEFAULT_ROLES: {
+  id: Uuid
+  name: string
+  permissions: Permission[]
+  scope: RoleScope
+}[] = [
   {
     id: "019a3f00-0000-7000-8000-000000000001",
     name: "Administrator",
+    scope: "church" as const,
     // Everything but the parent portal (36).
     permissions: crud(
       "users",
@@ -88,6 +108,7 @@ export const DEFAULT_ROLES: { id: Uuid; name: string; permissions: Permission[] 
   {
     id: "019a3f00-0000-7000-8000-000000000002",
     name: "Service leader",
+    scope: "assignedGroups" as const,
     // 26
     permissions: [
       "services:read",
@@ -98,12 +119,14 @@ export const DEFAULT_ROLES: { id: Uuid; name: string; permissions: Permission[] 
   {
     id: "019a3f00-0000-7000-8000-000000000003",
     name: "Servant",
+    scope: "assignedGroups" as const,
     // 17
     permissions: ["services:read", ...crud("attendance", "members", "lessons", "homework")],
   },
   {
     id: "019a3f00-0000-7000-8000-000000000004",
     name: "Parent",
+    scope: "church" as const,
     permissions: ["parentPortal:read"],
   },
 ].map((r) => ({ ...r, permissions: inCatalogOrder(r.permissions as Permission[]) }))
@@ -121,9 +144,23 @@ export function isActiveAccount(user: User): boolean {
   return user.approvedAt !== null && user.disabledAt === null
 }
 
-/** May the account do this? Only while it is enabled, and only if one of its roles allows it. */
+/**
+ * May the account do this somewhere? Only while it is enabled, and only if one of its roles
+ * allows it. For an `assignedGroups` role that is only in the account's groups: what a group
+ * allows is `canIn` in the mock layer.
+ */
 export function can(user: User, action: Action, resource: Resource): boolean {
   return user.disabledAt === null && user.permissions.includes(permissionOf(action, resource))
+}
+
+/**
+ * Does one of these assignments cover the group? A service assignment covers the service's own
+ * roster and all its stages; a stage assignment covers that stage only.
+ */
+export function covers(assignments: Group[], group: Group): boolean {
+  return assignments.some(
+    (a) => a.serviceId === group.serviceId && (a.stageId === null || a.stageId === group.stageId)
+  )
 }
 
 /**

@@ -3,17 +3,22 @@ import "server-only"
 import { can, isParent, isStaff } from "@/lib/domain/policy"
 import { CHURCH_TIME_ZONE } from "@/lib/domain/time"
 import { today as clockToday } from "@/server/mock/clock"
+import { groupName, mayAssign } from "@/server/mock/commands/assignments"
+import { assignmentsOf } from "@/server/mock/reach"
 import {
   currentGroupNames,
   currentStagesOf,
+  isArchived,
   personOf,
+  serviceOf,
   stageOf,
+  stagesOf,
   userOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context, Translator } from "@/server/viewer"
 
-import { rolesOf, userRef, viewerInfo } from "./present"
+import { rolesOf, serviceRef, userRef, viewerInfo } from "./present"
 import { getAssignableRoles, getRoleList } from "./roles"
 
 function classOf(s: State, personId: string): string | null {
@@ -116,25 +121,66 @@ function memberAccounts(s: State) {
 
 export type MemberAccount = ReturnType<typeof memberAccounts>[number]
 
+/** An account's groups: services by name, each service before its stages, stages in order. */
+function groupsOf(ctx: Context, userId: string) {
+  const { state: s, viewer } = ctx
+  const serviceName = (serviceId: string) => serviceOf(s, serviceId)?.name ?? ""
+  const position = (stageId: string | null) => stageOf(s, stageId)?.position ?? -1
+  return assignmentsOf(s, userId)
+    .sort(
+      (a, b) =>
+        serviceName(a.serviceId).localeCompare(serviceName(b.serviceId), "de") ||
+        position(a.stageId) - position(b.stageId)
+    )
+    .map((a) => ({
+      id: a.id,
+      serviceId: a.serviceId,
+      stageId: a.stageId,
+      name: groupName(s, a),
+      canRemove: mayAssign(s, viewer, a),
+    }))
+}
+
 /**
  * The accounts in "Staff accounts and roles": approved accounts with roles, except parents whose
- * roles only open the parent portal (they are managed under parent access).
+ * roles only open the parent portal (they are managed under parent access). Member-only accounts
+ * have no role and are listed under member accounts. Each shows the groups it serves in.
  */
 function staffAccounts(ctx: Context) {
   const { state: s } = ctx
   return s.users
     .filter((u) => u.approvedAt !== null && u.roleIds.length > 0 && (isStaff(u) || !isParent(u)))
-    .map((u) => ({
-      ...userRef(u)!,
-      email: u.email,
-      disabled: u.disabledAt !== null,
-      disabledAt: u.disabledAt,
-      roles: rolesOf(s, u).map((r) => ({ id: r.id, name: r.name })),
-    }))
+    .map((u) => {
+      const roles = rolesOf(s, u)
+      return {
+        ...userRef(u)!,
+        email: u.email,
+        disabled: u.disabledAt !== null,
+        disabledAt: u.disabledAt,
+        roles: roles.map((r) => ({ id: r.id, name: r.name })),
+        groups: groupsOf(ctx, u.id),
+        /** One of its roles holds only in assigned groups: without a group it sees nothing. */
+        needsGroups: roles.some((r) => r.scope === "assignedGroups"),
+      }
+    })
     .sort((a, b) => Number(a.disabled) - Number(b.disabled) || a.name.localeCompare(b.name, "de"))
 }
 
 export type StaffAccount = ReturnType<typeof staffAccounts>[number]
+
+/** The services and stages the viewer may assign accounts to, for "Assign to a group". */
+export function assignableGroups(ctx: Context) {
+  const { state: s, viewer } = ctx
+  return s.services
+    .filter((x) => !isArchived(x) && mayAssign(s, viewer, { serviceId: x.id, stageId: null }))
+    .sort((a, b) => a.name.localeCompare(b.name, "de"))
+    .map((x) => ({
+      ...serviceRef(s, x),
+      stages: stagesOf(s, x.id).map((st) => ({ id: st.id, name: st.name })),
+    }))
+}
+
+export type AssignableGroup = ReturnType<typeof assignableGroups>[number]
 
 export async function getSettings(ctx: Context) {
   const { state: s, viewer } = ctx
@@ -147,6 +193,7 @@ export async function getSettings(ctx: Context) {
     memberAccounts: seeAccounts ? memberAccounts(s) : null,
     roles: getRoleList(ctx),
     assignableRoles: canChangeAccounts ? getAssignableRoles(ctx) : [],
+    assignableGroups: seeAccounts ? assignableGroups(ctx) : [],
     canChangeAccounts,
     church: { name: "KHMK Köln", timeZone: CHURCH_TIME_ZONE },
     generatorRuns: [...s.generatorRuns].reverse().slice(0, 6),

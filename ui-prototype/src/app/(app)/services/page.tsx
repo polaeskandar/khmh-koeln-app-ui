@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
+import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader } from "@/components/page-header"
 import { ServiceFormDialog } from "@/features/services/service-dialogs"
 import { ServicesTable } from "@/features/services/services-table"
@@ -25,7 +26,7 @@ export default async function ServicesPage() {
           description={t("description")}
           actions={data.canCreate ? <ServiceFormDialog /> : null}
         />
-        <ServicesTable rows={data.rows} today={today()} />
+        {data.unassigned ? <NotAssigned /> : <ServicesTable rows={data.rows} today={today()} />}
       </PageBody>
     </>
   )

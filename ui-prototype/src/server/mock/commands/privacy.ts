@@ -55,6 +55,7 @@ export type ErasedKind =
   | "guardianLinks"
   | "account"
   | "roles"
+  | "assignments"
   | "notes"
 
 /** Records that stay, without the name. */
@@ -289,6 +290,7 @@ export function inventoryOf(
   if (user) {
     put(erase, "account", 1)
     put(erase, "roles", user.roleIds.length)
+    put(erase, "assignments", s.assignments.filter((a) => a.userId === user.id).length)
     put(erase, "guardianLinks", s.guardians.filter((g) => g.userId === user.id).length)
     put(
       keep,
@@ -400,6 +402,7 @@ export function eraseData(
     for (const u of s.users) if (u.approvedBy === user.id) u.approvedBy = null
     for (const r of s.dataRequests) if (r.closedBy === user.id) r.closedBy = null
     s.guardians = s.guardians.filter((g) => g.userId !== user.id)
+    s.assignments = s.assignments.filter((a) => a.userId !== user.id)
     s.users = s.users.filter((u) => u.id !== user.id)
   }
 
@@ -502,6 +505,9 @@ export function personalData(s: State, person: Person | undefined, user: User | 
           ? { result: user.ageCheck, parentAgreed: user.guardianConsentNote }
           : null,
         roles: user.roleIds.map((id) => roleOf(s, id)?.name ?? id),
+        servesIn: s.assignments
+          .filter((a) => a.userId === user.id)
+          .map((a) => ({ ...groupOf(a.serviceId, a.stageId), since: a.createdAt })),
         children: s.guardians
           .filter((g) => g.userId === user.id)
           .map((g) => {

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
 import { NoAccess } from "@/components/no-access"
+import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader } from "@/components/page-header"
 import { AddPersonDialog, MembersTable } from "@/features/members/members-table"
 import { listMembers } from "@/server/queries/members"
@@ -24,7 +25,9 @@ export default async function MembersPage() {
           description={t("description")}
           actions={d?.canAdd ? <AddPersonDialog services={d.services} /> : null}
         />
-        {d ? (
+        {d?.unassigned ? (
+          <NotAssigned />
+        ) : d ? (
           <MembersTable data={d} />
         ) : (
           <NoAccess title={t("noAccess")}>{t("noAccessHint")}</NoAccess>

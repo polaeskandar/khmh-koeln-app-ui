@@ -3,17 +3,27 @@ import "server-only"
 import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import { today as clockToday } from "@/server/mock/clock"
+import {
+  canEverywhere,
+  canIn,
+  canInService,
+  canSomewhere,
+  isUnassigned,
+  seesEverything,
+} from "@/server/mock/reach"
 import { isArchived, isCurrentOn, serviceOf, stageOf, stagesOf } from "@/server/mock/selectors"
 import type { Context } from "@/server/viewer"
 
-import { personRef, serviceRef, stageRef } from "./present"
+import { inGroups, personRef, serviceRef, stageRef } from "./present"
 
 /** The member list, for accounts whose roles may see members; null for everyone else. */
 export async function listMembers(ctx: Context) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   if (!can(viewer, "read", "members")) return null
-  // Roles hold everywhere: whoever may change members may change anyone's.
-  const canEdit = can(viewer, "update", "members")
+  // A role for assigned groups changes the people of those groups; a church-wide one anyone.
+  const editAnyone = canEverywhere(s, viewer, "update", "members")
+  const everyone = seesEverything(s, viewer)
   const today = clockToday()
   const since = addDays(today, -28)
 
@@ -34,15 +44,17 @@ export async function listMembers(ctx: Context) {
   }
 
   const rows = s.persons
-    .map((p) => {
+    .flatMap((p) => {
       const memberships = s.memberships
         .filter((m) => m.personId === p.id)
         .sort((a, b) => b.startsOn.localeCompare(a.startsOn))
       const current = memberships.filter((m) => isCurrentOn(m, today))
+      // Outside the church-wide view, people are seen through a current membership in a group.
+      if (!everyone && current.length === 0) return []
       const attended = (attendedByPerson.get(p.id) ?? []).sort((a, b) =>
         b.date.localeCompare(a.date)
       )
-      return {
+      const row = {
         person: personRef(p),
         placements: current.map((m) => ({
           membershipId: m.id,
@@ -62,8 +74,9 @@ export async function listMembers(ctx: Context) {
         lastAttended: attended[0] ?? null,
         recentAttendance: attended.slice(0, 6),
         attendedLast4Weeks: attended.filter((x) => x.date >= since).length,
-        canEdit,
+        canEdit: editAnyone || current.some((m) => canIn(s, viewer, "update", "members", m)),
       }
+      return [row]
     })
     .sort(
       (a, b) =>
@@ -78,10 +91,16 @@ export async function listMembers(ctx: Context) {
       ...serviceRef(s, x),
       stages: stagesOf(s, x.id).map((st) => ({
         ...stageRef(st)!,
-        canManageMembers: canEdit,
+        canManageMembers: canIn(s, viewer, "update", "members", {
+          serviceId: x.id,
+          stageId: st.id,
+        }),
       })),
-      canManageMembers: canEdit,
-      canManageServiceLevel: canEdit,
+      canManageMembers: canInService(s, viewer, "update", "members", x.id),
+      canManageServiceLevel: canIn(s, viewer, "update", "members", {
+        serviceId: x.id,
+        stageId: null,
+      }),
     }))
 
   return {
@@ -92,7 +111,8 @@ export async function listMembers(ctx: Context) {
       active: rows.filter((r) => r.person.status === "active").length,
       inactive: rows.filter((r) => r.person.status === "inactive").length,
     },
-    canAdd: can(viewer, "create", "members"),
+    canAdd: canSomewhere(s, viewer, "create", "members"),
+    unassigned: isUnassigned(s, viewer),
   }
 }
 
@@ -101,6 +121,7 @@ export type MemberRow = MembersPage["rows"][number]
 
 /** Everyone active, with where they belong today: for "add an existing person" pickers. */
 export function personDirectory(ctx: Context) {
+  ctx = inGroups(ctx)
   const { state: s } = ctx
   const today = clockToday()
   return s.persons

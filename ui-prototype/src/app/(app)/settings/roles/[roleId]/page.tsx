@@ -13,7 +13,7 @@ export async function generateMetadata() {
   return { title: t("roles") }
 }
 
-/** One role: what it allows (everywhere in the church) and who has it. */
+/** One role: what it allows, where it holds, and who has it. */
 export default async function RolePage({ params }: { params: Promise<{ roleId: string }> }) {
   const { roleId } = await params
   const ctx = await getStaffContext()

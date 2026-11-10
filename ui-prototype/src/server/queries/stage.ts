@@ -1,10 +1,10 @@
 import "server-only"
 
-import { can } from "@/lib/domain/policy"
 import { addDays, localDateOf } from "@/lib/domain/time"
 import type { Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
 import { stageImpact } from "@/server/mock/commands/services"
+import { canIn } from "@/server/mock/reach"
 import {
   currentAttendance,
   isArchived,
@@ -19,6 +19,7 @@ import type { Context } from "@/server/viewer"
 
 import { sortAgenda, upcomingFor } from "./meetings"
 import {
+  inGroups,
   personRef,
   scheduleSummary,
   serviceRef,
@@ -30,6 +31,7 @@ import { memberCount } from "./services"
 
 /** The header shared by a stage's tabs: Overview, Meetings, Attendance, Lessons, Homework. */
 export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const service = serviceOf(s, serviceId)
   const stage = stageOf(s, stageId)
@@ -70,9 +72,13 @@ export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uui
         .length,
     },
     can: {
-      structure: can(viewer, "update", "stages") && !isArchived(service),
-      members: can(viewer, "update", "members") && !isArchived(service) && !isArchived(stage),
-      sessions: can(viewer, "create", "sessions"),
+      structure:
+        canIn(s, viewer, "update", "stages", { serviceId, stageId: null }) && !isArchived(service),
+      members:
+        canIn(s, viewer, "update", "members", { serviceId, stageId }) &&
+        !isArchived(service) &&
+        !isArchived(stage),
+      sessions: canIn(s, viewer, "create", "sessions", { serviceId, stageId }),
     },
   }
 }
@@ -80,6 +86,7 @@ export async function getStageHeader(ctx: Context, serviceId: Uuid, stageId: Uui
 export type StageHeader = NonNullable<Awaited<ReturnType<typeof getStageHeader>>>
 
 export async function getStageMeetings(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   return {
@@ -109,6 +116,7 @@ export async function getStageMeetings(ctx: Context, serviceId: Uuid, stageId: U
  * is only meaningful for sessions with an expected roster.
  */
 export async function getStageAttendance(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const today = clockToday()
   const sessions = s.sessions

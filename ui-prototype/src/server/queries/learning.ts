@@ -1,10 +1,11 @@
 import "server-only"
 
-import { can, isActiveAccount } from "@/lib/domain/policy"
+import { isActiveAccount } from "@/lib/domain/policy"
 import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
-import type { HomeworkAssignment, Lesson, LocalDate, Uuid } from "@/lib/domain/types"
+import type { Group, HomeworkAssignment, Lesson, LocalDate, Uuid } from "@/lib/domain/types"
 import { today as clockToday } from "@/server/mock/clock"
 import { lessonMeeting, meetingOptions } from "@/server/mock/lesson-meeting"
+import { canIn } from "@/server/mock/reach"
 import {
   currentCompletion,
   guardiansOf,
@@ -22,7 +23,7 @@ import {
 import type { State } from "@/server/mock/state"
 import type { Context, Translator } from "@/server/viewer"
 
-import { personRef, serviceRef, stageRef, userRef } from "./present"
+import { inGroups, personRef, serviceRef, stageRef, userRef } from "./present"
 
 // ------------------------------------------------------------- view models
 
@@ -166,12 +167,12 @@ function stageContext(s: State, serviceId: Uuid, stageId: Uuid) {
 }
 
 /**
- * Who may prepare lessons: candidates for "responsible" and "helping". Roles hold everywhere,
- * so that is every active account whose roles may change lessons.
+ * Who may prepare the stage's lessons: candidates for "responsible" and "helping". Every active
+ * account whose roles may change lessons there: everywhere, or assigned to the stage or its service.
  */
-function preparers(s: State) {
+function preparers(s: State, group: Group) {
   return s.users
-    .filter((u) => isActiveAccount(u) && can(u, "update", "lessons"))
+    .filter((u) => isActiveAccount(u) && canIn(s, u, "update", "lessons", group))
     .map((u) => userRef(u)!)
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
@@ -192,6 +193,7 @@ function lessonPeople(s: State, stageId: Uuid) {
 // ------------------------------------------------------------------ lessons
 
 export async function getStageLessons(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   if (!context) return null
@@ -212,7 +214,9 @@ export async function getStageLessons(ctx: Context, serviceId: Uuid, stageId: Uu
     archived: lessons.filter((l) => l.archived),
     servants: lessonPeople(s, stageId),
     can: {
-      manage: can(viewer, "create", "lessons") && !isArchived(stageOf(s, stageId)!),
+      manage:
+        canIn(s, viewer, "create", "lessons", { serviceId, stageId }) &&
+        !isArchived(stageOf(s, stageId)!),
     },
   }
 }
@@ -223,6 +227,7 @@ export async function getLessonDetail(
   stageId: Uuid,
   lessonId: Uuid
 ) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   const lesson = lessonOf(s, lessonId)
@@ -248,13 +253,14 @@ export async function getLessonDetail(
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
       .map((h) => homeworkRow(s, h, today)),
     can: {
-      manage: can(viewer, "update", "lessons"),
-      homework: can(viewer, "create", "homework"),
+      manage: canIn(s, viewer, "update", "lessons", { serviceId, stageId }),
+      homework: canIn(s, viewer, "create", "homework", { serviceId, stageId }),
     },
   }
 }
 
 export async function getLessonForm(ctx: Context, serviceId: Uuid, stageId: Uuid, lessonId?: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   if (!context) return null
@@ -276,11 +282,13 @@ export async function getLessonForm(ctx: Context, serviceId: Uuid, stageId: Uuid
           : `date:${lesson.teachingDate}`
       : (firstFree?.value ?? `date:${today}`),
     options,
-    servants: preparers(s),
+    servants: preparers(s, { serviceId, stageId }),
     viewerId: viewer.id,
     /** Changes whenever lessons are added or this one is saved: the form starts fresh then. */
     version: `${s.lessons.length}-${lesson?.updatedAt ?? "new"}`,
-    can: { manage: can(viewer, lesson ? "update" : "create", "lessons") },
+    can: {
+      manage: canIn(s, viewer, lesson ? "update" : "create", "lessons", { serviceId, stageId }),
+    },
   }
 }
 
@@ -289,6 +297,7 @@ export type LessonForm = NonNullable<Awaited<ReturnType<typeof getLessonForm>>>
 // ----------------------------------------------------------------- homework
 
 export async function getStageHomework(ctx: Context, serviceId: Uuid, stageId: Uuid) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   if (!context) return null
@@ -308,7 +317,9 @@ export async function getStageHomework(ctx: Context, serviceId: Uuid, stageId: U
       .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate))
       .map((l) => ({ id: l.id, title: l.title, teachingDate: l.teachingDate })),
     can: {
-      manage: can(viewer, "create", "homework") && !isArchived(stageOf(s, stageId)!),
+      manage:
+        canIn(s, viewer, "create", "homework", { serviceId, stageId }) &&
+        !isArchived(stageOf(s, stageId)!),
     },
   }
 }
@@ -319,6 +330,7 @@ export async function getHomeworkEditor(
   stageId: Uuid,
   opts: { homeworkId?: Uuid; lessonId?: Uuid }
 ) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   if (!context) return null
@@ -361,7 +373,12 @@ export async function getHomeworkEditor(
       : 0,
     /** Changes whenever homework is added or this one is saved: the form starts fresh then. */
     version: `${s.homework.length}-${homework?.updatedAt ?? "new"}`,
-    can: { manage: can(viewer, homework ? "update" : "create", "homework") },
+    can: {
+      manage: canIn(s, viewer, homework ? "update" : "create", "homework", {
+        serviceId,
+        stageId,
+      }),
+    },
   }
 }
 
@@ -377,11 +394,12 @@ export async function getHomeworkProgress(
   stageId: Uuid,
   homeworkId: Uuid
 ) {
+  ctx = inGroups(ctx)
   const { state: s, viewer } = ctx
   const context = stageContext(s, serviceId, stageId)
   const hw = homeworkOf(s, homeworkId)
   if (!context || !hw || hw.stageId !== stageId) return null
-  if (!can(viewer, "read", "homework")) return { ...context, forbidden: true as const }
+  if (!canIn(s, viewer, "read", "homework", hw)) return { ...context, forbidden: true as const }
   const today = clockToday()
   const lesson = lessonOf(s, hw.lessonId)!
   const rows = homeworkAudience(s, hw, today)
@@ -415,7 +433,7 @@ export async function getHomeworkProgress(
     homework: homeworkRow(s, hw, today),
     lesson: { id: lesson.id, title: lesson.title, teachingDate: lesson.teachingDate },
     rows,
-    can: { manage: can(viewer, "update", "homework") },
+    can: { manage: canIn(s, viewer, "update", "homework", hw) },
   }
 }
 

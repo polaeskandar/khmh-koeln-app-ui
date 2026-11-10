@@ -63,7 +63,7 @@ describe("services", () => {
     expect(t.s.services).toContain(created)
   })
 
-  test("a service leader edits services (roles hold in every service), but archives none", () => {
+  test("a service leader edits the service they lead, but archives none and sees no other", () => {
     const t = demo()
     const sundaySchool = t.service("Sunday School")
     updateService(t.s, t.leader, sundaySchool.id, {
@@ -71,10 +71,12 @@ describe("services", () => {
       description: "Classes after the Divine Liturgy.",
     })
     expect(sundaySchool.description).toBe("Classes after the Divine Liturgy.")
+    expect(statusOf(() => archiveService(t.s, t.leader, sundaySchool.id))).toBe(403)
     const youth = t.service("Youth Meeting")
-    updateService(t.s, t.leader, youth.id, { name: "Youth Meeting", description: "Fridays." })
-    expect(youth.description).toBe("Fridays.")
-    expect(statusOf(() => archiveService(t.s, t.leader, youth.id))).toBe(403)
+    const edit = () =>
+      updateService(t.s, t.leader, youth.id, { name: "Youth Meeting", description: "Fridays." })
+    expect(statusOf(edit)).toBe(404)
+    expect(youth.description).not.toBe("Fridays.")
   })
 
   test("names are unique, ignoring case and extra spaces", () => {
@@ -115,9 +117,19 @@ describe("services", () => {
 })
 
 describe("dashboard", () => {
-  test("Today lists every meeting of the day; roles hold everywhere, so a servant may take each", async () => {
+  test("Today lists the meetings of the servant's groups, each with attendance to take", async () => {
     const t = demo()
     const d = await getDashboard(contextFor(t.s, t.daniel))
+    expect(d.todaySessions.map((x) => x.group)).toEqual(["3rd Class"])
+    expect(d.todaySessions.every((x) => x.can.record)).toBe(true)
+    expect(d.todaySessions.some((x) => x.can.manage)).toBe(false)
+    expect(d.services.map((x) => x.name)).toEqual(["Sunday School"])
+    expect(d.unassigned).toBe(false)
+  })
+
+  test("a service leader's Today has every class of the service", async () => {
+    const t = demo()
+    const d = await getDashboard(contextFor(t.s, t.leader))
     expect(d.todaySessions.map((x) => x.group)).toEqual([
       "Kindergarten",
       "1st Class",
@@ -126,7 +138,6 @@ describe("dashboard", () => {
       "4th Class",
       "5th & 6th Class",
     ])
-    expect(d.todaySessions.every((x) => x.can.record)).toBe(true)
-    expect(d.todaySessions.some((x) => x.can.manage)).toBe(false)
+    expect(d.todaySessions.every((x) => x.can.record && x.can.manage)).toBe(true)
   })
 })

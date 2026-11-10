@@ -102,7 +102,8 @@
       "guardian": "Diese Eltern-Verknüpfung existiert nicht oder wurde entfernt.",
       "request": "Diese Anfrage existiert nicht oder wurde gelöscht.",
       "role": "Diese Rolle existiert nicht oder wurde gelöscht.",
-      "route": "Nicht gefunden. Laden Sie die Seite neu und versuchen Sie es noch einmal."
+      "route": "Nicht gefunden. Laden Sie die Seite neu und versuchen Sie es noch einmal.",
+      "assignment": "Diese Zuordnung gibt es nicht oder sie wurde entfernt."
     },
     "validation": {
       "tooLong": "Höchstens {max} Zeichen.",
@@ -332,6 +333,10 @@
       "tooManyAttempts": "Zu viele Versuche. Warten Sie ein paar Minuten und versuchen Sie es dann noch einmal.",
       "resetLinkInvalid": "Dieser Link funktioniert nicht mehr. Bitten Sie das Gemeindebüro um einen neuen.",
       "confirmationLinkInvalid": "Dieser Bestätigungslink ist ungültig oder abgelaufen. Registrieren Sie sich erneut, um einen neuen zu erhalten."
+    },
+    "assignments": {
+      "alreadyAssigned": "{name} ist bereits {where} zugeordnet.",
+      "notAllowed": "Sie können dieser Gruppe niemanden zuordnen und niemanden aus ihr nehmen."
     }
   },
   "toast": {
@@ -396,7 +401,9 @@
     "memberUnlinked": "Verknüpfung für {name} entfernt.",
     "roleCreated": "Rolle „{name}“ angelegt.",
     "roleSaved": "Rolle gespeichert.",
-    "roleDeleted": "Rolle „{name}“ gelöscht."
+    "roleDeleted": "Rolle „{name}“ gelöscht.",
+    "groupAssigned": "{name} dient jetzt in {where}.",
+    "groupRemoved": "{name} dient nicht mehr in {where}."
   },
   "roles": {
     "summary": {
@@ -735,13 +742,16 @@
       "remove": "Rolle entfernen",
       "assign": {
         "title": "Rolle an {name} vergeben",
-        "description": "Rollen bestimmen, was jemand sehen und ändern kann, in jedem Dienst. Ein Konto kann mehrere haben.",
+        "description": "Rollen bestimmen, was jemand sehen und ändern kann: überall oder in den Gruppen, in denen das Konto dient. Ein Konto kann mehrere haben.",
         "role": "Rolle",
         "submit": "Rolle vergeben",
         "roleHint": "Was jede Rolle erlaubt, sehen Sie unter <link>Rollen</link>.",
         "choose": "Rolle wählen"
       },
-      "description": "Geben Sie jedem Konto die Rollen, die es braucht. Rollen gelten überall in der Gemeinde."
+      "description": "Geben Sie jedem Konto die Rollen, die es braucht, und die Gruppen, in denen es dient. Manche Rollen gelten überall in der Gemeinde, andere nur in den Gruppen des Kontos.",
+      "addGroup": "Gruppe",
+      "addGroupLabel": "{name} einer Gruppe zuordnen …",
+      "noGroups": "Noch keine Gruppe: sieht keinen Dienst, bis eine zugeordnet ist."
     },
     "parents": {
       "title": "Elternzugang",
@@ -840,7 +850,11 @@
       "deleteConfirm": "Rolle löschen",
       "readOnly": "Ihre Rollen erlauben Ihnen, Rollen zu sehen, aber nicht zu ändern.",
       "allows": "Erlaubt",
-      "global": "Rollen gelten überall in der Gemeinde, in jedem Dienst. Welche Kinder Eltern sehen, ergibt sich weiter aus dem Elternzugang; Mitglieder sehen ihre eigenen Gruppen ohne Rolle."
+      "global": "Manche Rollen gelten überall in der Gemeinde, andere nur in den Diensten und Stufen, denen ein Konto zugeordnet ist. Welche Kinder Eltern sehen, ergibt sich weiter aus dem Elternzugang; Mitglieder sehen ihre eigenen Gruppen ohne Rolle.",
+      "scope": {
+        "church": "Überall",
+        "assignedGroups": "In zugeordneten Gruppen"
+      }
     }
   },
   "session": {
@@ -1370,6 +1384,17 @@
       "upcoming": {
         "title": "Demnächst",
         "empty": "In den nächsten zwei Wochen ist nichts geplant."
+      },
+      "servants": {
+        "title": "Diener",
+        "description": "Wer in diesem Dienst dient. Leitungen sind dem ganzen Dienst zugeordnet.",
+        "empty": "Noch niemand ist zugeordnet.",
+        "assign": "Zuordnen",
+        "dialog": {
+          "title": "Diener zu {service} zuordnen",
+          "account": "Konto",
+          "chooseAccount": "Konto wählen"
+        }
       }
     }
   },
@@ -1939,7 +1964,7 @@
     "approve": {
       "title": "Konto von {name} freigeben",
       "parentDescription": "Prüfen Sie die Familie zuerst, zum Beispiel persönlich nach der Liturgie. Der Elternteil sieht dann die veröffentlichten Hausaufgaben dieser Kinder.",
-      "servantDescription": "Sprechen Sie zuerst mit der Dienstleitung. Die Rollen bestimmen, was der Diener sehen und tun kann, in jedem Dienst.",
+      "servantDescription": "Sprechen Sie zuerst mit der Dienstleitung. Die Rollen bestimmen, was der Diener sehen und tun kann; die Gruppen, wo.",
       "children": "Kinder",
       "childrenHint": "Kinder, deren Namen {name} angegeben hat, sind schon ausgewählt. Suchen Sie nach weiteren.",
       "findChild": "Kind nach Namen oder Klasse suchen",
@@ -1965,8 +1990,13 @@
       "consentNote": "Wie wurde zugestimmt? (optional)",
       "consentNotePlaceholder": "Zum Beispiel: Seine Mutter hat am 8. November persönlich zugestimmt.",
       "roles": "Rollen",
-      "rolesHint": "Was das Konto darf, überall in der Gemeinde. Sie können das später unter Mitarbeiterkonten und Rollen ändern.",
-      "servesIn": "Gibt an, in {service} zu dienen."
+      "rolesHint": "Was das Konto darf. Sie können das später unter Mitarbeiterkonten und Rollen ändern.",
+      "servesIn": "Gibt an, in {service} zu dienen.",
+      "groups": "Gruppen",
+      "groupsHint": "Wo die Person dient. Rollen, die nur in zugeordneten Gruppen gelten, gelten hier. Der angegebene Dienst ist schon gewählt.",
+      "noGroups": "Noch keine Gruppe. Ein Diener ohne Gruppe sieht keinen Dienst.",
+      "addGroup": "Gruppe hinzufügen",
+      "removeGroup": "{group} entfernen"
     },
     "decline": {
       "title": "Registrierung von {name} ablehnen?",
@@ -2117,7 +2147,8 @@
       "guardianLinks": "{count, plural, one {# Elternverknüpfung} other {# Elternverknüpfungen}}",
       "account": "{count, plural, one {Das Konto mit seiner Anmeldung} other {# Konten}}",
       "roles": "{count, plural, one {# Rolle} other {# Rollen}}",
-      "notes": "{count, plural, one {# Notiz mit Erwähnung, geleert} other {# Notizen mit Erwähnung, geleert}}"
+      "notes": "{count, plural, one {# Notiz mit Erwähnung, geleert} other {# Notizen mit Erwähnung, geleert}}",
+      "assignments": "{count, plural, one {# Gruppe, in der die Person dient} other {# Gruppen, in denen die Person dient}}"
     },
     "keep": {
       "sessionTotals": "{count, plural, one {Anwesenheitszahlen von # Treffen} other {Anwesenheitszahlen von # Treffen}}",
@@ -2185,7 +2216,8 @@
     },
     "groups": {
       "noSchedule": "Derzeit keine regelmäßigen Treffen.",
-      "lastLesson": "Letzte Lektion: „{title}“, {date}"
+      "lastLesson": "Letzte Lektion: „{title}“, {date}",
+      "servants": "Diener: {names}"
     },
     "homework": {
       "description": "Alles, was Ihnen die Diener Ihrer Gruppen aufgegeben haben.",
@@ -2219,9 +2251,9 @@
     "details": "Rolle",
     "name": "Name",
     "nameHint": "Zum Beispiel: Gemeindebüro, Anwesenheitshilfe.",
-    "description": "Was die Rolle erlaubt, überall in der Gemeinde, und wer sie hat.",
+    "description": "Was die Rolle erlaubt, wo sie gilt und wer sie hat.",
     "permissions": "Was sie erlaubt",
-    "permissionsHint": "Rollen gelten überall: Eine Rolle, die Anwesenheit erfassen darf, darf es in jedem Dienst. Wer Anlegen, Ändern oder Löschen ankreuzt, kreuzt auch Sehen an.",
+    "permissionsHint": "Wer Anlegen, Ändern oder Löschen ankreuzt, kreuzt auch Sehen an.",
     "chosen": "{count, number} von {total, number} gewählt",
     "readOnlyNote": "Sie können diese Rolle sehen, aber Ihre Rollen erlauben nicht, sie zu ändern.",
     "create": "Rolle anlegen",
@@ -2243,7 +2275,12 @@
     "locksOut": "Sonst kann niemand Rollen ändern. Ohne „Rollen: Ändern“ hier könnte niemand mehr Rollen reparieren, deshalb würde diese Änderung abgelehnt.",
     "deleteLocksOut": "Sonst kann niemand Rollen ändern, deshalb kann diese Rolle nicht gelöscht werden. Geben Sie zuerst einer anderen Rolle „Rollen: Ändern“.",
     "added": "Angelegt {when}",
-    "changed": "Zuletzt geändert {when}"
+    "changed": "Zuletzt geändert {when}",
+    "scope": "Wo sie gilt",
+    "scopeChurch": "Überall in der Gemeinde",
+    "scopeChurchHint": "In jedem Dienst und jeder Stufe. Für die Verwaltung, das Gemeindebüro und Eltern.",
+    "scopeAssigned": "Nur in den zugeordneten Gruppen des Kontos",
+    "scopeAssignedHint": "In den Diensten und Stufen, denen das Konto unter Mitarbeiterkonten und Rollen zugeordnet ist. Für Diener und Dienstleitungen."
   },
   "permissions": {
     "actions": {
@@ -2338,5 +2375,25 @@
     "openHtml": "Nur das HTML",
     "openText": "Nur den Text",
     "notes": "Lateinische Buchstaben erscheinen in der Schrift des Geräts, daher sieht die E-Mail überall etwas anders aus; arabische in Vazirmatn wie in der App, wo das Programm Schriften lädt (Apple Mail, iOS Mail, Outlook für Mac). Dunkle Farben erscheinen in Programmen, die sie unterstützen, etwa Apple Mail; Gmail dunkelt E-Mails selbst ab."
+  },
+  "assignments": {
+    "notAssigned": {
+      "title": "Sie sind noch keiner Gruppe zugeordnet",
+      "description": "Wenden Sie sich an das Gemeindebüro. Sobald Sie einem Dienst oder einer Stufe zugeordnet sind, erscheinen hier deren Treffen, Mitglieder, Lektionen und Hausaufgaben."
+    },
+    "wholeService": "Der ganze Dienst",
+    "service": "Dienst",
+    "stage": "Stufe",
+    "chooseService": "Dienst wählen",
+    "stageHint": "Der ganze Dienst umfasst seine eigene Liste und alle seine Stufen, wie für eine Dienstleitung; eine Stufe nur diese Stufe.",
+    "assign": "Zuordnen",
+    "remove": "Herausnehmen",
+    "removeLabel": "{name} aus {where} herausnehmen",
+    "removeTitle": "{name} aus {where} herausnehmen?",
+    "removeDescription": "Rollen, die in zugeordneten Gruppen gelten, gelten dort für die Person nicht mehr. Bisherige Anwesenheitseinträge, Lektionen und Hausaufgaben bleiben erhalten.",
+    "dialog": {
+      "title": "{name} einer Gruppe zuordnen",
+      "description": "Rollen, die nur in zugeordneten Gruppen gelten, etwa Diener und Dienstleitung, gelten in den Gruppen, denen ein Konto zugeordnet ist."
+    }
   }
 }

@@ -96,15 +96,22 @@ function goodSamaritan(t: Demo, { publish = true } = {}) {
 }
 
 describe("roles", () => {
-  test("roles hold everywhere: a servant prepares lessons for any stage", () => {
+  test("a servant prepares lessons for their own stage only", () => {
     const t = demo()
     expect(can(t.daniel, "create", "lessons")).toBe(true)
-    const lesson = createLesson(t.s, t.daniel, t.c1.id, {
+    const lesson = createLesson(t.s, t.daniel, t.c3.id, {
       title: "Noah’s ark",
       meeting: "date:2026-11-15",
       responsibleId: t.daniel.id,
     })
-    expect(lesson.stageId).toBe(t.c1.id)
+    expect(lesson.stageId).toBe(t.c3.id)
+    const elsewhere = () =>
+      createLesson(t.s, t.daniel, t.c1.id, {
+        title: "Noah’s ark",
+        meeting: "date:2026-11-15",
+        responsibleId: t.daniel.id,
+      })
+    expect(statusOf(elsewhere)).toBe(404)
   })
 
   test("without Lessons: Add, preparing a lesson is refused", () => {

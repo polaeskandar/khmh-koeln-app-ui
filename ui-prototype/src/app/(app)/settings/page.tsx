@@ -66,7 +66,12 @@ export default async function SettingsPage() {
               d.canChangeAccounts ? t("users.description") : t("users.descriptionReadOnly")
             }
           >
-            <UsersRoles users={d.users} roles={d.assignableRoles} canGive={d.canChangeAccounts} />
+            <UsersRoles
+              users={d.users}
+              roles={d.assignableRoles}
+              groups={d.assignableGroups}
+              canGive={d.canChangeAccounts}
+            />
           </Section>
         ) : null}
 

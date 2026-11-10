@@ -20,9 +20,9 @@
  * Mina, a youth who shares his name with a child in 3rd Class, registers,
  * confirms his address and is linked to the right record. At
  * the end, the administrator adds a role of the church's own ("Attendance
- * helper"), gives it to Sara, and deletes a role nobody has; roles hold
- * everywhere in the church, and Sara, the church office, sees only what her
- * roles allow. Last come the emails the backend will send: the prototype's
+ * helper"), gives it to Sara, and deletes a role nobody has; a role holds
+ * everywhere in the church or only in an account's groups, and Sara, the
+ * church office, sees only what her roles allow. Last come the emails the backend will send: the prototype's
  * Emails section, and each email as a mail client draws it.
  *
  * It starts its own production server with a fresh in-memory data set and the
@@ -451,7 +451,7 @@ async function mvpScreens() {
   )
 
   // Services are created, archived and deleted by administrators; service
-  // leaders edit them (roles hold in every service). The data-changing steps
+  // leaders edit the services they lead. The data-changing steps
   // come at the end.
   const admin = await signIn("Mariam Fahmy")
   await clickAndWait(
@@ -992,7 +992,8 @@ async function memberPortal() {
 // ------------------------------------------------------- roles and permissions
 
 /**
- * Roles are data and hold everywhere in the church: the backend's defaults
+ * Roles are data and hold everywhere in the church or only in an account's
+ * assigned groups: the backend's defaults
  * (Administrator, Service leader, Servant, Parent), ordinary roles, and the
  * church's own, such as "Church office". Mariam adds "Attendance helper" (see
  * the services, take attendance) and gives it to Sara, approves a servant with
@@ -1042,7 +1043,7 @@ async function rolesAndPermissions() {
   )
   await shot(admin, "admin", "role-church-office")
 
-  // Sara also helps at the door on Sundays. Roles hold everywhere: no service to choose.
+  // Sara also helps at the door on Sundays. The new role holds everywhere: no group to choose.
   await go(admin, "/settings")
   const sara = admin
     .locator("section[aria-labelledby='users'] li")

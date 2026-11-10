@@ -9,6 +9,7 @@ import { ruleViolation } from "@/server/errors"
 import { nowMs } from "../clock"
 import { authorize, found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
+import { authorizeInService } from "../reach"
 import { isArchived, serviceOf, stageOf, stagesOf } from "../selectors"
 import type { State } from "../state"
 
@@ -61,7 +62,7 @@ export function createService(s: State, actor: User, input: ServiceInput): Servi
 
 export function updateService(s: State, actor: User, id: Uuid, input: ServiceInput): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "update", "services")
+  authorizeInService(s, actor, "update", "services", service.id)
   const v = new Violations()
   const name = v.name("name", input.name, 120, msg("errors.services.nameRequired"))
   const description = v.optionalText("description", input.description, 2000)
@@ -94,7 +95,14 @@ export function serviceImpact(s: State, id: Uuid) {
 
 export function archiveService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "delete", "services", msg("errors.services.adminOnlyArchive"))
+  authorizeInService(
+    s,
+    actor,
+    "delete",
+    "services",
+    service.id,
+    msg("errors.services.adminOnlyArchive")
+  )
   if (isArchived(service)) {
     throw ruleViolation(msg("errors.services.alreadyArchived", { name: service.name }))
   }
@@ -109,7 +117,14 @@ export function archiveService(s: State, actor: User, id: Uuid): Service {
 
 export function restoreService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "delete", "services", msg("errors.services.adminOnlyRestore"))
+  authorizeInService(
+    s,
+    actor,
+    "delete",
+    "services",
+    service.id,
+    msg("errors.services.adminOnlyRestore")
+  )
   if (!isArchived(service)) {
     throw ruleViolation(msg("errors.services.notArchived", { name: service.name }))
   }
@@ -125,7 +140,14 @@ export function restoreService(s: State, actor: User, id: Uuid): Service {
  */
 export function deleteService(s: State, actor: User, id: Uuid): Service {
   const service = found(serviceOf(s, id), "service")
-  authorize(actor, "delete", "services", msg("errors.services.adminOnlyDelete"))
+  authorizeInService(
+    s,
+    actor,
+    "delete",
+    "services",
+    service.id,
+    msg("errors.services.adminOnlyDelete")
+  )
   const impact = serviceImpact(s, id)
   if (impact.sessions > 0) {
     throw ruleViolation(
@@ -140,6 +162,7 @@ export function deleteService(s: State, actor: User, id: Uuid): Service {
   s.memberships = s.memberships.filter(
     (x) => x.serviceId !== id && !(x.stageId && stageIds.has(x.stageId))
   )
+  s.assignments = s.assignments.filter((x) => x.serviceId !== id)
   return service
 }
 
@@ -158,9 +181,10 @@ function checkStageName(s: State, v: Violations, serviceId: Uuid, name: string, 
   )
 }
 
+/** Stages are the service's structure: changing them needs the role to hold in the whole service. */
 function editableService(s: State, actor: User, serviceId: Uuid, action: Action): Service {
   const service = found(serviceOf(s, serviceId), "service")
-  authorize(actor, action, "stages")
+  authorizeInService(s, actor, action, "stages", service.id)
   if (isArchived(service)) {
     throw ruleViolation(msg("errors.services.archivedNoStageChanges", { name: service.name }))
   }
@@ -283,6 +307,7 @@ export function deleteStage(s: State, actor: User, stageId: Uuid): Stage {
   s.stages = s.stages.filter((x) => x.id !== stageId)
   s.schedules = s.schedules.filter((x) => x.stageId !== stageId)
   s.memberships = s.memberships.filter((x) => x.stageId !== stageId)
+  s.assignments = s.assignments.filter((x) => x.stageId !== stageId)
   stagesOf(s, stage.serviceId, true).forEach((x, i) => (x.position = i))
   return stage
 }

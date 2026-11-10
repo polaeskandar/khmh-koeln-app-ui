@@ -16,7 +16,8 @@ by hand on a laptop or phone, prepare lessons and give small homework tasks. Par
 children's homework in a parent portal and tick it off. People register themselves and an administrator approves each
 account; roles are defined by the church itself (it starts with Administrator, Service leader, Servant and Parent
 and adds its own, such as a church office): each is a name and permissions, an action on a resource, and holds
-everywhere in the church. Requests to see or delete personal data (DSGVO) are handled in the app. After the launch, members get
+everywhere in the church or only in the services and stages an account is assigned to (servants and service
+leaders). Requests to see or delete personal data (DSGVO) are handled in the app. After the launch, members get
 accounts of their own too (a youth, an adult in the Coptic course; under 16 only with a parent's agreement): a
 member portal shows their groups, the next meetings and their homework, which they tick off themselves. The app speaks English,
 German and Arabic (right to left) and has a dark mode. QR check-in, follow-up, visitation, events,

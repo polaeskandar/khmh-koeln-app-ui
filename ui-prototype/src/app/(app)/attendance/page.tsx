@@ -3,6 +3,7 @@ import { CircleAlert, ClipboardCheck } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
+import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader, Section } from "@/components/page-header"
 import { AgendaRow, SessionCardView, sessionHref } from "@/components/session-bits"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -32,40 +33,44 @@ export default async function AttendancePage() {
           description={t("description", { date: f.longDate(d.today) })}
         />
 
-        <Section id="today" title={t("today")}>
-          {d.sessions.length === 0 ? (
-            <Empty className="border border-dashed">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <ClipboardCheck />
-                </EmptyMedia>
-                <EmptyTitle>{t("empty")}</EmptyTitle>
-                <EmptyDescription>
-                  {d.canRecordAnywhere
-                    ? t.rich("emptyLink", {
-                        link: (chunks) => (
-                          <Link href="/meetings" className="underline underline-offset-4">
-                            {chunks}
-                          </Link>
-                        ),
-                      })
-                    : t("emptyStaff")}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {d.sessions.map((s) => (
-                <SessionCardView
-                  key={s.id}
-                  session={s}
-                  today={d.today}
-                  action={<SessionCardAction session={s} today={d.today} />}
-                />
-              ))}
-            </div>
-          )}
-        </Section>
+        {d.unassigned ? (
+          <NotAssigned />
+        ) : (
+          <Section id="today" title={t("today")}>
+            {d.sessions.length === 0 ? (
+              <Empty className="border border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <ClipboardCheck />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("empty")}</EmptyTitle>
+                  <EmptyDescription>
+                    {d.canRecordAnywhere
+                      ? t.rich("emptyLink", {
+                          link: (chunks) => (
+                            <Link href="/meetings" className="underline underline-offset-4">
+                              {chunks}
+                            </Link>
+                          ),
+                        })
+                      : t("emptyStaff")}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {d.sessions.map((s) => (
+                  <SessionCardView
+                    key={s.id}
+                    session={s}
+                    today={d.today}
+                    action={<SessionCardAction session={s} today={d.today} />}
+                  />
+                ))}
+              </div>
+            )}
+          </Section>
+        )}
 
         <div className="grid gap-10 lg:grid-cols-2">
           {d.earlier.length > 0 ? (

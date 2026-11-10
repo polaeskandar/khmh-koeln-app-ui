@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server"
 import { cn } from "cn"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
+import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader } from "@/components/page-header"
 import { ServiceTag } from "@/components/service-tag"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -81,7 +82,9 @@ export default async function SchedulesPage({ searchParams }: PageProps<"/meetin
           />
         </div>
 
-        {d.groups.length === 0 ? (
+        {d.unassigned ? (
+          <NotAssigned />
+        ) : d.groups.length === 0 ? (
           <Empty className="border border-dashed">
             <EmptyHeader>
               <EmptyMedia variant="icon">

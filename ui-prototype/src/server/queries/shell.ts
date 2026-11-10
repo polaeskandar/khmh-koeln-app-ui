@@ -1,8 +1,9 @@
 import "server-only"
 
-import { can, isActiveAccount, isStaff } from "@/lib/domain/policy"
+import { isActiveAccount, isStaff } from "@/lib/domain/policy"
 import { localDateOf } from "@/lib/domain/time"
 import { nowMs, now } from "@/server/mock/clock"
+import { canIn } from "@/server/mock/reach"
 import type { Context } from "@/server/viewer"
 
 import { byAccess } from "./accounts"
@@ -11,9 +12,9 @@ import { viewerInfo } from "./present"
 export async function getShell(ctx: Context) {
   const { state, viewer } = ctx
   const today = localDateOf(nowMs())
-  const openSessions = can(viewer, "create", "attendance")
-    ? state.sessions.filter((x) => x.status === "active").length
-    : 0
+  const openSessions = state.sessions.filter(
+    (x) => x.status === "active" && canIn(state, viewer, "create", "attendance", x)
+  ).length
   // The prototype's "view as" list: every staff account and the parents with a profile in the
   // demo story. The other parent accounts exist in the data but are not listed, to keep it short.
   const personas = state.users

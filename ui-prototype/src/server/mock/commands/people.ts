@@ -4,11 +4,12 @@ import { fullName, nameKey } from "@/lib/domain/names"
 import { addDays, localTimeOf, toInstant } from "@/lib/domain/time"
 import type { Attendance, Membership, Person, User, Uuid } from "@/lib/domain/types"
 import { msg } from "@/i18n/message"
-import { ProblemError, ruleViolation } from "@/server/errors"
+import { forbidden, notFound, ProblemError, ruleViolation } from "@/server/errors"
 
 import { nowMs, today } from "../clock"
 import { authorize, found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
+import { authorizeIn, canEverywhere, canIn, seesPerson } from "../reach"
 import {
   currentAttendance,
   isArchived,
@@ -26,7 +27,7 @@ import type { State } from "../state"
 /** Marks a person present. Only while the session is taking attendance; never twice. */
 export function markPresent(s: State, actor: User, sessionId: Uuid, personId: Uuid): Attendance {
   const session = found(sessionOf(s, sessionId), "session")
-  authorize(actor, "create", "attendance")
+  authorizeIn(s, actor, "create", "attendance", session, "session")
   const person = found(personOf(s, personId), "person")
   if (session.status === "scheduled") throw ruleViolation(msg("errors.attendance.openFirst"))
   if (session.status === "completed") throw ruleViolation(msg("errors.attendance.closedReopen"))
@@ -71,7 +72,7 @@ export function removeAttendance(
     "attendance"
   )
   const session = sessionOf(s, attendance.sessionId)!
-  authorize(actor, "delete", "attendance")
+  authorizeIn(s, actor, "delete", "attendance", session, "attendance")
   if (attendance.removedAt) throw ruleViolation(msg("errors.attendance.alreadyRemoved"))
   if (session.status !== "active") throw ruleViolation(msg("errors.attendance.closedReopen"))
   const v = new Violations()
@@ -113,7 +114,14 @@ export function createPerson(
   authorize(actor, "create", "members", msg("errors.people.addNotAllowed"))
   const { v, firstName, lastName, displayName } = validatePerson(input)
   if (input.serviceId) checkPlacement(s, v, input.serviceId, input.stageId)
+  else if (!canEverywhere(s, actor, "create", "members")) {
+    v.add("serviceId", msg("errors.people.chooseJoinService"))
+  }
   v.throwIfAny()
+  const placement = input.serviceId ? { serviceId: input.serviceId, stageId: input.stageId } : null
+  if (placement && !canIn(s, actor, "create", "members", placement)) {
+    throw forbidden(msg("errors.people.addOutsideServices"))
+  }
   if (!input.allowDuplicate) {
     const namesakes = possibleDuplicates(s, firstName, lastName)
     if (namesakes.length > 0) {
@@ -143,9 +151,28 @@ export function createPerson(
   return { person, membership }
 }
 
-export function updatePerson(s: State, actor: User, personId: Uuid, input: PersonInput): Person {
+/**
+ * A person is changed through their groups: an account whose role holds only in its groups
+ * changes people with a current membership there, and doesn't find anyone else (404).
+ */
+function changeablePerson(s: State, actor: User, personId: Uuid): Person {
   const person = found(personOf(s, personId), "person")
   authorize(actor, "update", "members", msg("errors.people.changeNotAllowed"))
+  if (canEverywhere(s, actor, "update", "members")) return person
+  if (!seesPerson(s, actor, person.id)) throw notFound("person")
+  const date = today()
+  const changeable = s.memberships.some(
+    (m) =>
+      m.personId === person.id && isCurrentOn(m, date) && canIn(s, actor, "update", "members", m)
+  )
+  if (!changeable) {
+    throw forbidden(msg("errors.people.editOutsideServices", { name: fullName(person) }))
+  }
+  return person
+}
+
+export function updatePerson(s: State, actor: User, personId: Uuid, input: PersonInput): Person {
+  const person = changeablePerson(s, actor, personId)
   const { v, firstName, lastName, displayName } = validatePerson(input)
   v.throwIfAny()
   person.firstName = firstName
@@ -160,13 +187,13 @@ export function setPersonStatus(
   personId: Uuid,
   status: Person["status"]
 ): Person {
-  const person = found(personOf(s, personId), "person")
-  authorize(actor, "update", "members", msg("errors.people.changeNotAllowed"))
+  const person = changeablePerson(s, actor, personId)
   person.status = status
   return person
 }
 
-function checkPlacement(s: State, v: Violations, serviceId: Uuid, stageId: Uuid | null) {
+/** The service and stage must exist, belong together and not be archived (422). */
+export function checkPlacement(s: State, v: Violations, serviceId: Uuid, stageId: Uuid | null) {
   const service = serviceOf(s, serviceId)
   if (!service) return v.add("serviceId", msg("errors.meetings.chooseService"))
   if (isArchived(service)) {
@@ -212,6 +239,9 @@ export function addMembership(
   const v = new Violations()
   checkPlacement(s, v, serviceId, stageId)
   v.throwIfAny()
+  if (!canIn(s, actor, "update", "members", { serviceId, stageId })) {
+    throw forbidden(msg("errors.people.membershipOutsideServices"))
+  }
   const date = today()
   const open = s.memberships.find(
     (m) =>
@@ -236,7 +266,7 @@ export function endMembership(s: State, actor: User, membershipId: Uuid): Member
     s.memberships.find((x) => x.id === membershipId),
     "membership"
   )
-  authorize(actor, "delete", "members", msg("errors.people.removeNotAllowed"))
+  authorizeIn(s, actor, "delete", "members", m, "membership", msg("errors.people.removeNotAllowed"))
   if (m.endsOn !== null && m.endsOn < today()) {
     throw ruleViolation(msg("errors.people.membershipEnded"))
   }
@@ -259,11 +289,14 @@ export function moveMembership(
     s.memberships.find((x) => x.id === membershipId),
     "membership"
   )
-  authorize(actor, "update", "members", msg("errors.people.changeNotAllowed"))
+  authorizeIn(s, actor, "update", "members", m, "membership", msg("errors.people.changeNotAllowed"))
   if (m.stageId === stageId) return m
   const v = new Violations()
   checkPlacement(s, v, m.serviceId, stageId)
   v.throwIfAny()
+  if (!canIn(s, actor, "update", "members", { serviceId: m.serviceId, stageId })) {
+    throw forbidden(msg("errors.people.moveOutsideStages"))
+  }
   if (m.startsOn >= today()) {
     m.stageId = stageId
     return m

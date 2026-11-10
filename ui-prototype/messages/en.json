@@ -102,7 +102,8 @@
       "guardian": "This parent link does not exist or was removed.",
       "request": "This request does not exist or was deleted.",
       "role": "This role does not exist or was deleted.",
-      "route": "Not found. Reload the page and try again."
+      "route": "Not found. Reload the page and try again.",
+      "assignment": "This assignment does not exist or was removed."
     },
     "validation": {
       "tooLong": "Use at most {max} characters.",
@@ -332,6 +333,10 @@
       "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
       "resetLinkInvalid": "This link no longer works. Ask the church office for a new one.",
       "confirmationLinkInvalid": "This confirmation link is invalid or has expired. Register again to get a new one."
+    },
+    "assignments": {
+      "alreadyAssigned": "{name} is already assigned to {where}.",
+      "notAllowed": "You can’t assign people to this group or take them out of it."
     }
   },
   "toast": {
@@ -396,7 +401,9 @@
     "memberUnlinked": "Link removed for {name}.",
     "roleCreated": "Role “{name}” created.",
     "roleSaved": "Role saved.",
-    "roleDeleted": "Role “{name}” deleted."
+    "roleDeleted": "Role “{name}” deleted.",
+    "groupAssigned": "{name} now serves in {where}.",
+    "groupRemoved": "{name} no longer serves in {where}."
   },
   "roles": {
     "summary": {
@@ -735,13 +742,16 @@
       "remove": "Remove role",
       "assign": {
         "title": "Give {name} a role",
-        "description": "Roles decide what someone can see and change, in every service. An account can have several.",
+        "description": "Roles decide what someone can see and change: everywhere, or in the groups the account serves in. An account can have several.",
         "role": "Role",
         "submit": "Give role",
         "roleHint": "See what each role allows under <link>Roles</link>.",
         "choose": "Choose a role"
       },
-      "description": "Give each account the roles it needs. Roles hold everywhere in the church."
+      "description": "Give each account the roles it needs and the groups it serves in. Some roles hold everywhere in the church, others only in the account’s groups.",
+      "addGroup": "Group",
+      "addGroupLabel": "Assign {name} to a group…",
+      "noGroups": "No group yet: sees no service until assigned."
     },
     "parents": {
       "title": "Parent access",
@@ -840,7 +850,11 @@
       "deleteConfirm": "Delete role",
       "readOnly": "Your roles let you see roles, not change them.",
       "allows": "Allows",
-      "global": "Roles hold everywhere in the church, in every service. Which children a parent sees still comes from parent access; members see their own groups without a role."
+      "global": "Some roles hold everywhere in the church, others only in the services and stages an account is assigned to. Which children a parent sees still comes from parent access; members see their own groups without a role.",
+      "scope": {
+        "church": "Everywhere",
+        "assignedGroups": "In assigned groups"
+      }
     }
   },
   "session": {
@@ -1370,6 +1384,17 @@
       "upcoming": {
         "title": "Coming up",
         "empty": "Nothing planned in the next two weeks."
+      },
+      "servants": {
+        "title": "Servants",
+        "description": "Who serves in this service. Leaders are assigned to the whole service.",
+        "empty": "Nobody is assigned yet.",
+        "assign": "Assign",
+        "dialog": {
+          "title": "Assign a servant to {service}",
+          "account": "Account",
+          "chooseAccount": "Choose an account"
+        }
       }
     }
   },
@@ -1939,7 +1964,7 @@
     "approve": {
       "title": "Approve {name}’s account",
       "parentDescription": "Check the family first, for example in person after the liturgy. The parent then sees these children’s published homework.",
-      "servantDescription": "Check with the service leader first. The roles decide what the servant can see and do, in every service.",
+      "servantDescription": "Check with the service leader first. The roles decide what the servant can see and do; the groups, where.",
       "children": "Children",
       "childrenHint": "Children whose names {name} wrote are already chosen. Search to add others.",
       "findChild": "Find a child by name or class",
@@ -1965,8 +1990,13 @@
       "consentNote": "How did they agree? (optional)",
       "consentNotePlaceholder": "For example: his mother agreed in person on 8 November.",
       "roles": "Roles",
-      "rolesHint": "What the account may do, everywhere in the church. You can change it later under Staff accounts and roles.",
-      "servesIn": "Says they serve in {service}."
+      "rolesHint": "What the account may do. You can change it later under Staff accounts and roles.",
+      "servesIn": "Says they serve in {service}.",
+      "groups": "Groups",
+      "groupsHint": "Where they serve. Roles that hold only in assigned groups hold here. The service they named is already chosen.",
+      "noGroups": "No group yet. A servant without a group sees no service.",
+      "addGroup": "Add group",
+      "removeGroup": "Remove {group}"
     },
     "decline": {
       "title": "Decline {name}’s registration?",
@@ -2117,7 +2147,8 @@
       "guardianLinks": "{count, plural, one {# parent link} other {# parent links}}",
       "account": "{count, plural, one {The account and its sign-in} other {# accounts}}",
       "roles": "{count, plural, one {# role} other {# roles}}",
-      "notes": "{count, plural, one {# note that mentioned them, emptied} other {# notes that mentioned them, emptied}}"
+      "notes": "{count, plural, one {# note that mentioned them, emptied} other {# notes that mentioned them, emptied}}",
+      "assignments": "{count, plural, one {# group they serve in} other {# groups they serve in}}"
     },
     "keep": {
       "sessionTotals": "{count, plural, one {Attendance totals of # meeting} other {Attendance totals of # meetings}}",
@@ -2185,7 +2216,8 @@
     },
     "groups": {
       "noSchedule": "No regular meetings at the moment.",
-      "lastLesson": "Last lesson: “{title}”, {date}"
+      "lastLesson": "Last lesson: “{title}”, {date}",
+      "servants": "Servants: {names}"
     },
     "homework": {
       "description": "Everything the servants of your groups gave you.",
@@ -2219,9 +2251,9 @@
     "details": "Role",
     "name": "Name",
     "nameHint": "For example: Church office, Attendance helper.",
-    "description": "What the role allows, everywhere in the church, and who has it.",
+    "description": "What the role allows, where it holds, and who has it.",
     "permissions": "What it allows",
-    "permissionsHint": "Roles hold everywhere: a role that may take attendance may take it in every service. Ticking Add, Change or Delete ticks See too.",
+    "permissionsHint": "Ticking Add, Change or Delete ticks See too.",
     "chosen": "{count, number} of {total, number} chosen",
     "readOnlyNote": "You can see this role, but your roles don’t let you change it.",
     "create": "Create role",
@@ -2243,7 +2275,12 @@
     "locksOut": "Nobody else can change roles. Without “Roles: Change” here, no one could repair roles any more, so this change would be refused.",
     "deleteLocksOut": "Nobody else can change roles, so this role can’t be deleted. Give another role “Roles: Change” first.",
     "added": "Added {when}",
-    "changed": "Last changed {when}"
+    "changed": "Last changed {when}",
+    "scope": "Where it applies",
+    "scopeChurch": "Everywhere in the church",
+    "scopeChurchHint": "In every service and stage. For the administrator, the church office and parents.",
+    "scopeAssigned": "Only in the account’s assigned groups",
+    "scopeAssignedHint": "In the services and stages the account is assigned to under Staff accounts and roles. For servants and service leaders."
   },
   "permissions": {
     "actions": {
@@ -2338,5 +2375,25 @@
     "openHtml": "HTML on its own",
     "openText": "Text on its own",
     "notes": "Latin letters appear in the reader’s own font, so the email looks a little different on every device; Arabic letters are in Vazirmatn, as in the app, where the client loads fonts (Apple Mail, iOS Mail, Outlook for Mac). Dark colors appear in clients that support them, such as Apple Mail; Gmail darkens emails by itself."
+  },
+  "assignments": {
+    "notAssigned": {
+      "title": "You are not assigned to a group yet",
+      "description": "Ask the church office. Once you are assigned to a service or a stage, its meetings, members, lessons and homework appear here."
+    },
+    "wholeService": "The whole service",
+    "service": "Service",
+    "stage": "Stage",
+    "chooseService": "Choose a service",
+    "stageHint": "The whole service covers its own roster and all its stages, as for a service leader; a stage covers that stage only.",
+    "assign": "Assign",
+    "remove": "Take out",
+    "removeLabel": "Take {name} out of {where}",
+    "removeTitle": "Take {name} out of {where}?",
+    "removeDescription": "Roles that hold in assigned groups no longer hold there for them. Their past attendance records, lessons and homework stay.",
+    "dialog": {
+      "title": "Assign {name} to a group",
+      "description": "Roles that hold only in assigned groups, such as Servant and Service leader, hold in the groups an account is assigned to."
+    }
   }
 }

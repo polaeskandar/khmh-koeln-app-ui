@@ -1,9 +1,10 @@
-import { BookOpen, CalendarX2, Clock, MapPin, MoveRight, Repeat } from "lucide-react"
+import { BookOpen, CalendarX2, Clock, MapPin, MoveRight, Repeat, UsersRound } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
 import { ServiceTag } from "@/components/service-tag"
 import { useFormat } from "@/i18n/format"
+import { isolate } from "@/lib/bidi"
 import type { LocalDate } from "@/lib/domain/types"
 import type { MemberGroup, MemberMeeting } from "@/server/queries/member"
 
@@ -14,7 +15,7 @@ export const memberTaskHref: TaskHref = (task) => `/member/homework/${task.id}`
 
 /**
  * One group the member is in: the service and stage, when and where it meets,
- * and the passage and memory verse of the last lesson.
+ * who serves it, and the passage and memory verse of the last lesson.
  */
 export function GroupCard({ group, today }: { group: MemberGroup; today: LocalDate }) {
   const t = useTranslations("member.groups")
@@ -53,6 +54,13 @@ export function GroupCard({ group, today }: { group: MemberGroup; today: LocalDa
       ) : (
         <p className="text-sm text-muted-foreground">{t("noSchedule")}</p>
       )}
+
+      {group.servants.length > 0 ? (
+        <p className="flex items-start gap-2 text-sm text-muted-foreground">
+          <UsersRound className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+          <span>{t("servants", { names: f.list(group.servants.map(isolate)) })}</span>
+        </p>
+      ) : null}
 
       {group.lastLesson ? (
         <div className="flex flex-col gap-2 bg-muted/50 p-3">

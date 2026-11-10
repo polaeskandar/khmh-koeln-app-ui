@@ -2,6 +2,7 @@ import { CalendarOff } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
+import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader, Section } from "@/components/page-header"
 import { AgendaRow, sessionHref } from "@/components/session-bits"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
@@ -76,52 +77,58 @@ export default async function MeetingsPage({ searchParams }: PageProps<"/meeting
           }
         />
         <MeetingsTabs active="sessions" />
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-muted-foreground">
-              {t("agenda.range", {
-                // "Monday 2 November to Sunday 15 November 2026": the year once, at the end.
-                from: f.longDate(d.days[0].date).replace(/ \d{4}$/, ""),
-                to: f.longDate(d.days.at(-1)!.date),
-              })}
-            </p>
-            <ServiceFilter
-              services={d.services}
-              value={d.serviceId}
-              basePath="/meetings"
-              params={{ date: d.selected !== d.today ? d.selected : null }}
-            />
-          </div>
-          <DayStrip
-            days={d.days.map((x) => ({ date: x.date, tones: x.tones, count: x.items.length }))}
-            selected={d.selected}
-            today={d.today}
-            href={href}
-          />
-        </div>
-        <Section id="day" title={f.longDate(d.selected)} description={daySummary(day.items)}>
-          {day.items.length === 0 ? (
-            <Empty className="border border-dashed">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <CalendarOff />
-                </EmptyMedia>
-                <EmptyTitle>{t("agenda.emptyTitle")}</EmptyTitle>
-                <EmptyDescription>
-                  {d.serviceId ? t("agenda.emptyFiltered") : t("agenda.emptyOtherDay")}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <ul className="divide-y border-y">
-              {day.items.map((item) => (
-                <li key={item.kind === "session" ? item.id : item.key}>
-                  <AgendaRow item={item} today={d.today} href={itemHref(item)} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </Section>
+        {d.unassigned ? (
+          <NotAssigned />
+        ) : (
+          <>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted-foreground">
+                  {t("agenda.range", {
+                    // "Monday 2 November to Sunday 15 November 2026": the year once, at the end.
+                    from: f.longDate(d.days[0].date).replace(/ \d{4}$/, ""),
+                    to: f.longDate(d.days.at(-1)!.date),
+                  })}
+                </p>
+                <ServiceFilter
+                  services={d.services}
+                  value={d.serviceId}
+                  basePath="/meetings"
+                  params={{ date: d.selected !== d.today ? d.selected : null }}
+                />
+              </div>
+              <DayStrip
+                days={d.days.map((x) => ({ date: x.date, tones: x.tones, count: x.items.length }))}
+                selected={d.selected}
+                today={d.today}
+                href={href}
+              />
+            </div>
+            <Section id="day" title={f.longDate(d.selected)} description={daySummary(day.items)}>
+              {day.items.length === 0 ? (
+                <Empty className="border border-dashed">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <CalendarOff />
+                    </EmptyMedia>
+                    <EmptyTitle>{t("agenda.emptyTitle")}</EmptyTitle>
+                    <EmptyDescription>
+                      {d.serviceId ? t("agenda.emptyFiltered") : t("agenda.emptyOtherDay")}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                <ul className="divide-y border-y">
+                  {day.items.map((item) => (
+                    <li key={item.kind === "session" ? item.id : item.key}>
+                      <AgendaRow item={item} today={d.today} href={itemHref(item)} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          </>
+        )}
       </PageBody>
     </>
   )
