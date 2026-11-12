@@ -3,239 +3,117 @@
 import { z } from "zod"
 
 import { msg } from "@/i18n/message"
-import * as commands from "@/server/mock/commands/learning"
+import {
+  createLesson,
+  createTask,
+  deleteLesson,
+  deleteTask,
+  setLessonStatus,
+  setTaskDone,
+  setTaskStatus,
+  updateLesson,
+  updateTask,
+} from "@/server/mock/commands/learning"
 
-import { id, run } from "./run"
-import { isolate } from "@/lib/bidi"
+import { run } from "./run"
+import { link, nullableText, shortText, unit, uuid } from "./schemas"
 
-const material = z.object({ label: z.string().max(500), url: z.string().max(2000).nullable() })
-const optional = z.string().max(10_000).nullable().optional()
-
-const lessonInput = z.object({
-  title: z.string().max(1000),
-  meeting: z.string().max(200),
-  summary: optional,
-  passage: optional,
-  objectives: optional,
-  teachingPoints: optional,
-  memoryVerse: optional,
-  activities: optional,
-  materials: z.array(material).max(20).optional(),
-  notes: optional,
-  responsibleId: id,
-  collaboratorIds: z.array(id).max(20).optional(),
-})
-
-const homeworkInput = z.object({
-  title: z.string().max(1000),
-  instructions: z.string().max(10_000),
-  dueDate: z.string().max(20).nullable(),
-  resources: z.array(material).max(20).optional(),
+const lesson = z.object({
+  sessionId: uuid.nullable(),
+  date: z.string().max(10).nullable(),
+  title: shortText,
+  summary: nullableText,
+  objectives: nullableText,
+  teachingPoints: nullableText,
+  materials: z.array(link.extend({ shared: z.boolean() })).max(30),
+  notes: nullableText,
 })
 
 export async function createLessonAction(
-  stageId: string,
-  input: z.input<typeof lessonInput>,
-  ready: boolean
+  where: z.input<typeof unit>,
+  input: z.input<typeof lesson>
 ) {
-  return run(
-    ({ state, viewer }) => {
-      const lesson = commands.createLesson(
-        state,
-        viewer,
-        id.parse(stageId),
-        lessonInput.parse(input),
-        ready ? "ready" : "draft"
-      )
-      return { id: lesson.id, title: lesson.title, status: lesson.status }
-    },
-    (r) =>
-      r.status === "ready"
-        ? msg("toast.lessonReady", { title: isolate(r.title) })
-        : msg("toast.lessonDraftSaved", { title: isolate(r.title) })
-  )
+  const target = unit.parse(where)
+  const data = lesson.parse(input)
+
+  return run((ctx) => createLesson(ctx, target, data).id, msg("toast.lessonSaved"))
 }
 
-export async function updateLessonAction(
-  lessonId: string,
-  input: z.input<typeof lessonInput>,
-  status?: "draft" | "ready"
-) {
-  return run(
-    ({ state, viewer }) => {
-      const lesson = commands.updateLesson(
-        state,
-        viewer,
-        id.parse(lessonId),
-        lessonInput.parse(input)
-      )
-      if (status && status !== lesson.status && lesson.status !== "completed")
-        commands.setLessonStatus(state, viewer, lesson.id, status)
-      return { id: lesson.id, status: lesson.status }
-    },
-    (r) => (r.status === "ready" ? msg("toast.lessonSavedReady") : msg("toast.saved"))
-  )
+export async function updateLessonAction(lessonId: string, input: z.input<typeof lesson>) {
+  const id = uuid.parse(lessonId)
+  const data = lesson.parse(input)
+
+  return run((ctx) => updateLesson(ctx, id, data).id, msg("toast.lessonSaved"))
 }
 
 export async function setLessonStatusAction(
   lessonId: string,
-  status: "draft" | "ready" | "completed"
+  status: "draft" | "ready" | "published"
 ) {
-  return run(
-    ({ state, viewer }) =>
-      commands.setLessonStatus(
-        state,
-        viewer,
-        id.parse(lessonId),
-        z.enum(["draft", "ready", "completed"]).parse(status)
-      ).status,
-    (s) =>
-      s === "completed"
-        ? msg("toast.lessonTaught")
-        : s === "ready"
-          ? msg("toast.lessonMarkedReady")
-          : msg("toast.lessonBackToDraft")
-  )
-}
+  const id = uuid.parse(lessonId)
+  const value = z.enum(["draft", "ready", "published"]).parse(status)
 
-export async function archiveLessonAction(lessonId: string) {
-  return run(
-    ({ state, viewer }) => commands.archiveLesson(state, viewer, id.parse(lessonId)).title,
-    (title) => msg("toast.archivedTitle", { title })
-  )
-}
-
-export async function restoreLessonAction(lessonId: string) {
-  return run(
-    ({ state, viewer }) => commands.restoreLesson(state, viewer, id.parse(lessonId)).title,
-    (title) => msg("toast.restoredTitle", { title })
-  )
+  return run((ctx) => setLessonStatus(ctx, id, value), msg(`toast.lessonStatus.${value}`))
 }
 
 export async function deleteLessonAction(lessonId: string) {
-  return run(
-    ({ state, viewer }) => commands.deleteLesson(state, viewer, id.parse(lessonId)).title,
-    (title) => msg("toast.deletedTitle", { title })
-  )
+  const id = uuid.parse(lessonId)
+
+  return run((ctx) => deleteLesson(ctx, id), msg("toast.lessonDeleted"))
 }
 
-export async function createHomeworkAction(
+const task = z.object({
+  title: shortText,
+  instructions: z.string().max(10000),
+  dueDate: z.string().max(10).nullable(),
+  resources: z.array(link).max(20),
+})
+
+export async function createTaskAction(
   lessonId: string,
-  input: z.input<typeof homeworkInput>,
+  input: z.input<typeof task>,
   publish: boolean
 ) {
+  const id = uuid.parse(lessonId)
+  const data = task.parse(input)
+  const value = z.boolean().parse(publish)
+
   return run(
-    ({ state, viewer }) => {
-      const hw = commands.createHomework(
-        state,
-        viewer,
-        id.parse(lessonId),
-        homeworkInput.parse(input),
-        z.boolean().parse(publish)
-      )
-      return { id: hw.id, status: hw.status }
-    },
-    (r) =>
-      r.status === "published" ? msg("toast.homeworkPublishedNew") : msg("toast.homeworkDraftSaved")
+    (ctx) => createTask(ctx, id, data, value).id,
+    msg(value ? "toast.taskPublished" : "toast.taskSaved")
   )
 }
 
-export async function updateHomeworkAction(
-  homeworkId: string,
-  input: z.input<typeof homeworkInput>,
-  publish?: boolean
+export async function updateTaskAction(taskId: string, input: z.input<typeof task>) {
+  const id = uuid.parse(taskId)
+  const data = task.parse(input)
+
+  return run((ctx) => updateTask(ctx, id, data).id, msg("toast.taskSaved"))
+}
+
+export async function setTaskStatusAction(
+  taskId: string,
+  status: "draft" | "published" | "archived"
 ) {
+  const id = uuid.parse(taskId)
+  const value = z.enum(["draft", "published", "archived"]).parse(status)
+
+  return run((ctx) => setTaskStatus(ctx, id, value), msg(`toast.taskStatus.${value}`))
+}
+
+export async function deleteTaskAction(taskId: string) {
+  const id = uuid.parse(taskId)
+
+  return run((ctx) => deleteTask(ctx, id), msg("toast.taskDeleted"))
+}
+
+export async function setTaskDoneAction(taskId: string, personId: string, done: boolean) {
+  const id = uuid.parse(taskId)
+  const person = uuid.parse(personId)
+  const value = z.boolean().parse(done)
+
   return run(
-    ({ state, viewer }) => {
-      let hw = commands.updateHomework(
-        state,
-        viewer,
-        id.parse(homeworkId),
-        homeworkInput.parse(input)
-      )
-      if (publish && hw.status === "draft") hw = commands.publishHomework(state, viewer, hw.id)
-      return { id: hw.id, status: hw.status }
-    },
-    (r) =>
-      r.status === "published"
-        ? msg("toast.homeworkSavedPublished")
-        : msg("toast.homeworkSavedDraft")
+    (ctx) => setTaskDone(ctx, id, person, value),
+    msg(value ? "toast.taskDone" : "toast.taskNotDone")
   )
-}
-
-export async function publishHomeworkAction(homeworkId: string) {
-  return run(
-    ({ state, viewer }) => commands.publishHomework(state, viewer, id.parse(homeworkId)).title,
-    (title) => msg("toast.homeworkPublished", { title })
-  )
-}
-
-export async function unpublishHomeworkAction(homeworkId: string) {
-  return run(
-    ({ state, viewer }) => commands.unpublishHomework(state, viewer, id.parse(homeworkId)).title,
-    (title) => msg("toast.homeworkUnpublished", { title })
-  )
-}
-
-export async function archiveHomeworkAction(homeworkId: string) {
-  return run(
-    ({ state, viewer }) => commands.archiveHomework(state, viewer, id.parse(homeworkId)).title,
-    (title) => msg("toast.homeworkArchived", { title })
-  )
-}
-
-export async function restoreHomeworkAction(homeworkId: string) {
-  return run(
-    ({ state, viewer }) => {
-      const hw = commands.restoreHomework(state, viewer, id.parse(homeworkId))
-      return { title: hw.title, status: hw.status }
-    },
-    (r) =>
-      r.status === "published"
-        ? msg("toast.homeworkRestoredPublished", { title: isolate(r.title) })
-        : msg("toast.homeworkRestoredDraft", { title: isolate(r.title) })
-  )
-}
-
-export async function deleteHomeworkAction(homeworkId: string) {
-  return run(
-    ({ state, viewer }) => commands.deleteHomework(state, viewer, id.parse(homeworkId)).title,
-    (title) => msg("toast.deletedTitle", { title })
-  )
-}
-
-/** Parent portal: report a child's homework as completed. Safe to call twice. */
-export async function completeHomeworkAction(homeworkId: string, childId: string) {
-  return run(({ state, viewer }) => {
-    const c = commands.completeHomework(state, viewer, id.parse(homeworkId), id.parse(childId))
-    return { completedAt: c.completedAt }
-  })
-}
-
-export async function undoCompletionAction(homeworkId: string, childId: string) {
-  return run(({ state, viewer }) => {
-    commands.undoCompletion(state, viewer, id.parse(homeworkId), id.parse(childId))
-    return null
-  })
-}
-
-export async function linkGuardianAction(userId: string, personId: string) {
-  return run(({ state, viewer }) => {
-    commands.linkGuardian(state, viewer, id.parse(userId), id.parse(personId))
-    return null
-  }, msg("toast.accessGiven"))
-}
-
-export async function approveGuardianAction(linkId: string) {
-  return run(({ state, viewer }) => {
-    commands.approveGuardian(state, viewer, id.parse(linkId))
-    return null
-  }, msg("toast.approved"))
-}
-
-export async function revokeGuardianAction(linkId: string) {
-  return run(({ state, viewer }) => {
-    commands.revokeGuardian(state, viewer, id.parse(linkId))
-    return null
-  }, msg("toast.accessRemoved"))
 }

@@ -1,289 +1,120 @@
 import "server-only"
 
-import { fullName, initials, preferredName } from "@/lib/domain/names"
-import { isMember, isParent, isStaff } from "@/lib/domain/policy"
-import { nextOccurrence } from "@/lib/domain/recurrence"
-import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
-import type {
-  LocalDate,
-  MeetingSchedule,
-  MeetingSession,
-  Person,
-  Role,
-  Service,
-  Stage,
-  User,
-  Uuid,
-} from "@/lib/domain/types"
+import { fullName, initials, unitName } from "@/lib/domain/names"
+import type { Account, Person, Session, Unit, Uuid } from "@/lib/domain/types"
+import type { AccountRef, PersonRef, SessionCard, UnitRef, ViewerInfo } from "@/lib/view-models"
+import { can, grantsOf, isStaff } from "@/server/mock/access"
 import {
-  compareAgenda,
-  type PersonRef,
-  type PlannedOccurrence,
-  type ScheduleSummary,
-  type ServiceRef,
-  type SessionCard,
-  type StageRef,
-  type UserRef,
-  type ViewerInfo,
-} from "@/lib/view-models"
-import { today } from "@/server/mock/clock"
-import { occurrenceOn } from "@/server/mock/generator"
-import { canIn, groupView } from "@/server/mock/reach"
-import {
-  childrenOf,
-  currentGroupNames,
-  isArchived,
+  accountOf,
   personOf,
-  roleOf,
-  rosterOn,
+  presentIds,
+  rosterOf,
   serviceOf,
-  sessionCounts,
-  sessionForOccurrence,
   stageOf,
-  userOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
-/**
- * The context as the viewer sees it: the services, stages, meetings, members, lessons and homework
- * of the groups its roles hold in (`groupView`). Every read model of groups starts here, so lists
- * leave the other groups out and their pages are not found, as with the API.
- */
-export function inGroups(ctx: Context): Context {
-  const state = groupView(ctx.state, ctx.viewer)
-  return state === ctx.state ? ctx : { ...ctx, state }
-}
+export function unitRef(s: State, unit: Unit): UnitRef {
+  const service = serviceOf(s, unit.serviceId)
+  const stage = stageOf(s, unit.stageId)
+  const serviceName = service?.name ?? ""
 
-/** Identity colour slot (1–8), fixed when the service was created. */
-export function serviceTone(s: State, id: Uuid): number {
-  return s.serviceTones[id] ?? 1
-}
-
-export function serviceRef(s: State, service: Service): ServiceRef {
   return {
-    id: service.id,
-    name: service.name,
-    tone: serviceTone(s, service.id),
-    archived: isArchived(service),
-  }
-}
-
-export function stageRef(stage: Stage | undefined | null): StageRef | null {
-  return stage ? { id: stage.id, name: stage.name, archived: isArchived(stage) } : null
-}
-
-export function userRef(user: User | undefined | null): UserRef | null {
-  if (!user) return null
-  const [first = "", last = ""] = user.displayName.split(" ")
-  return {
-    id: user.id,
-    name: user.displayName,
-    initials: `${first.charAt(0)}${last.charAt(0)}`.toUpperCase(),
+    serviceId: unit.serviceId,
+    stageId: unit.stageId,
+    serviceName,
+    stageName: stage?.name ?? null,
+    name: unitName(serviceName, stage?.name ?? null),
+    tone: s.serviceTones[unit.serviceId] ?? 1,
   }
 }
 
 export function personRef(p: Person): PersonRef {
+  return { id: p.id, name: fullName(p), initials: initials(p), lastName: p.lastName }
+}
+
+export function accountName(s: State, account: Account): string {
+  const person = personOf(s, account.personId)
+
+  return person ? fullName(person) : account.username
+}
+
+export function accountRef(s: State, id: Uuid | null): AccountRef | null {
+  const account = accountOf(s, id)
+
+  return account
+    ? { id: account.id, name: accountName(s, account), username: account.username }
+    : null
+}
+
+export const unitOf = (x: { serviceId: Uuid; stageId: Uuid | null }): Unit => ({
+  serviceId: x.serviceId,
+  stageId: x.stageId,
+})
+
+export function sessionCard({ state: s, viewer }: Context, x: Session): SessionCard {
+  const unit = unitOf(x)
+  const occasion = s.occasions.find((o) => o.id === x.occasionId)
+  const anonymous = s.anonymousCounts[x.id]?.present ?? 0
+
   return {
-    id: p.id,
-    firstName: p.firstName,
-    lastName: p.lastName,
-    displayName: p.displayName,
-    name: preferredName(p),
-    fullName: fullName(p),
-    initials: initials(p),
-    status: p.status,
+    id: x.id,
+    unit: unitRef(s, unit),
+    date: x.date,
+    startTime: x.startTime,
+    endTime: x.endTime,
+    location: x.location,
+    status: x.status,
+    kind: x.kind,
+    cancelReason: x.cancelReason,
+    occasion: occasion
+      ? { id: occasion.id, key: occasion.key, name: occasion.name, category: occasion.category }
+      : null,
+    changedByHand: x.changedByHand,
+    originalDate: x.originalDate,
+    present: presentIds(s, x.id).size + anonymous,
+    roster: rosterOf(s, unit, x.date).length,
+    canRecord: can(s, viewer, "attendance.record", unit),
+    canManage: can(s, viewer, "schedule.manage", unit),
   }
 }
 
-export function sessionCard(s: State, viewer: User, x: MeetingSession): SessionCard {
-  const service = serviceOf(s, x.serviceId)!
-  const stage = stageOf(s, x.stageId)
-  const counts = sessionCounts(s, x)
-  const date = localDateOf(x.startsAt)
+export function bySessionTime(a: Session, b: Session) {
+  return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
+}
+
+export function roleSummary(s: State, account: Account): string {
+  const names = [
+    ...new Set(
+      s.assignments
+        .filter((a) => a.accountId === account.id)
+        .map((a) => s.roles.find((r) => r.id === a.roleId)?.name)
+        .filter((n): n is string => !!n)
+    ),
+  ]
+
+  return names.join(", ")
+}
+
+export function viewerInfo(s: State, account: Account): ViewerInfo {
+  const person = personOf(s, account.personId)
+
   return {
-    kind: "session",
-    id: x.id,
-    title: x.title,
-    group: stage?.name ?? service.name,
-    order: stage?.position ?? -1,
-    service: serviceRef(s, service),
-    stage: stageRef(stage),
-    scheduleId: x.scheduleId,
-    date,
-    occurrenceDate: x.occurrenceDate,
-    startTime: localTimeOf(x.startsAt),
-    endTime: x.endsAt ? localTimeOf(x.endsAt) : null,
-    startsAt: x.startsAt,
-    location: x.location,
-    status: x.status,
-    rosterMode: x.rosterMode,
-    moved: s.events.some((e) => e.sessionId === x.id && e.type === "moved"),
-    oneOff: x.scheduleId === null,
-    cancelReason: x.cancelReason,
-    counts,
-    openedAt: x.openedAt,
-    closedAt: x.closedAt,
-    closedBy: userRef(userOf(s, x.closedBy)),
-    can: {
-      record: canIn(s, viewer, "create", "attendance", x),
-      manage: canIn(s, viewer, "update", "sessions", x),
-      reopen: canIn(s, viewer, "update", "sessions", x),
+    id: account.id,
+    name: accountName(s, account),
+    firstName: person?.firstName ?? account.username,
+    initials: person ? initials(person) : account.username.slice(0, 2).toUpperCase(),
+    username: account.username,
+    roleSummary: roleSummary(s, account),
+    areas: {
+      staff: isStaff(s, account),
+      parent: can(s, account, "portal.parent"),
+      member: can(s, account, "portal.member"),
     },
   }
 }
 
-export function scheduleRosterSize(
-  s: State,
-  sch: MeetingSchedule,
-  date: LocalDate = today()
-): number | null {
-  return sch.rosterMode === "open" ? null : rosterOn(s, sch.serviceId, sch.stageId, date).length
-}
-
-export function plannedOccurrence(
-  s: State,
-  viewer: User,
-  sch: MeetingSchedule,
-  date: LocalDate
-): PlannedOccurrence | null {
-  const occ = occurrenceOn(sch, date)
-  if (!occ) return null
-  const service = serviceOf(s, sch.serviceId)!
-  const stage = stageOf(s, sch.stageId)
-  return {
-    kind: "planned",
-    key: `${sch.id}@${date}`,
-    scheduleId: sch.id,
-    title: sch.name,
-    group: stage?.name ?? service.name,
-    order: stage?.position ?? -1,
-    service: serviceRef(s, service),
-    stage: stageRef(stage),
-    date,
-    startTime: sch.startTime,
-    endTime: sch.endTime,
-    location: sch.location,
-    rosterMode: sch.rosterMode,
-    rosterSize: scheduleRosterSize(s, sch, date),
-    createdOn: addDays(date, -1),
-    can: { manage: canIn(s, viewer, "update", "sessions", sch) },
-  }
-}
-
-/** Is the schedule currently producing sessions? */
-export function isGenerating(s: State, sch: MeetingSchedule): boolean {
-  const service = serviceOf(s, sch.serviceId)
-  const stage = stageOf(s, sch.stageId)
-  return sch.active && !!service && !isArchived(service) && (!stage || !isArchived(stage))
-}
-
-export function scheduleSummary(s: State, viewer: User, sch: MeetingSchedule): ScheduleSummary {
-  const service = serviceOf(s, sch.serviceId)!
-  const stage = stageOf(s, sch.stageId)
-  let next: ScheduleSummary["next"] = null
-  if (isGenerating(s, sch)) {
-    // The next meeting is either a session that already exists (today's or
-    // tomorrow's, or one changed in advance) or the first planned date.
-    const from = today()
-    const session = s.sessions
-      .filter(
-        (x) =>
-          x.scheduleId === sch.id &&
-          (x.status === "scheduled" || x.status === "active") &&
-          localDateOf(x.startsAt) >= from
-      )
-      .sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
-    let date = nextOccurrence(sch.recurrence, from)
-    while (date && sessionForOccurrence(s, sch.id, date))
-      date = nextOccurrence(sch.recurrence, addDays(date, 1))
-    const planned = date ? plannedOccurrence(s, viewer, sch, date) : null
-    if (session && (!planned || session.startsAt <= `${planned.date}T${planned.startTime}`)) {
-      next = {
-        date: localDateOf(session.startsAt),
-        startTime: localTimeOf(session.startsAt),
-        status: session.status,
-        moved: s.events.some((e) => e.sessionId === session.id && e.type === "moved"),
-      }
-    } else if (planned) {
-      next = { date: planned.date, startTime: planned.startTime, status: "planned", moved: false }
-    }
-  }
-  return {
-    id: sch.id,
-    name: sch.name,
-    description: sch.description,
-    service: serviceRef(s, service),
-    stage: stageRef(stage),
-    group: stage?.name ?? service.name,
-    recurrence: sch.recurrence,
-    startTime: sch.startTime,
-    endTime: sch.endTime,
-    location: sch.location,
-    rosterMode: sch.rosterMode,
-    rosterSize: scheduleRosterSize(s, sch),
-    active: sch.active,
-    next,
-    sessionCount: s.sessions.filter((x) => x.scheduleId === sch.id).length,
-    can: { manage: canIn(s, viewer, "update", "sessions", sch) },
-  }
-}
-
-/** The account's roles, the ones that allow the most first. */
-export function rolesOf(s: State, user: User): Role[] {
-  return user.roleIds
-    .map((id) => roleOf(s, id))
-    .filter((r): r is Role => !!r)
-    .sort(
-      (a, b) => b.permissions.length - a.permissions.length || a.name.localeCompare(b.name, "de")
-    )
-}
-
-/** "Service leader", or "Service leader +1" for an account with two roles. */
-export function roleList(roles: { name: string }[]): string {
-  return roles.length === 0
-    ? ""
-    : `${roles[0].name}${roles.length > 1 ? ` +${roles.length - 1}` : ""}`
-}
-
-/** How an account appears in menus, with a one-line summary of its roles in the request's language. */
-export function viewerInfo(ctx: Context, viewer: User): ViewerInfo {
-  const { state: s, t, f } = ctx
-  const roles = rolesOf(s, viewer).map((r) => ({ id: r.id, name: r.name }))
-  const children = childrenOf(s, viewer.id)
-  const member = personOf(s, viewer.personId)
-  // The groups the member portal shows: none while the record is inactive.
-  const groups = member?.status === "active" ? currentGroupNames(s, member.id, today()) : []
-  const staff = isStaff(viewer)
-  const parent = isParent(viewer)
-  const roleSummary =
-    staff || (!parent && roles.length > 0)
-      ? roleList(roles)
-      : parent
-        ? children.length > 0
-          ? t("roles.summary.parentOf", {
-              children: f.list(children.map((c) => c.displayName ?? c.firstName)),
-            })
-          : t("roles.summary.parentWaiting")
-        : member
-          ? groups.length > 0
-            ? t("roles.summary.memberOf", { groups: f.list(groups) })
-            : t("roles.summary.member")
-          : t("roles.summary.none")
-  return {
-    ...userRef(viewer)!,
-    email: viewer.email,
-    roleSummary,
-    roles,
-    permissions: viewer.disabledAt ? [] : viewer.permissions,
-    isStaff: staff,
-    // Opens the parent portal, even while access to a child is still waiting for approval.
-    isParent: parent,
-    isMember: isMember(viewer),
-    memberGroups: groups.length,
-  }
-}
-
-export function sortSessions<T extends SessionCard>(items: T[]): T[] {
-  return [...items].sort(compareAgenda)
+export function hasGrants(s: State, account: Account): boolean {
+  return grantsOf(s, account.id).length > 0
 }

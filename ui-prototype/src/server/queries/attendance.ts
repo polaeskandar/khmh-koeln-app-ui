@@ -1,164 +1,121 @@
 import "server-only"
 
-import { addDays, localDateOf } from "@/lib/domain/time"
-import type { Attendance, MeetingSession, Uuid } from "@/lib/domain/types"
-import type { AttendanceEntry, PersonRef } from "@/lib/view-models"
-import { today as clockToday } from "@/server/mock/clock"
+import { notFound } from "next/navigation"
+
+import { fullName, matchesQuery, unitName } from "@/lib/domain/names"
+import { addDays } from "@/lib/domain/time"
+import type { Uuid } from "@/lib/domain/types"
+import { can, canSeeUnit, unitsWith } from "@/server/mock/access"
+import { today } from "@/server/mock/clock"
 import {
-  attendanceHistory,
-  isCurrentOn,
-  personOf,
+  currentUnitsOfPerson,
+  presentIds,
+  rosterOf,
   serviceOf,
   sessionOf,
-  sessionRoster,
   stageOf,
-  userOf,
 } from "@/server/mock/selectors"
-import { canIn, canSomewhere, isUnassigned } from "@/server/mock/reach"
-import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
-import { sessionHistory, todaysSessions } from "./meetings"
-import { inGroups, personRef, sessionCard, sortSessions, userRef } from "./present"
+import { accountRef, bySessionTime, personRef, sessionCard, unitOf } from "./present"
 
-function entry(s: State, a: Attendance, rosterIds: Set<Uuid>): AttendanceEntry {
-  return {
-    id: a.id,
-    person: personRef(personOf(s, a.personId)!),
-    recordedAt: a.recordedAt,
-    recordedBy: userRef(userOf(s, a.recordedBy)),
-    removedAt: a.removedAt,
-    removedBy: userRef(userOf(s, a.removedBy)),
-    removalReason: a.removalReason,
-    onRoster: rosterIds.has(a.personId),
-  }
-}
-
-const byPersonName = (a: { person: PersonRef }, b: { person: PersonRef }) =>
-  a.person.lastName.localeCompare(b.person.lastName, "de") ||
-  a.person.firstName.localeCompare(b.person.firstName, "de")
-
-/** Where a person belongs today, e.g. "Sunday School · 3rd Class". Helps tell namesakes apart. */
-function placementsOf(s: State, personId: Uuid): string[] {
-  const date = clockToday()
-  return s.memberships
-    .filter((m) => m.personId === personId && isCurrentOn(m, date))
-    .map((m) => {
-      const service = serviceOf(s, m.serviceId)!
-      const stage = stageOf(s, m.stageId)
-      return stage ? `${service.name} · ${stage.name}` : service.name
-    })
-    .sort()
-}
-
-export async function getAttendanceHome(ctx: Context) {
-  ctx = inGroups(ctx)
+export function getAttendanceOverview(ctx: Context) {
   const { state: s, viewer } = ctx
-  const today = clockToday()
-  const sessions = todaysSessions(ctx)
-  const record = (x: MeetingSession) => canIn(s, viewer, "create", "attendance", x)
-  const earlier = sortSessions(
-    s.sessions
-      .filter(
-        (x) =>
-          record(x) &&
-          localDateOf(x.startsAt) < today &&
-          localDateOf(x.startsAt) >= addDays(today, -21) &&
-          (x.status === "scheduled" || x.status === "active")
-      )
-      .map((x) => sessionCard(s, viewer, x))
-  )
-  const closed = s.sessions
-    .filter((x) => record(x) && x.status === "completed" && x.closedAt)
-    .sort((a, b) => b.closedAt!.localeCompare(a.closedAt!))
-    .slice(0, 6)
-    .map((x) => sessionCard(s, viewer, x))
+  const units = unitsWith(s, viewer, "attendance.record")
+  const date = today()
+  const inUnits = (x: { serviceId: Uuid; stageId: Uuid | null }) =>
+    units.some((u) => u.serviceId === x.serviceId && u.stageId === x.stageId)
+  const mine = s.sessions.filter((x) => inUnits(x) && canSeeUnit(s, viewer, unitOf(x)))
+
   return {
-    today,
-    sessions,
-    earlier,
-    closed,
-    canRecordAnywhere: canSomewhere(s, viewer, "create", "attendance"),
-    unassigned: isUnassigned(s, viewer),
+    today: mine
+      .filter((x) => x.date === date)
+      .sort(bySessionTime)
+      .map((x) => sessionCard(ctx, x)),
+    unfinished: mine
+      .filter((x) => x.date < date && (x.status === "open" || x.status === "scheduled"))
+      .sort(bySessionTime)
+      .map((x) => sessionCard(ctx, x)),
+    recent: mine
+      .filter((x) => x.date < date && x.date >= addDays(date, -21) && x.status === "closed")
+      .sort((a, b) => bySessionTime(b, a))
+      .map((x) => sessionCard(ctx, x)),
   }
 }
 
-export async function getAttendanceBoard(ctx: Context, sessionId: Uuid) {
-  ctx = inGroups(ctx)
+export function getSessionPage(ctx: Context, sessionId: Uuid) {
   const { state: s, viewer } = ctx
   const session = sessionOf(s, sessionId)
-  if (!session) return null
-  const card = sessionCard(s, viewer, session)
-  const roster = sessionRoster(s, session)
+
+  if (!session || !canSeeUnit(s, viewer, unitOf(session))) {
+    notFound()
+  }
+
+  const unit = unitOf(session)
+  const present = presentIds(s, session.id)
+  const roster = rosterOf(s, unit, session.date)
   const rosterIds = new Set(roster.map((p) => p.id))
-  const all = attendanceHistory(s, sessionId)
-  const current = all.filter((a) => !a.removedAt).map((a) => entry(s, a, rosterIds))
-  const currentByPerson = new Map(current.map((e) => [e.person.id, e]))
-  const removed = all
-    .filter((a) => a.removedAt)
-    .map((a) => entry(s, a, rosterIds))
-    .sort((a, b) => b.removedAt!.localeCompare(a.removedAt!))
-  const rosterRows = roster
-    .map((p) => ({
-      person: personRef(p),
-      entry: currentByPerson.get(p.id) ?? null,
-      placements: placementsOf(s, p.id),
-    }))
-    .sort(byPersonName)
-  // Everyone else who could be marked present (not on this roster): for visitors and namesakes.
-  const others = s.persons
-    .filter((p) => p.status === "active" && !rosterIds.has(p.id))
-    .map((p) => ({
-      person: personRef(p),
-      entry: currentByPerson.get(p.id) ?? null,
-      placements: placementsOf(s, p.id),
-    }))
-    .sort(byPersonName)
+  const marks = new Map(
+    s.attendance
+      .filter((a) => a.sessionId === session.id && a.removedAt === null)
+      .map((a) => [a.personId, a])
+  )
+  const row = (personId: Uuid) => {
+    const person = s.persons.find((p) => p.id === personId)!
+    const mark = marks.get(personId)
+
+    return {
+      person: personRef(person),
+      present: present.has(personId),
+      recordedAt: mark?.recordedAt ?? null,
+      recordedBy: accountRef(s, mark?.recordedBy ?? null),
+    }
+  }
+  const byName = (a: { person: { lastName: string; name: string } }, b: typeof a) =>
+    a.person.name.localeCompare(b.person.name, "de")
+
   return {
-    session: card,
-    roster: rosterRows,
-    others,
-    present: current.sort((a, b) => b.recordedAt.localeCompare(a.recordedAt)),
-    removed,
-    history: sessionHistory(s, session),
-    today: clockToday(),
+    session: sessionCard(ctx, session),
+    today: today(),
+    roster: roster.map((p) => row(p.id)).sort(byName),
+    visitors: [...present]
+      .filter((id) => !rosterIds.has(id) && s.persons.some((p) => p.id === id))
+      .map(row)
+      .sort(byName),
+    anonymous: s.anonymousCounts[session.id]?.present ?? 0,
+    history: s.events
+      .filter((e) => e.sessionId === session.id)
+      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+      .map((e) => ({
+        id: e.id,
+        type: e.type,
+        occurredAt: e.occurredAt,
+        actor: accountRef(s, e.actorId),
+        note: e.note,
+      })),
     can: {
-      record: canIn(s, viewer, "create", "attendance", session),
-      reopen: canIn(s, viewer, "update", "sessions", session),
-      manage: canIn(s, viewer, "update", "sessions", session),
+      record: can(s, viewer, "attendance.record", unit),
+      correct: can(s, viewer, "attendance.correct", unit),
+      manage: can(s, viewer, "schedule.manage", unit),
     },
   }
 }
 
-export type AttendanceBoard = NonNullable<Awaited<ReturnType<typeof getAttendanceBoard>>>
-
-export async function getAttendanceSummary(ctx: Context, sessionId: Uuid) {
-  ctx = inGroups(ctx)
+export function searchPeople(ctx: Context, query: string) {
   const { state: s, viewer } = ctx
-  const session = sessionOf(s, sessionId)
-  if (!session) return null
-  const roster = sessionRoster(s, session)
-  const rosterIds = new Set(roster.map((p) => p.id))
-  const all = attendanceHistory(s, sessionId).map((a) => entry(s, a, rosterIds))
-  const present = all.filter((e) => !e.removedAt)
-  const presentIds = new Set(present.map((e) => e.person.id))
-  return {
-    session: sessionCard(s, viewer, session),
-    present: present.filter((e) => e.onRoster || session.rosterMode === "open").sort(byPersonName),
-    notOnRoster:
-      session.rosterMode === "open" ? [] : present.filter((e) => !e.onRoster).sort(byPersonName),
-    notMarked: roster
-      .filter((p) => !presentIds.has(p.id))
-      .map((p) => ({ person: personRef(p) }))
-      .sort(byPersonName),
-    corrections: all
-      .filter((e) => e.removedAt)
-      .sort((a, b) => a.removedAt!.localeCompare(b.removedAt!)),
-    /** People whose data was erased: counted in the totals, but no longer listed by name. */
-    erasedPresent: s.anonymousCounts[session.id]?.present ?? 0,
-    history: sessionHistory(s, session),
-    today: clockToday(),
-  }
-}
 
-export type AttendanceSummary = NonNullable<Awaited<ReturnType<typeof getAttendanceSummary>>>
+  if (unitsWith(s, viewer, "attendance.record").length === 0 || query.trim().length < 2) {
+    return []
+  }
+
+  return s.persons
+    .filter((p) => matchesQuery(p, query))
+    .slice(0, 8)
+    .map((p) => ({
+      ...personRef(p),
+      fullName: fullName(p),
+      groups: currentUnitsOfPerson(s, p.id, today()).map((u) =>
+        unitName(serviceOf(s, u.serviceId)?.name ?? "", stageOf(s, u.stageId)?.name ?? null)
+      ),
+    }))
+}

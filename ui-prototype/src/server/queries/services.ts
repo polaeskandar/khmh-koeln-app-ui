@@ -1,379 +1,157 @@
 import "server-only"
 
-import { nameKey } from "@/lib/domain/names"
-import { can, isActiveAccount, isStaff } from "@/lib/domain/policy"
-import { addDays, localDateOf } from "@/lib/domain/time"
-import type { LocalDate, Service, Stage, Uuid } from "@/lib/domain/types"
-import { today as clockToday } from "@/server/mock/clock"
-import { mayAssign } from "@/server/mock/commands/assignments"
-import { serviceImpact, stageImpact } from "@/server/mock/commands/services"
-import { canIn, canInService, isUnassigned } from "@/server/mock/reach"
+import { notFound } from "next/navigation"
+
+import type { PlanStatus, Service, Uuid } from "@/lib/domain/types"
+import { can, canInService, canSeeService, canSeeUnit } from "@/server/mock/access"
+import { today } from "@/server/mock/clock"
 import {
-  isArchived,
-  isCurrentOn,
-  personOf,
-  rosterOn,
+  planOf,
+  rosterOf,
+  scheduleFor,
   serviceOf,
-  sessionCounts,
-  stageOf,
   stagesOf,
-  userOf,
+  unitsOf,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
-import { upcomingFor } from "./meetings"
-import {
-  inGroups,
-  personRef,
-  scheduleSummary,
-  serviceRef,
-  sessionCard,
-  stageRef,
-  userRef,
-} from "./present"
+import { unitRef } from "./present"
 
-/** Distinct active people with a current membership in the service (or one stage of it). */
-export function memberCount(
-  s: State,
-  serviceId: Uuid,
-  stageId?: Uuid,
-  date: LocalDate = clockToday()
-): number {
-  const ids = new Set(
-    s.memberships
+function nextSession(s: State, serviceId: Uuid, stageId: Uuid | null | undefined) {
+  const date = today()
+
+  return (
+    s.sessions
       .filter(
-        (m) =>
-          m.serviceId === serviceId &&
-          (stageId === undefined || m.stageId === stageId) &&
-          isCurrentOn(m, date)
+        (x) =>
+          x.serviceId === serviceId &&
+          (stageId === undefined || x.stageId === stageId) &&
+          x.status !== "canceled" &&
+          x.status !== "closed" &&
+          x.date >= date
       )
-      .map((m) => m.personId)
+      .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))[0] ??
+    null
   )
-  return [...ids].filter((id) => personOf(s, id)?.status === "active").length
 }
 
-/**
- * Attendance over the last four weeks. For sessions with an expected roster
- * it is the share of the roster marked present; open sessions only have a
- * head count. Canceled sessions and sessions without attendance are ignored.
- */
-export function attendanceTrend(s: State, filter: { serviceId: Uuid; stageId?: Uuid }) {
-  const to = clockToday()
-  const from = addDays(to, -28)
-  const sessions = s.sessions.filter(
-    (x) =>
-      x.serviceId === filter.serviceId &&
-      (filter.stageId === undefined || x.stageId === filter.stageId) &&
-      x.status === "completed" &&
-      localDateOf(x.startsAt) >= from &&
-      localDateOf(x.startsAt) < to
-  )
-  const expected = sessions.filter((x) => x.rosterMode === "expected")
-  let rosterTotal = 0
-  let presentTotal = 0
-  for (const x of expected) {
-    const c = sessionCounts(s, x)
-    rosterTotal += c.rosterSize ?? 0
-    presentTotal += c.rosterPresent
-  }
-  const open = sessions.filter((x) => x.rosterMode === "open")
-  const openPresent = open.reduce((sum, x) => sum + sessionCounts(s, x).present, 0)
-  return {
-    sessions: sessions.length,
-    rate: rosterTotal > 0 ? presentTotal / rosterTotal : null,
-    averagePresent: open.length > 0 ? Math.round(openPresent / open.length) : null,
-  }
+function memberCount(s: State, service: Service, stageId?: Uuid | null) {
+  const date = today()
+
+  return unitsOf(s, service)
+    .filter((u) => stageId === undefined || u.stageId === stageId)
+    .reduce((sum, u) => sum + rosterOf(s, u, date).length, 0)
 }
 
-function serviceRow(ctx: Context, service: Service) {
+export function getServices(ctx: Context, archived: boolean) {
   const { state: s, viewer } = ctx
-  const stages = stagesOf(s, service.id)
-  const schedules = s.schedules.filter((x) => x.serviceId === service.id)
-  const next = upcomingFor(ctx, { serviceId: service.id, days: 21 })[0] ?? null
-  const impact = serviceImpact(s, service.id)
+  const all = s.services.filter((x) => canSeeService(s, viewer, x.id))
+
   return {
-    ...serviceRef(s, service),
-    description: service.description,
-    archivedAt: service.archivedAt,
-    createdAt: service.createdAt,
-    stageCount: stages.length,
-    stageNames: stages.map((x) => x.name),
-    memberCount: memberCount(s, service.id),
-    activeSchedules: schedules.filter((x) => x.active).length,
-    next: next
-      ? {
-          date: next.date,
-          startTime: next.startTime,
-          group: next.group,
-          status: next.kind === "session" ? next.status : ("planned" as const),
+    canCreate: can(s, viewer, "services.manage"),
+    archivedCount: all.filter((x) => x.archivedAt !== null).length,
+    services: all
+      .filter((x) => (x.archivedAt !== null) === archived)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((x) => {
+        const next = nextSession(s, x.id, undefined)
+
+        return {
+          id: x.id,
+          name: x.name,
+          description: x.description,
+          tone: s.serviceTones[x.id] ?? 1,
+          structure: x.structure,
+          stages: stagesOf(s, x.id)
+            .filter((st) => canSeeUnit(s, viewer, { serviceId: x.id, stageId: st.id }))
+            .map((st) => ({ id: st.id, name: st.name })),
+          members: memberCount(s, x),
+          next: next ? { date: next.date, startTime: next.startTime } : null,
         }
-      : null,
-    trend: attendanceTrend(s, { serviceId: service.id }),
-    canDelete: impact.sessions === 0,
-    impact,
-    can: {
-      edit: canIn(s, viewer, "update", "services", { serviceId: service.id, stageId: null }),
-      archive: canIn(s, viewer, "delete", "services", { serviceId: service.id, stageId: null }),
-    },
+      }),
   }
 }
 
-export type ServiceRow = ReturnType<typeof serviceRow>
+export function serviceFor({ state: s, viewer }: Context, serviceId: Uuid): Service {
+  const service = serviceOf(s, serviceId)
 
-export async function listServices(ctx: Context) {
-  ctx = inGroups(ctx)
-  const rows = [...ctx.state.services]
-    .sort((a, b) => a.name.localeCompare(b.name, "de"))
-    .map((service) => serviceRow(ctx, service))
-  return {
-    rows,
-    canCreate: can(ctx.viewer, "create", "services"),
-    unassigned: isUnassigned(ctx.state, ctx.viewer),
-    existingNames: ctx.state.services.map((x) => ({
-      key: nameKey(x.name),
-      name: x.name,
-      archived: isArchived(x),
-    })),
+  if (!service || !canSeeService(s, viewer, service.id)) {
+    notFound()
   }
+
+  return service
 }
 
-/**
- * The servants of a service: the accounts assigned to the whole service (its leaders, first) or
- * to one of the stages the viewer sees. Those who may assign there (administrators, and the
- * service's leaders) also get the staff accounts to choose from.
- */
-function servantsOf(ctx: Context, serviceId: Uuid) {
+export function planState(
+  s: State,
+  scheduleId: Uuid | undefined,
+  year: number
+): PlanStatus | "none" {
+  const plan = scheduleId ? planOf(s, scheduleId, year) : undefined
+
+  return plan?.status ?? "none"
+}
+
+export function getService(ctx: Context, serviceId: Uuid) {
   const { state: s, viewer } = ctx
-  const position = (stageId: Uuid | null) => stageOf(s, stageId)?.position ?? -1
-  const visible = s.assignments
-    .filter((a) => a.serviceId === serviceId && (a.stageId === null || stageOf(s, a.stageId)))
-    .sort((a, b) => position(a.stageId) - position(b.stageId))
-  const people = new Map<Uuid, NonNullable<ReturnType<typeof userOf>>>()
-  for (const a of visible) {
-    const user = userOf(s, a.userId)
-    if (user && isActiveAccount(user)) people.set(user.id, user)
+  const service = serviceFor(ctx, serviceId)
+  const hasHistory =
+    s.sessions.some((x) => x.serviceId === service.id) ||
+    s.memberships.some((m) => m.serviceId === service.id) ||
+    s.lessons.some((l) => l.serviceId === service.id)
+
+  return {
+    id: service.id,
+    name: service.name,
+    description: service.description,
+    structure: service.structure,
+    archived: service.archivedAt !== null,
+    tone: s.serviceTones[service.id] ?? 1,
+    hasHistory,
+    can: {
+      manage: can(s, viewer, "services.manage"),
+      stages: can(s, viewer, "stages.manage", { serviceId: service.id, stageId: null }),
+      schedule: canInService(s, viewer, "schedule.manage", service.id),
+    },
+    stages: stagesOf(s, service.id, true)
+      .filter((st) => canSeeUnit(s, viewer, { serviceId: service.id, stageId: st.id }))
+      .map((st) => {
+        const next = nextSession(s, service.id, st.id)
+
+        return {
+          id: st.id,
+          name: st.name,
+          description: st.description,
+          archived: st.archivedAt !== null,
+          members: memberCount(s, service, st.id),
+          next: next ? { date: next.date, startTime: next.startTime, status: next.status } : null,
+        }
+      }),
   }
-  const rows = [...people.values()]
-    .map((user) => {
-      const groups = visible
-        .filter((a) => a.userId === user.id)
-        .map((a) => ({
-          id: a.id,
-          stage: stageRef(stageOf(s, a.stageId)),
-          canRemove: mayAssign(s, viewer, a),
-        }))
+}
+
+export function getScheduleOverview(ctx: Context, serviceId: Uuid, year: number) {
+  const { state: s, viewer } = ctx
+  const service = serviceFor(ctx, serviceId)
+
+  return unitsOf(s, service)
+    .filter((u) => canSeeUnit(s, viewer, u))
+    .map((u) => {
+      const schedule = scheduleFor(s, u)
+      const sessions = s.sessions.filter(
+        (x) => x.scheduleId === schedule?.id && x.date.startsWith(`${year}-`)
+      )
+      const plan = schedule ? planOf(s, schedule.id, year) : undefined
+
       return {
-        ...userRef(user)!,
-        email: user.email,
-        leads: groups.some((g) => g.stage === null),
-        groups,
+        unit: unitRef(s, u),
+        scheduleId: schedule?.id ?? null,
+        status: planState(s, schedule?.id, year),
+        rule: plan?.rule ?? null,
+        sessions: sessions.filter((x) => x.status !== "canceled").length,
+        canceled: sessions.filter((x) => x.status === "canceled").length,
+        canManage: can(s, viewer, "schedule.manage", u),
       }
     })
-    .sort(
-      (a, b) =>
-        Number(b.leads) - Number(a.leads) ||
-        position(a.groups[0]?.stage?.id ?? null) - position(b.groups[0]?.stage?.id ?? null) ||
-        a.name.localeCompare(b.name, "de")
-    )
-  const canAssign = mayAssign(s, viewer, { serviceId, stageId: null })
-  return {
-    rows,
-    canAssign,
-    accounts: canAssign
-      ? s.users
-          .filter((u) => isActiveAccount(u) && isStaff(u))
-          .map((u) => ({
-            id: u.id,
-            name: u.displayName,
-            groups: s.assignments
-              .filter((a) => a.userId === u.id && a.serviceId === serviceId)
-              .map((a) => a.stageId),
-          }))
-          .sort((a, b) => a.name.localeCompare(b.name, "de"))
-      : [],
-  }
-}
-
-export type ServiceServants = ReturnType<typeof servantsOf>
-
-export async function getServiceDetail(ctx: Context, id: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const service = serviceOf(s, id)
-  if (!service) return null
-  const today = clockToday()
-  const stages = stagesOf(s, id).map((stage) => stageRow(ctx, stage))
-  // Same order as the stages: service-wide schedules first, then stage by stage.
-  const position = (stageId: Uuid | null) => stageOf(s, stageId)?.position ?? -1
-  const schedules = s.schedules
-    .filter((x) => x.serviceId === id)
-    .sort(
-      (a, b) =>
-        Number(b.active) - Number(a.active) ||
-        position(a.stageId) - position(b.stageId) ||
-        a.name.localeCompare(b.name, "de")
-    )
-    .map((x) => scheduleSummary(s, viewer, x))
-  // Latest day first; the sessions of one day in stage order.
-  const recent = s.sessions
-    .filter((x) => x.serviceId === id && x.status === "completed")
-    .map((x) => sessionCard(s, viewer, x))
-    .sort(
-      (a, b) =>
-        b.date.localeCompare(a.date) || a.order - b.order || a.startTime.localeCompare(b.startTime)
-    )
-    .slice(0, 6)
-  return {
-    service: {
-      ...serviceRef(s, service),
-      description: service.description,
-      archivedAt: service.archivedAt,
-      createdAt: service.createdAt,
-    },
-    stages,
-    archivedStages: stagesOf(s, id, true)
-      .filter(isArchived)
-      .map((x) => stageRef(x)!),
-    schedules,
-    upcoming: upcomingFor(ctx, { serviceId: id, days: 14 }).slice(0, 8),
-    recent,
-    stats: {
-      members: memberCount(s, id),
-      serviceLevelMembers: rosterOn(s, id, null, today).length,
-      trend: attendanceTrend(s, { serviceId: id }),
-    },
-    impact: serviceImpact(s, id),
-    servants: servantsOf(ctx, id),
-    can: {
-      edit: canIn(s, viewer, "update", "services", { serviceId: id, stageId: null }),
-      archive: canIn(s, viewer, "delete", "services", { serviceId: id, stageId: null }),
-      structure: canIn(s, viewer, "update", "stages", { serviceId: id, stageId: null }),
-      sessions: canInService(s, viewer, "create", "sessions", id),
-    },
-  }
-}
-
-function stageRow(ctx: Context, stage: Stage) {
-  const { state: s, viewer } = ctx
-  const schedules = s.schedules.filter((x) => x.stageId === stage.id)
-  const active = schedules.find((x) => x.active)
-  const next =
-    upcomingFor(ctx, { serviceId: stage.serviceId, stageId: stage.id, days: 14 })[0] ?? null
-  const last = s.sessions
-    .filter((x) => x.stageId === stage.id && x.status === "completed")
-    .sort((a, b) => b.startsAt.localeCompare(a.startsAt))[0]
-  const impact = stageImpact(s, stage.id)
-  return {
-    ...stageRef(stage)!,
-    description: stage.description,
-    position: stage.position,
-    members: memberCount(s, stage.serviceId, stage.id),
-    meets: active
-      ? `${ctx.f.recurrence(active.recurrence)} · ${ctx.f.timeRange(active.startTime, active.endTime)}`
-      : null,
-    schedules: schedules.length,
-    next: next
-      ? {
-          date: next.date,
-          startTime: next.startTime,
-          status: next.kind === "session" ? next.status : ("planned" as const),
-          id: next.kind === "session" ? next.id : null,
-        }
-      : null,
-    last: last ? sessionCard(s, viewer, last) : null,
-    trend: attendanceTrend(s, { serviceId: stage.serviceId, stageId: stage.id }),
-    sessions: impact.sessions,
-    canDelete: impact.sessions === 0 && impact.members === 0,
-    deleteBlocker:
-      impact.sessions > 0
-        ? ctx.t("stages.deleteBlocked.history", { count: impact.sessions })
-        : impact.members > 0
-          ? ctx.t("stages.deleteBlocked.members", { count: impact.members })
-          : null,
-  }
-}
-
-export type StageRow = ReturnType<typeof stageRow>
-
-export async function getStageManagement(ctx: Context, serviceId: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const service = serviceOf(s, serviceId)
-  if (!service) return null
-  return {
-    service: { ...serviceRef(s, service), description: service.description },
-    stages: stagesOf(s, serviceId).map((x) => stageRow(ctx, x)),
-    archived: stagesOf(s, serviceId, true)
-      .filter(isArchived)
-      .map((x) => ({ ...stageRow(ctx, x), archivedAt: x.archivedAt })),
-    serviceLevelMembers: rosterOn(s, serviceId, null, clockToday()).length,
-    can: {
-      structure:
-        canIn(s, viewer, "update", "stages", { serviceId, stageId: null }) && !isArchived(service),
-    },
-  }
-}
-
-export async function getStageDetail(ctx: Context, serviceId: Uuid, stageId: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const service = serviceOf(s, serviceId)
-  const stage = stageOf(s, stageId)
-  if (!service || !stage || stage.serviceId !== serviceId) return null
-  const today = clockToday()
-  const memberships = s.memberships.filter((m) => m.stageId === stageId && isCurrentOn(m, today))
-  const members = memberships
-    .map((m) => ({
-      membershipId: m.id,
-      since: m.startsOn,
-      person: personRef(personOf(s, m.personId)!),
-    }))
-    .filter((m) => m.person.status === "active")
-    .sort(
-      (a, b) =>
-        a.person.lastName.localeCompare(b.person.lastName, "de") ||
-        a.person.firstName.localeCompare(b.person.firstName, "de")
-    )
-  const recent = s.sessions
-    .filter((x) => x.stageId === stageId && x.status === "completed")
-    .sort((a, b) => b.startsAt.localeCompare(a.startsAt))
-    .slice(0, 8)
-    .map((x) => sessionCard(s, viewer, x))
-  // Attendance per person over the last eight completed sessions: a quick way to see who has not been coming.
-  const lastSessions = recent.slice(0, 8)
-  const presentBySession = new Map(
-    lastSessions.map((x) => [
-      x.id,
-      new Set(
-        s.attendance.filter((a) => a.sessionId === x.id && !a.removedAt).map((a) => a.personId)
-      ),
-    ])
-  )
-  return {
-    service: serviceRef(s, service),
-    stage: { ...stageRow(ctx, stage), archivedAt: stage.archivedAt },
-    otherStages: stagesOf(s, serviceId)
-      .filter((x) => x.id !== stageId)
-      .map((x) => stageRef(x)!),
-    members: members.map((m) => ({
-      ...m,
-      recent: lastSessions.map((x) => presentBySession.get(x.id)!.has(m.person.id)).reverse(),
-    })),
-    recentDates: lastSessions.map((x) => x.date).reverse(),
-    schedules: s.schedules
-      .filter((x) => x.stageId === stageId)
-      .map((x) => scheduleSummary(s, viewer, x)),
-    upcoming: upcomingFor(ctx, { serviceId, stageId, days: 21 }).slice(0, 5),
-    recent,
-    can: {
-      structure:
-        canIn(s, viewer, "update", "stages", { serviceId, stageId: null }) && !isArchived(service),
-      members:
-        canIn(s, viewer, "update", "members", { serviceId, stageId }) &&
-        !isArchived(service) &&
-        !isArchived(stage),
-      sessions: canIn(s, viewer, "create", "sessions", { serviceId, stageId }),
-    },
-  }
 }

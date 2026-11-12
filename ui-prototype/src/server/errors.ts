@@ -42,17 +42,17 @@ export type Thing =
   | "service"
   | "stage"
   | "person"
-  | "membership"
   | "schedule"
+  | "plan"
   | "session"
-  | "attendance"
   | "lesson"
-  | "homework"
-  | "user"
-  | "guardian"
-  | "request"
+  | "task"
+  | "account"
   | "role"
   | "assignment"
+  | "guardianship"
+  | "request"
+  | "occasion"
 
 export const forbidden = (detail: Message = msg("errors.forbidden")) =>
   new ProblemError({ status: 403, detail })

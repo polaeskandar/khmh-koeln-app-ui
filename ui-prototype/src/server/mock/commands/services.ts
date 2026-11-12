@@ -1,313 +1,286 @@
-import "server-only"
-
-import { nameKey } from "@/lib/domain/names"
-import { toInstant } from "@/lib/domain/time"
-import type { Action, Service, Stage, User, Uuid } from "@/lib/domain/types"
 import { msg } from "@/i18n/message"
-import { ruleViolation } from "@/server/errors"
+import { cleanName, nameKey } from "@/lib/domain/names"
+import type { Service, ServiceStructure, Stage, Uuid } from "@/lib/domain/types"
+import { invalid, ruleViolation } from "@/server/errors"
 
-import { nowMs } from "../clock"
-import { authorize, found, Violations } from "../guard"
+import { authorize, requireIn } from "../access"
+import { now, nowMs } from "../clock"
+import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
-import { authorizeInService } from "../reach"
-import { isArchived, serviceOf, stageOf, stagesOf } from "../selectors"
+import { serviceOf, stageOf, stagesOf } from "../selectors"
 import type { State } from "../state"
 
-export type ServiceInput = { name: string; description?: string | null }
-export type StageInput = { name: string; description?: string | null }
+import type { Actor } from "./accounts"
 
-// ---------------------------------------------------------------- services
+export type StageInput = { name: string; description: string | null }
 
-function checkServiceName(s: State, v: Violations, name: string, exceptId?: Uuid) {
-  const clash = s.services.find((x) => x.id !== exceptId && nameKey(x.name) === nameKey(name))
-  if (!clash) return
-  v.add(
-    "name",
-    isArchived(clash)
-      ? msg("errors.services.nameTakenArchived", { name: clash.name })
-      : msg("errors.services.nameTaken", { name: clash.name })
-  )
-}
+function checkServiceName(s: State, v: Violations, name: string, except: Uuid | null): string {
+  const clean = v.name("name", name, 80, msg("errors.services.nameRequired"))
 
-/** The colour slot fewest services use, so a new service stands out; the lowest slot wins a tie. */
-function freeTone(s: State): number {
-  const used = Array.from({ length: 8 }, () => 0)
-  for (const x of s.services) {
-    const tone = s.serviceTones[x.id]
-    if (tone) used[tone - 1] += 1
+  if (s.services.some((x) => x.id !== except && nameKey(x.name) === nameKey(clean))) {
+    v.add("name", msg("errors.services.nameTaken"))
   }
-  return used.indexOf(Math.min(...used)) + 1
+
+  return clean
 }
 
-export function createService(s: State, actor: User, input: ServiceInput): Service {
-  authorize(actor, "create", "services", msg("errors.services.adminOnlyCreate"))
-  const v = new Violations()
-  const name = v.name("name", input.name, 120, msg("errors.services.nameRequired"))
-  const description = v.optionalText("description", input.description, 2000)
-  if (!v.has("name")) checkServiceName(s, v, name)
-  v.throwIfAny()
-  const ms = nowMs()
-  const service: Service = {
-    id: uuidv7(ms),
-    name,
-    description,
-    archivedAt: null,
-    createdAt: toInstant(ms),
-    updatedAt: toInstant(ms),
+function checkStages(v: Violations, stages: StageInput[]) {
+  const keys = new Set<string>()
+
+  stages.forEach((stage, index) => {
+    const clean = v.name(`stages.${index}`, stage.name, 80, msg("errors.stages.nameRequired"))
+
+    if (clean && keys.has(nameKey(clean))) {
+      v.add(`stages.${index}`, msg("errors.stages.nameTaken"))
+    }
+
+    keys.add(nameKey(clean))
+  })
+}
+
+function nextTone(s: State): number {
+  const used = new Set(Object.values(s.serviceTones))
+
+  for (let tone = 1; tone <= 8; tone++) {
+    if (!used.has(tone)) {
+      return tone
+    }
   }
-  s.serviceTones[service.id] = freeTone(s)
-  s.services.push(service)
-  return service
+
+  return (s.services.length % 8) + 1
 }
 
-export function updateService(s: State, actor: User, id: Uuid, input: ServiceInput): Service {
-  const service = found(serviceOf(s, id), "service")
-  authorizeInService(s, actor, "update", "services", service.id)
-  const v = new Violations()
-  const name = v.name("name", input.name, 120, msg("errors.services.nameRequired"))
-  const description = v.optionalText("description", input.description, 2000)
-  if (!v.has("name")) checkServiceName(s, v, name, service.id)
-  v.throwIfAny()
-  service.name = name
-  service.description = description
-  service.updatedAt = toInstant(nowMs())
-  return service
-}
-
-/** What archiving or deleting a service would affect; shown in the confirmation dialogs. */
-export function serviceImpact(s: State, id: Uuid) {
-  const sessions = s.sessions.filter((x) => x.serviceId === id)
-  const upcoming = sessions.filter(
-    (x) => x.status === "scheduled" && Date.parse(x.startsAt) > nowMs()
-  )
-  return {
-    sessions: sessions.length,
-    activeSessions: sessions.filter((x) => x.status === "active").length,
-    upcomingSessions: upcoming.length,
-    stages: stagesOf(s, id, true).length,
-    schedules: s.schedules.filter((x) => x.serviceId === id).length,
-    activeSchedules: s.schedules.filter((x) => x.serviceId === id && x.active).length,
-    members: new Set(
-      s.memberships.filter((m) => m.serviceId === id && m.endsOn === null).map((m) => m.personId)
-    ).size,
-  }
-}
-
-export function archiveService(s: State, actor: User, id: Uuid): Service {
-  const service = found(serviceOf(s, id), "service")
-  authorizeInService(
-    s,
-    actor,
-    "delete",
-    "services",
-    service.id,
-    msg("errors.services.adminOnlyArchive")
-  )
-  if (isArchived(service)) {
-    throw ruleViolation(msg("errors.services.alreadyArchived", { name: service.name }))
-  }
-  if (serviceImpact(s, id).activeSessions > 0) {
-    throw ruleViolation(msg("errors.services.takingAttendance", { name: service.name }))
-  }
-  const at = toInstant(nowMs())
-  service.archivedAt = at
-  service.updatedAt = at
-  return service
-}
-
-export function restoreService(s: State, actor: User, id: Uuid): Service {
-  const service = found(serviceOf(s, id), "service")
-  authorizeInService(
-    s,
-    actor,
-    "delete",
-    "services",
-    service.id,
-    msg("errors.services.adminOnlyRestore")
-  )
-  if (!isArchived(service)) {
-    throw ruleViolation(msg("errors.services.notArchived", { name: service.name }))
-  }
-  service.archivedAt = null
-  service.updatedAt = toInstant(nowMs())
-  return service
-}
-
-/**
- * Deleting is only allowed while nothing refers to the service's history:
- * once a session exists, the database's RESTRICT foreign keys refuse the
- * delete and the service must be archived instead.
- */
-export function deleteService(s: State, actor: User, id: Uuid): Service {
-  const service = found(serviceOf(s, id), "service")
-  authorizeInService(
-    s,
-    actor,
-    "delete",
-    "services",
-    service.id,
-    msg("errors.services.adminOnlyDelete")
-  )
-  const impact = serviceImpact(s, id)
-  if (impact.sessions > 0) {
-    throw ruleViolation(
-      msg("errors.services.hasHistory", { name: service.name, count: impact.sessions })
-    )
-  }
-  const stageIds = new Set(s.stages.filter((x) => x.serviceId === id).map((x) => x.id))
-  s.services = s.services.filter((x) => x.id !== id)
-  delete s.serviceTones[id]
-  s.stages = s.stages.filter((x) => x.serviceId !== id)
-  s.schedules = s.schedules.filter((x) => x.serviceId !== id)
-  s.memberships = s.memberships.filter(
-    (x) => x.serviceId !== id && !(x.stageId && stageIds.has(x.stageId))
-  )
-  s.assignments = s.assignments.filter((x) => x.serviceId !== id)
-  return service
-}
-
-// ------------------------------------------------------------------ stages
-
-function checkStageName(s: State, v: Violations, serviceId: Uuid, name: string, exceptId?: Uuid) {
-  const clash = s.stages.find(
-    (x) => x.serviceId === serviceId && x.id !== exceptId && nameKey(x.name) === nameKey(name)
-  )
-  if (!clash) return
-  v.add(
-    "name",
-    isArchived(clash)
-      ? msg("errors.stages.nameTakenArchived", { name: clash.name })
-      : msg("errors.stages.nameTaken", { name: clash.name })
-  )
-}
-
-/** Stages are the service's structure: changing them needs the role to hold in the whole service. */
-function editableService(s: State, actor: User, serviceId: Uuid, action: Action): Service {
-  const service = found(serviceOf(s, serviceId), "service")
-  authorizeInService(s, actor, action, "stages", service.id)
-  if (isArchived(service)) {
-    throw ruleViolation(msg("errors.services.archivedNoStageChanges", { name: service.name }))
-  }
-  return service
-}
-
-export function createStage(s: State, actor: User, serviceId: Uuid, input: StageInput): Stage {
-  const service = editableService(s, actor, serviceId, "create")
-  const v = new Violations()
-  const name = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
-  const description = v.optionalText("description", input.description, 500)
-  if (!v.has("name")) checkStageName(s, v, service.id, name)
-  v.throwIfAny()
-  const siblings = s.stages.filter((x) => x.serviceId === service.id)
-  const active = siblings.filter((x) => !isArchived(x))
-  // New stages go after the active ones; archived stages keep sorting last.
-  for (const archived of siblings.filter(isArchived)) archived.position += 1
-  const ms = nowMs()
+export function addStageRow(s: State, service: Service, input: StageInput): Stage {
   const stage: Stage = {
-    id: uuidv7(ms),
+    id: uuidv7(nowMs()),
     serviceId: service.id,
-    name,
-    description,
-    position: active.length === 0 ? 0 : Math.max(...active.map((x) => x.position)) + 1,
+    name: cleanName(input.name),
+    description: input.description?.trim() || null,
+    position: stagesOf(s, service.id, true).length + 1,
     archivedAt: null,
-    createdAt: toInstant(ms),
+    createdAt: now(),
   }
   s.stages.push(stage)
-  return stage
-}
-
-export function updateStage(s: State, actor: User, stageId: Uuid, input: StageInput): Stage {
-  const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId, "update")
-  const v = new Violations()
-  const name = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
-  const description = v.optionalText("description", input.description, 500)
-  if (!v.has("name")) checkStageName(s, v, stage.serviceId, name, stage.id)
-  v.throwIfAny()
-  stage.name = name
-  stage.description = description
-  return stage
-}
-
-/** Sets the display order of a service's active stages. */
-export function reorderStages(s: State, actor: User, serviceId: Uuid, orderedIds: Uuid[]): Stage[] {
-  const service = editableService(s, actor, serviceId, "update")
-  const active = stagesOf(s, service.id)
-  const expected = new Set(active.map((x) => x.id))
-  if (orderedIds.length !== expected.size || !orderedIds.every((id) => expected.has(id))) {
-    throw ruleViolation(msg("errors.stages.reorderStale"))
-  }
-  orderedIds.forEach((id, index) => {
-    stageOf(s, id)!.position = index
+  s.schedules.push({
+    id: uuidv7(nowMs()),
+    serviceId: service.id,
+    stageId: stage.id,
+    createdAt: now(),
   })
-  stagesOf(s, service.id, true)
-    .filter(isArchived)
-    .forEach((x, i) => (x.position = orderedIds.length + i))
-  return stagesOf(s, service.id)
-}
 
-export function stageImpact(s: State, stageId: Uuid) {
-  const sessions = s.sessions.filter((x) => x.stageId === stageId)
-  return {
-    sessions: sessions.length,
-    activeSessions: sessions.filter((x) => x.status === "active").length,
-    members: new Set(
-      s.memberships.filter((m) => m.stageId === stageId && m.endsOn === null).map((m) => m.personId)
-    ).size,
-    schedules: s.schedules.filter((x) => x.stageId === stageId).length,
-  }
-}
-
-export function archiveStage(s: State, actor: User, stageId: Uuid): Stage {
-  const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId, "delete")
-  if (isArchived(stage)) {
-    throw ruleViolation(msg("errors.stages.alreadyArchived", { name: stage.name }))
-  }
-  if (stageImpact(s, stageId).activeSessions > 0) {
-    throw ruleViolation(msg("errors.stages.takingAttendance", { name: stage.name }))
-  }
-  stage.archivedAt = toInstant(nowMs())
-  const siblings = stagesOf(s, stage.serviceId, true)
-  siblings.forEach((x, i) => (x.position = i))
   return stage
 }
 
-export function restoreStage(s: State, actor: User, stageId: Uuid): Stage {
-  const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId, "delete")
-  if (!isArchived(stage)) {
-    throw ruleViolation(msg("errors.stages.notArchived", { name: stage.name }))
+export function createService(
+  { state: s, viewer }: Actor,
+  input: {
+    name: string
+    description: string | null
+    structure: ServiceStructure
+    stages: StageInput[]
   }
-  const active = stagesOf(s, stage.serviceId)
-  stage.archivedAt = null
-  stage.position = active.length
-  stagesOf(s, stage.serviceId, true).forEach((x, i) => (x.position = i))
+) {
+  authorize(s, viewer, "services.manage")
+  const v = new Violations()
+  const name = checkServiceName(s, v, input.name, null)
+  const description = v.optionalText("description", input.description, 500)
+
+  if (input.structure === "stages") {
+    checkStages(v, input.stages)
+
+    if (input.stages.length === 0) {
+      v.add("stages", msg("errors.stages.atLeastOne"))
+    }
+  }
+
+  v.throwIfAny()
+  const service: Service = {
+    id: uuidv7(nowMs()),
+    name: cleanName(name),
+    description,
+    structure: input.structure,
+    archivedAt: null,
+    createdAt: now(),
+  }
+  s.services.push(service)
+  s.serviceTones[service.id] = nextTone(s)
+
+  if (input.structure === "single") {
+    s.schedules.push({
+      id: uuidv7(nowMs()),
+      serviceId: service.id,
+      stageId: null,
+      createdAt: now(),
+    })
+  } else {
+    input.stages.forEach((stage) => addStageRow(s, service, stage))
+  }
+
+  return service
+}
+
+export function updateService(
+  { state: s, viewer }: Actor,
+  serviceId: Uuid,
+  input: { name: string; description: string | null }
+) {
+  authorize(s, viewer, "services.manage")
+  const service = found(serviceOf(s, serviceId), "service")
+  const v = new Violations()
+  const name = checkServiceName(s, v, input.name, service.id)
+  const description = v.optionalText("description", input.description, 500)
+  v.throwIfAny()
+  service.name = cleanName(name)
+  service.description = description
+}
+
+function hasHistory(s: State, serviceId: Uuid): boolean {
+  return (
+    s.sessions.some((x) => x.serviceId === serviceId) ||
+    s.memberships.some((m) => m.serviceId === serviceId) ||
+    s.lessons.some((l) => l.serviceId === serviceId)
+  )
+}
+
+export function changeStructure(
+  { state: s, viewer }: Actor,
+  serviceId: Uuid,
+  structure: ServiceStructure,
+  firstStage: StageInput | null
+) {
+  authorize(s, viewer, "services.manage")
+  const service = found(serviceOf(s, serviceId), "service")
+
+  if (service.structure === structure) {
+    return
+  }
+
+  if (hasHistory(s, service.id)) {
+    throw ruleViolation(msg("errors.services.structureLocked"))
+  }
+
+  if (structure === "stages" && !firstStage) {
+    throw invalid({ stage: msg("errors.stages.atLeastOne") })
+  }
+
+  s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
+  s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
+  s.stages = s.stages.filter((x) => x.serviceId !== service.id)
+  service.structure = structure
+
+  if (structure === "single") {
+    s.schedules.push({
+      id: uuidv7(nowMs()),
+      serviceId: service.id,
+      stageId: null,
+      createdAt: now(),
+    })
+  } else {
+    const v = new Violations()
+    checkStages(v, [firstStage!])
+    v.throwIfAny()
+    addStageRow(s, service, firstStage!)
+  }
+}
+
+export function setServiceArchived(
+  { state: s, viewer }: Actor,
+  serviceId: Uuid,
+  archived: boolean
+) {
+  authorize(s, viewer, "services.manage")
+  const service = found(serviceOf(s, serviceId), "service")
+
+  if (archived && s.sessions.some((x) => x.serviceId === service.id && x.status === "open")) {
+    throw ruleViolation(msg("errors.services.openSession"))
+  }
+
+  service.archivedAt = archived ? now() : null
+}
+
+export function deleteService({ state: s, viewer }: Actor, serviceId: Uuid) {
+  authorize(s, viewer, "services.manage")
+  const service = found(serviceOf(s, serviceId), "service")
+
+  if (hasHistory(s, service.id)) {
+    throw ruleViolation(msg("errors.services.hasHistory"))
+  }
+
+  s.services = s.services.filter((x) => x.id !== service.id)
+  s.stages = s.stages.filter((x) => x.serviceId !== service.id)
+  s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
+  s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
+  s.daysOff = s.daysOff.filter((d) => d.serviceId !== service.id)
+  delete s.serviceTones[service.id]
+}
+
+function managedStage({ state: s, viewer }: Actor, stageId: Uuid): Stage {
+  const stage = found(stageOf(s, stageId), "stage")
+  requireIn(s, viewer, "stages.manage", { serviceId: stage.serviceId, stageId: null }, "stage")
+
   return stage
 }
 
-/**
- * A stage can be deleted while it has no sessions and nobody is currently in
- * it. Otherwise it is archived, so past rosters stay readable.
- */
-export function deleteStage(s: State, actor: User, stageId: Uuid): Stage {
-  const stage = found(stageOf(s, stageId), "stage")
-  editableService(s, actor, stage.serviceId, "delete")
-  const impact = stageImpact(s, stageId)
-  if (impact.sessions > 0) {
-    throw ruleViolation(
-      msg("errors.stages.hasHistory", { name: stage.name, count: impact.sessions })
+export function addStage({ state: s, viewer }: Actor, serviceId: Uuid, input: StageInput) {
+  const service = found(serviceOf(s, serviceId), "service")
+  requireIn(s, viewer, "stages.manage", { serviceId: service.id, stageId: null })
+
+  if (service.structure !== "stages") {
+    throw ruleViolation(msg("errors.services.noStages"))
+  }
+
+  const v = new Violations()
+  const clean = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
+
+  if (stagesOf(s, service.id, true).some((x) => nameKey(x.name) === nameKey(clean))) {
+    v.add("name", msg("errors.stages.nameTaken"))
+  }
+
+  v.optionalText("description", input.description, 500)
+  v.throwIfAny()
+
+  return addStageRow(s, service, input)
+}
+
+export function updateStage(actor: Actor, stageId: Uuid, input: StageInput) {
+  const stage = managedStage(actor, stageId)
+  const s = actor.state
+  const v = new Violations()
+  const clean = v.name("name", input.name, 80, msg("errors.stages.nameRequired"))
+
+  if (
+    stagesOf(s, stage.serviceId, true).some(
+      (x) => x.id !== stage.id && nameKey(x.name) === nameKey(clean)
     )
+  ) {
+    v.add("name", msg("errors.stages.nameTaken"))
   }
-  if (impact.members > 0) {
-    throw ruleViolation(
-      msg("errors.stages.hasMembers", { name: stage.name, count: impact.members })
-    )
+
+  const description = v.optionalText("description", input.description, 500)
+  v.throwIfAny()
+  stage.name = cleanName(clean)
+  stage.description = description
+}
+
+export function setStageArchived(actor: Actor, stageId: Uuid, archived: boolean) {
+  const stage = managedStage(actor, stageId)
+
+  if (archived && actor.state.sessions.some((x) => x.stageId === stage.id && x.status === "open")) {
+    throw ruleViolation(msg("errors.stages.openSession"))
   }
-  s.stages = s.stages.filter((x) => x.id !== stageId)
-  s.schedules = s.schedules.filter((x) => x.stageId !== stageId)
-  s.memberships = s.memberships.filter((x) => x.stageId !== stageId)
-  s.assignments = s.assignments.filter((x) => x.stageId !== stageId)
-  stagesOf(s, stage.serviceId, true).forEach((x, i) => (x.position = i))
-  return stage
+
+  stage.archivedAt = archived ? now() : null
+}
+
+export function moveStage(actor: Actor, stageId: Uuid, direction: -1 | 1) {
+  const stage = managedStage(actor, stageId)
+  const ordered = stagesOf(actor.state, stage.serviceId)
+  const index = ordered.findIndex((x) => x.id === stage.id)
+  const other = ordered[index + direction]
+
+  if (!other) {
+    return
+  }
+
+  ;[stage.position, other.position] = [other.position, stage.position]
 }

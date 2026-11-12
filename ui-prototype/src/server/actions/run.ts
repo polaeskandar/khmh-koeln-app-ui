@@ -6,9 +6,8 @@ import { z } from "zod"
 import type { Message } from "@/i18n/message"
 import { getMessageTranslator } from "@/i18n/server"
 import { type ActionResult, type Problem, ProblemError } from "@/server/errors"
-import { openState } from "@/server/mock/runtime"
-import type { State } from "@/server/mock/state"
-import { type Context, getContext } from "@/server/viewer"
+import { getState, type State } from "@/server/mock/state"
+import { type Context, getContext, getSignedInContext } from "@/server/viewer"
 
 type Translate = Awaited<ReturnType<typeof getMessageTranslator>>
 
@@ -71,12 +70,19 @@ export async function run<T>(
   return attempt(async () => mutate(await getContext()), message)
 }
 
+export async function runDuringPasswordChange<T>(
+  mutate: (ctx: Context) => T,
+  message?: Message | ((result: T) => Message)
+): Promise<ActionResult<T>> {
+  return attempt(async () => mutate(await getSignedInContext()), message)
+}
+
 /** Like run, for the few actions that work without a session: registration, sign-in. */
 export async function runPublic<T>(
   mutate: (state: State) => T,
   message?: Message | ((result: T) => Message)
 ): Promise<ActionResult<T>> {
-  return attempt(() => mutate(openState()), message)
+  return attempt(() => mutate(getState()), message)
 }
 
 export const id = z.uuid()

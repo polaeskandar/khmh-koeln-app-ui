@@ -1,443 +1,246 @@
 import "server-only"
 
-import { isActiveAccount } from "@/lib/domain/policy"
-import { addDays, localDateOf, localTimeOf } from "@/lib/domain/time"
-import type { Group, HomeworkAssignment, Lesson, LocalDate, Uuid } from "@/lib/domain/types"
-import { today as clockToday } from "@/server/mock/clock"
-import { lessonMeeting, meetingOptions } from "@/server/mock/lesson-meeting"
-import { canIn } from "@/server/mock/reach"
+import { notFound } from "next/navigation"
+
+import type { Lesson, Person, Task, Unit, Uuid } from "@/lib/domain/types"
+import { can, canSeeUnit, unitsWith } from "@/server/mock/access"
+import { today } from "@/server/mock/clock"
 import {
-  currentCompletion,
-  guardiansOf,
-  homeworkAudience,
-  homeworkOf,
-  isArchived,
-  lessonOf,
-  ownAccountOf,
-  rosterOn,
-  scheduleOf,
-  serviceOf,
-  stageOf,
-  userOf,
+  accountOfPerson,
+  guardianAccountsOf,
+  rosterOf,
+  sameUnit,
+  scheduleFor,
 } from "@/server/mock/selectors"
 import type { State } from "@/server/mock/state"
-import type { Context, Translator } from "@/server/viewer"
+import type { Context } from "@/server/viewer"
 
-import { inGroups, personRef, serviceRef, stageRef, userRef } from "./present"
+import { accountName, accountRef, personRef, unitOf, unitRef } from "./present"
 
-// ------------------------------------------------------------- view models
+export function reachable(s: State, unit: Unit): { person: Person; via: "own" | "parent" }[] {
+  return rosterOf(s, unit, today()).flatMap(
+    (person): { person: Person; via: "own" | "parent" }[] => {
+      const own = accountOfPerson(s, person.id)
 
-export type MeetingView =
-  | { kind: "none"; date: LocalDate }
-  | { kind: "planned"; date: LocalDate; startTime: string; title: string; createdOn: LocalDate }
-  | {
-      kind: "session"
-      id: Uuid
-      status: "scheduled" | "active" | "completed" | "canceled"
-      date: LocalDate
-      startTime: string
-      endTime: string | null
-      title: string
-      location: string | null
-      moved: boolean
-      cancelReason: string | null
-    }
-  | { kind: "not-on-schedule"; date: LocalDate; title: string | null }
-
-function meetingView(s: State, lesson: Lesson): MeetingView {
-  const m = lessonMeeting(s, lesson)
-  switch (m.kind) {
-    case "none":
-      return { kind: "none", date: lesson.teachingDate }
-    case "planned": {
-      const schedule = scheduleOf(s, m.scheduleId)!
-      return {
-        kind: "planned",
-        date: m.date,
-        startTime: schedule.startTime,
-        title: schedule.name,
-        createdOn: m.createdOn,
+      if (own && can(s, own, "portal.member")) {
+        return [{ person, via: "own" as const }]
       }
+
+      return guardianAccountsOf(s, person.id).length > 0 ? [{ person, via: "parent" as const }] : []
     }
-    case "session":
-      return {
-        kind: "session",
-        id: m.session.id,
-        status: m.session.status,
-        date: localDateOf(m.session.startsAt),
-        startTime: localTimeOf(m.session.startsAt),
-        endTime: m.session.endsAt ? localTimeOf(m.session.endsAt) : null,
-        title: m.session.title,
-        location: m.session.location,
-        moved: s.events.some((e) => e.sessionId === m.session.id && e.type === "moved"),
-        cancelReason: m.session.cancelReason,
-      }
-    case "not-on-schedule":
-      return {
-        kind: "not-on-schedule",
-        date: m.date,
-        title: scheduleOf(s, m.scheduleId)?.name ?? null,
-      }
-  }
-}
-
-export type HomeworkCounts = {
-  assigned: number
-  completed: number
-  notCompleted: number
-  late: number
-  /** Not reported yet, and nobody can report it in the app: no parent account and no own account. */
-  withoutAccount: number
-}
-
-function homeworkCounts(s: State, hw: HomeworkAssignment, date: LocalDate): HomeworkCounts {
-  const audience = homeworkAudience(s, hw, date).filter((a) => a.inStage)
-  let completed = 0
-  let late = 0
-  let withoutAccount = 0
-  for (const { person } of audience) {
-    const c = currentCompletion(s, hw.id, person.id)
-    if (c) {
-      completed++
-      if (hw.dueDate && localDateOf(c.completedAt) > hw.dueDate) late++
-    } else if (guardiansOf(s, person.id).length === 0 && !ownAccountOf(s, person.id)) {
-      withoutAccount++
-    }
-  }
-  return {
-    assigned: audience.length,
-    completed,
-    notCompleted: audience.length - completed,
-    late,
-    withoutAccount,
-  }
-}
-
-function homeworkRow(s: State, hw: HomeworkAssignment, date: LocalDate) {
-  const lesson = lessonOf(s, hw.lessonId)!
-  return {
-    id: hw.id,
-    title: hw.title,
-    instructions: hw.instructions,
-    status: hw.status,
-    dueDate: hw.dueDate,
-    publishedAt: hw.publishedAt,
-    resources: hw.resources,
-    lesson: { id: lesson.id, title: lesson.title, teachingDate: lesson.teachingDate },
-    counts: hw.status === "draft" ? null : homeworkCounts(s, hw, date),
-  }
-}
-
-export type HomeworkRow = ReturnType<typeof homeworkRow>
-
-function lessonRow(s: State, lesson: Lesson, date: LocalDate, t: Translator) {
-  const homework = s.homework.filter((h) => h.lessonId === lesson.id)
-  return {
-    id: lesson.id,
-    title: lesson.title,
-    passage: lesson.passage,
-    teachingDate: lesson.teachingDate,
-    status: lesson.status,
-    archived: lesson.archivedAt !== null,
-    // The responsible servant's account may have been erased (data protection request).
-    responsible: userRef(userOf(s, lesson.responsibleId)) ?? {
-      id: lesson.responsibleId,
-      name: t("common.formerAccount"),
-      initials: "–",
-    },
-    collaborators: lesson.collaboratorIds.map((id) => userRef(userOf(s, id))!).filter(Boolean),
-    meeting: meetingView(s, lesson),
-    homework: {
-      total: homework.filter((h) => h.status !== "archived").length,
-      published: homework.filter((h) => h.status === "published").length,
-      drafts: homework.filter((h) => h.status === "draft").length,
-    },
-    updatedAt: lesson.updatedAt,
-    isPast: lesson.teachingDate < date,
-  }
-}
-
-export type LessonRow = ReturnType<typeof lessonRow>
-
-function stageContext(s: State, serviceId: Uuid, stageId: Uuid) {
-  const service = serviceOf(s, serviceId)
-  const stage = stageOf(s, stageId)
-  if (!service || !stage || stage.serviceId !== service.id) return null
-  return { service: serviceRef(s, service), stage: stageRef(stage)! }
-}
-
-/**
- * Who may prepare the stage's lessons: candidates for "responsible" and "helping". Every active
- * account whose roles may change lessons there: everywhere, or assigned to the stage or its service.
- */
-function preparers(s: State, group: Group) {
-  return s.users
-    .filter((u) => isActiveAccount(u) && canIn(s, u, "update", "lessons", group))
-    .map((u) => userRef(u)!)
-    .sort((a, b) => a.name.localeCompare(b.name, "de"))
-}
-
-/** The people responsible for or helping with the stage's lessons: the lesson list's filter. */
-function lessonPeople(s: State, stageId: Uuid) {
-  const ids = new Set(
-    s.lessons
-      .filter((l) => l.stageId === stageId)
-      .flatMap((l) => [l.responsibleId, ...l.collaboratorIds])
   )
-  return s.users
-    .filter((u) => ids.has(u.id))
-    .map((u) => userRef(u)!)
-    .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
 
-// ------------------------------------------------------------------ lessons
+export function progress(s: State, task: Task) {
+  const people = reachable(s, unitOf(task))
+  const done = new Set(
+    s.completions.filter((c) => c.taskId === task.id && c.undoneAt === null).map((c) => c.personId)
+  )
 
-export async function getStageLessons(ctx: Context, serviceId: Uuid, stageId: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  if (!context) return null
-  const today = clockToday()
-  const lessons = s.lessons
-    .filter((l) => l.stageId === stageId)
-    .map((l) => lessonRow(s, l, today, ctx.t))
-  const active = lessons.filter((l) => !l.archived)
+  return { done: people.filter((p) => done.has(p.person.id)).length, total: people.length }
+}
+
+function lessonSummary(s: State, l: Lesson) {
   return {
-    ...context,
-    today,
-    upcoming: active
-      .filter((l) => l.teachingDate >= today)
-      .sort((a, b) => a.teachingDate.localeCompare(b.teachingDate)),
-    previous: active
-      .filter((l) => l.teachingDate < today)
-      .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate)),
-    archived: lessons.filter((l) => l.archived),
-    servants: lessonPeople(s, stageId),
-    can: {
-      manage:
-        canIn(s, viewer, "create", "lessons", { serviceId, stageId }) &&
-        !isArchived(stageOf(s, stageId)!),
-    },
+    id: l.id,
+    title: l.title,
+    date: l.date,
+    status: l.status,
+    tasks: s.tasks.filter((t) => t.lessonId === l.id && t.status !== "archived").length,
   }
 }
 
-export async function getLessonDetail(
-  ctx: Context,
-  serviceId: Uuid,
-  stageId: Uuid,
-  lessonId: Uuid
-) {
-  ctx = inGroups(ctx)
+export function getPreparation(ctx: Context) {
   const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  const lesson = lessonOf(s, lessonId)
-  if (!context || !lesson || lesson.stageId !== stageId) return null
-  const today = clockToday()
-  return {
-    ...context,
-    today,
-    lesson: {
-      ...lessonRow(s, lesson, today, ctx.t),
-      summary: lesson.summary,
-      objectives: lesson.objectives,
-      teachingPoints: lesson.teachingPoints,
-      memoryVerse: lesson.memoryVerse,
-      activities: lesson.activities,
-      materials: lesson.materials,
-      notes: lesson.notes,
-      completedAt: lesson.completedAt,
-      createdAt: lesson.createdAt,
-    },
-    homework: s.homework
-      .filter((h) => h.lessonId === lesson.id)
-      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-      .map((h) => homeworkRow(s, h, today)),
-    can: {
-      manage: canIn(s, viewer, "update", "lessons", { serviceId, stageId }),
-      homework: canIn(s, viewer, "create", "homework", { serviceId, stageId }),
-    },
-  }
-}
+  const date = today()
 
-export async function getLessonForm(ctx: Context, serviceId: Uuid, stageId: Uuid, lessonId?: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  if (!context) return null
-  const lesson = lessonId ? lessonOf(s, lessonId) : undefined
-  if (lessonId && (!lesson || lesson.stageId !== stageId)) return null
-  const today = clockToday()
-  const from = lesson && lesson.teachingDate < today ? lesson.teachingDate : addDays(today, -28)
-  const options = meetingOptions(s, stageId, from, addDays(today, 84), lesson?.id)
-  const firstFree = options.find((o) => o.date > today && !o.takenBy && o.state !== "canceled")
-  return {
-    ...context,
-    today,
-    lesson: lesson ?? null,
-    meetingValue: lesson
-      ? lesson.sessionId
-        ? `session:${lesson.sessionId}`
-        : lesson.scheduleId
-          ? `schedule:${lesson.scheduleId}:${lesson.teachingDate}`
-          : `date:${lesson.teachingDate}`
-      : (firstFree?.value ?? `date:${today}`),
-    options,
-    servants: preparers(s, { serviceId, stageId }),
-    viewerId: viewer.id,
-    /** Changes whenever lessons are added or this one is saved: the form starts fresh then. */
-    version: `${s.lessons.length}-${lesson?.updatedAt ?? "new"}`,
-    can: {
-      manage: canIn(s, viewer, lesson ? "update" : "create", "lessons", { serviceId, stageId }),
-    },
-  }
-}
+  return unitsWith(s, viewer, "lessons.prepare")
+    .filter((u) => canSeeUnit(s, viewer, u))
+    .map((u) => {
+      const lessons = s.lessons.filter((l) => sameUnit(unitOf(l), u))
 
-export type LessonForm = NonNullable<Awaited<ReturnType<typeof getLessonForm>>>
-
-// ----------------------------------------------------------------- homework
-
-export async function getStageHomework(ctx: Context, serviceId: Uuid, stageId: Uuid) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  if (!context) return null
-  const today = clockToday()
-  const rows = s.homework
-    .filter((h) => h.stageId === stageId)
-    .map((h) => homeworkRow(s, h, today))
-    .sort((a, b) =>
-      (b.dueDate ?? b.lesson.teachingDate).localeCompare(a.dueDate ?? a.lesson.teachingDate)
-    )
-  return {
-    ...context,
-    today,
-    rows,
-    lessons: s.lessons
-      .filter((l) => l.stageId === stageId && !l.archivedAt)
-      .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate))
-      .map((l) => ({ id: l.id, title: l.title, teachingDate: l.teachingDate })),
-    can: {
-      manage:
-        canIn(s, viewer, "create", "homework", { serviceId, stageId }) &&
-        !isArchived(stageOf(s, stageId)!),
-    },
-  }
-}
-
-export async function getHomeworkEditor(
-  ctx: Context,
-  serviceId: Uuid,
-  stageId: Uuid,
-  opts: { homeworkId?: Uuid; lessonId?: Uuid }
-) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  if (!context) return null
-  const homework = opts.homeworkId ? homeworkOf(s, opts.homeworkId) : undefined
-  if (opts.homeworkId && (!homework || homework.stageId !== stageId)) return null
-  const lessons = s.lessons
-    .filter((l) => l.stageId === stageId && !l.archivedAt)
-    .sort((a, b) => b.teachingDate.localeCompare(a.teachingDate))
-  const lesson =
-    lessonOf(s, homework?.lessonId ?? opts.lessonId) ??
-    lessons.find((l) => l.teachingDate >= clockToday()) ??
-    lessons[0]
-  const today = clockToday()
-  const audience = homework ? homeworkAudience(s, homework, today) : []
-  return {
-    ...context,
-    today,
-    homework: homework ?? null,
-    lesson: lesson
-      ? {
-          id: lesson.id,
-          title: lesson.title,
-          teachingDate: lesson.teachingDate,
-          passage: lesson.passage,
-          memoryVerse: lesson.memoryVerse,
-        }
-      : null,
-    lessons: lessons.map((l) => ({
-      id: l.id,
-      title: l.title,
-      teachingDate: l.teachingDate,
-      passage: l.passage,
-      memoryVerse: l.memoryVerse,
-    })),
-    childrenInStage: homework
-      ? audience.filter((a) => a.inStage).length
-      : rosterOn(s, serviceId, stageId, today).length,
-    completions: homework
-      ? s.completions.filter((c) => c.assignmentId === homework.id && c.undoneAt === null).length
-      : 0,
-    /** Changes whenever homework is added or this one is saved: the form starts fresh then. */
-    version: `${s.homework.length}-${homework?.updatedAt ?? "new"}`,
-    can: {
-      manage: canIn(s, viewer, homework ? "update" : "create", "homework", {
-        serviceId,
-        stageId,
-      }),
-    },
-  }
-}
-
-export type HomeworkEditor = NonNullable<Awaited<ReturnType<typeof getHomeworkEditor>>>
-
-/**
- * S06: who reported the homework as completed. Reported by a parent or by the member's own
- * account, not verified learning.
- */
-export async function getHomeworkProgress(
-  ctx: Context,
-  serviceId: Uuid,
-  stageId: Uuid,
-  homeworkId: Uuid
-) {
-  ctx = inGroups(ctx)
-  const { state: s, viewer } = ctx
-  const context = stageContext(s, serviceId, stageId)
-  const hw = homeworkOf(s, homeworkId)
-  if (!context || !hw || hw.stageId !== stageId) return null
-  if (!canIn(s, viewer, "read", "homework", hw)) return { ...context, forbidden: true as const }
-  const today = clockToday()
-  const lesson = lessonOf(s, hw.lessonId)!
-  const rows = homeworkAudience(s, hw, today)
-    .map(({ person, inStage }) => {
-      const c = currentCompletion(s, hw.id, person.id)
-      const by = c ? userOf(s, c.completedBy) : undefined
-      const parents = guardiansOf(s, person.id)
       return {
-        person: personRef(person),
-        inStage,
-        status: c ? ("completed" as const) : ("not-completed" as const),
-        completedAt: c?.completedAt ?? null,
-        completedBy: by ? by.displayName : null,
-        /** Reported with the member's own account rather than by a parent. */
-        reportedBySelf: !!by && by.personId === person.id,
-        late: !!(c && hw.dueDate && localDateOf(c.completedAt) > hw.dueDate),
-        parentAccounts: parents.length,
-        /** The member has an account of their own and can report it themselves. */
-        ownAccount: !!ownAccountOf(s, person.id),
+        unit: unitRef(s, u),
+        upcoming: lessons
+          .filter((l) => l.date >= date)
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map((l) => lessonSummary(s, l)),
+        earlier: lessons
+          .filter((l) => l.date < date)
+          .sort((a, b) => b.date.localeCompare(a.date))
+          .slice(0, 3)
+          .map((l) => lessonSummary(s, l)),
       }
     })
-    .sort(
-      (a, b) =>
-        a.person.lastName.localeCompare(b.person.lastName, "de") ||
-        a.person.firstName.localeCompare(b.person.firstName, "de")
+}
+
+export function lessonFor({ state: s, viewer }: Context, lessonId: Uuid): Lesson {
+  const lesson = s.lessons.find((l) => l.id === lessonId)
+
+  if (
+    !lesson ||
+    !canSeeUnit(s, viewer, unitOf(lesson)) ||
+    !(
+      can(s, viewer, "lessons.prepare", unitOf(lesson)) ||
+      can(s, viewer, "tasks.manage", unitOf(lesson))
     )
+  ) {
+    notFound()
+  }
+
+  return lesson
+}
+
+export function getLesson(ctx: Context, lessonId: Uuid) {
+  const { state: s, viewer } = ctx
+  const lesson = lessonFor(ctx, lessonId)
+  const unit = unitOf(lesson)
+  const session = s.sessions.find((x) => x.id === lesson.sessionId)
+
   return {
-    ...context,
-    forbidden: false as const,
-    today,
-    homework: homeworkRow(s, hw, today),
-    lesson: { id: lesson.id, title: lesson.title, teachingDate: lesson.teachingDate },
-    rows,
-    can: { manage: canIn(s, viewer, "update", "homework", hw) },
+    lesson,
+    unit: unitRef(s, unit),
+    responsible: accountRef(s, lesson.responsibleId),
+    session: session
+      ? { id: session.id, startTime: session.startTime, status: session.status }
+      : null,
+    tasks: s.tasks
+      .filter((t) => t.lessonId === lesson.id)
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        status: t.status,
+        dueDate: t.dueDate,
+        ...progress(s, t),
+      })),
+    can: {
+      prepare: can(s, viewer, "lessons.prepare", unit),
+      publish: can(s, viewer, "lessons.publish", unit),
+      tasks: can(s, viewer, "tasks.manage", unit),
+    },
   }
 }
 
-export type HomeworkProgress = Extract<
-  NonNullable<Awaited<ReturnType<typeof getHomeworkProgress>>>,
-  { forbidden: false }
->
+export function sessionOptions(s: State, unit: Unit, keep: Uuid | null) {
+  const schedule = scheduleFor(s, unit)
+  const date = today()
+
+  return s.sessions
+    .filter(
+      (x) =>
+        x.scheduleId === schedule?.id &&
+        ((x.date >= date && x.status !== "canceled") || x.id === keep)
+    )
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 16)
+    .map((x) => ({ id: x.id, date: x.date, startTime: x.startTime }))
+}
+
+export function getLessonEditor(ctx: Context, unit: Unit, lessonId: Uuid | null) {
+  const { state: s, viewer } = ctx
+
+  if (!canSeeUnit(s, viewer, unit) || !can(s, viewer, "lessons.prepare", unit)) {
+    notFound()
+  }
+
+  const lesson = lessonId ? lessonFor(ctx, lessonId) : null
+
+  return {
+    unit: unitRef(s, unit),
+    lesson,
+    sessions: sessionOptions(s, unit, lesson?.sessionId ?? null),
+  }
+}
+
+export function getTasks(ctx: Context) {
+  const { state: s, viewer } = ctx
+
+  return unitsWith(s, viewer, "tasks.manage")
+    .filter((u) => canSeeUnit(s, viewer, u))
+    .map((u) => ({
+      unit: unitRef(s, u),
+      tasks: s.tasks
+        .filter((t) => sameUnit(unitOf(t), u) && t.status !== "archived")
+        .sort((a, b) => (b.dueDate ?? "9999").localeCompare(a.dueDate ?? "9999"))
+        .map((t) => ({
+          id: t.id,
+          title: t.title,
+          status: t.status,
+          dueDate: t.dueDate,
+          lesson: s.lessons.find((l) => l.id === t.lessonId)?.title ?? "",
+          ...progress(s, t),
+        })),
+      archived: s.tasks.filter((t) => sameUnit(unitOf(t), u) && t.status === "archived").length,
+    }))
+}
+
+export function taskFor({ state: s, viewer }: Context, taskId: Uuid): Task {
+  const task = s.tasks.find((t) => t.id === taskId)
+
+  if (
+    !task ||
+    !canSeeUnit(s, viewer, unitOf(task)) ||
+    !can(s, viewer, "tasks.manage", unitOf(task))
+  ) {
+    notFound()
+  }
+
+  return task
+}
+
+export function getTask(ctx: Context, taskId: Uuid) {
+  const { state: s } = ctx
+  const task = taskFor(ctx, taskId)
+  const lesson = s.lessons.find((l) => l.id === task.lessonId)!
+  const completions = s.completions.filter((c) => c.taskId === task.id && c.undoneAt === null)
+
+  return {
+    task,
+    lesson: { id: lesson.id, title: lesson.title, date: lesson.date, status: lesson.status },
+    unit: unitRef(s, unitOf(task)),
+    ...progress(s, task),
+    people: reachable(s, unitOf(task))
+      .map(({ person, via }) => {
+        const done = completions.find((c) => c.personId === person.id)
+        const by = done?.completedBy ? s.accounts.find((a) => a.id === done.completedBy) : undefined
+
+        return {
+          person: personRef(person),
+          via,
+          doneAt: done?.completedAt ?? null,
+          doneBy: by ? accountName(s, by) : null,
+          byOwnAccount: by?.personId === person.id,
+        }
+      })
+      .sort((a, b) => a.person.name.localeCompare(b.person.name, "de")),
+  }
+}
+
+export function getTaskEditor(ctx: Context, lessonId: Uuid | null, taskId: Uuid | null) {
+  const { state: s } = ctx
+  const task = taskId ? taskFor(ctx, taskId) : null
+  const lesson = lessonFor(ctx, task?.lessonId ?? lessonId ?? "")
+
+  if (!can(s, ctx.viewer, "tasks.manage", unitOf(lesson))) {
+    notFound()
+  }
+
+  return {
+    task,
+    lesson: { id: lesson.id, title: lesson.title, date: lesson.date, status: lesson.status },
+    unit: unitRef(s, unitOf(lesson)),
+  }
+}
+
+export function taskLessonChoices(ctx: Context) {
+  const { state: s, viewer } = ctx
+  const date = today()
+
+  return unitsWith(s, viewer, "tasks.manage").map((u) => ({
+    unit: unitRef(s, u),
+    lessons: s.lessons
+      .filter((l) => sameUnit(unitOf(l), u) && l.date >= date.slice(0, 8) + "01")
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((l) => ({ id: l.id, title: l.title, date: l.date })),
+  }))
+}

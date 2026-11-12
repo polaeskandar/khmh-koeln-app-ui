@@ -41,3 +41,7 @@ export function fold(value: string): string {
     .replace(/\p{Diacritic}/gu, "")
     .toLocaleLowerCase("de-DE")
 }
+
+export function unitName(serviceName: string, stageName: string | null): string {
+  return stageName ? `${serviceName} - ${stageName}` : serviceName
+}

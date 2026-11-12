@@ -1,13 +1,19 @@
 "use client"
 
-/**
- * Bottom tab bar for phones, adapted from shadcnblocks "application-shell30".
- * Taking attendance is the raised centre action. Hidden while a session's
- * attendance screen is open, which has its own bottom bar.
- */
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardCheck, Menu } from "lucide-react"
+import {
+  BookOpenText,
+  ClipboardCheck,
+  Database,
+  House,
+  Layers,
+  ListChecks,
+  Menu,
+  ShieldCheck,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
@@ -19,120 +25,112 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { ViewerInfo } from "@/lib/view-models"
+import type { Shell } from "@/server/queries/shell"
 
-import { isActive, NAV, navAllowed, SETTINGS, type NavItem } from "./nav"
-import { PersonaMenuContent } from "./sidebar-parts"
+import { isActive, PersonaMenuContent } from "./sidebar-parts"
 
-const byHref = (href: string) => NAV.find((i) => i.href === href)!
-
-function Tab({ item, active, badge }: { item: NavItem; active: boolean; badge?: number }) {
-  const t = useTranslations("nav")
+function Tab({
+  href,
+  icon: Icon,
+  label,
+  active,
+}: {
+  href: string
+  icon: LucideIcon
+  label: string
+  active: boolean
+}) {
   return (
     <Link
-      href={item.href}
+      href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground",
-        active && "text-foreground"
+        active &&
+          "text-foreground after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:bg-primary"
       )}
     >
-      <item.icon className="size-5" />
-      {t(item.key)}
-      {badge ? (
-        <span className="absolute start-1/2 top-1.5 ms-1.5 flex h-4 min-w-4 items-center justify-center bg-primary px-1 text-[10px] text-primary-foreground">
-          {badge}
-        </span>
-      ) : null}
+      <Icon className="size-5" />
+      {label}
     </Link>
   )
 }
 
 export function MobileTabBar({
-  pathname,
-  openSessions = 0,
+  nav,
   viewer,
   personas,
 }: {
-  pathname?: string | null
-  openSessions?: number
-  viewer?: ViewerInfo
-  personas?: ViewerInfo[]
+  nav: Shell["nav"]
+  viewer: ViewerInfo
+  personas: ViewerInfo[]
 }) {
   const t = useTranslations("nav")
-  const moreItems = [byHref("/services"), SETTINGS]
-  const moreActive = moreItems.some((i) => isActive(i.href, pathname))
-  const attendanceActive = isActive("/attendance", pathname)
+  const pathname = usePathname() ?? ""
+
+  if (/^\/attendance\/[^/]+$/.test(pathname)) {
+    return null
+  }
+
+  const lessonsHref = nav.preparation ? "/lessons" : "/lessons/tasks"
+  const more = [
+    nav.accounts && { href: "/admin/accounts", icon: UsersRound, label: t("accounts") },
+    nav.access && { href: "/admin/access", icon: ShieldCheck, label: t("access") },
+    nav.data && { href: "/admin/data", icon: Database, label: t("data") },
+    nav.preparation && nav.tasks && { href: "/lessons/tasks", icon: ListChecks, label: t("tasks") },
+  ].filter((x) => !!x)
+
   return (
     <nav
       aria-label={t("main")}
       className="fixed inset-x-0 bottom-0 z-30 flex h-16 items-stretch border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
     >
-      <Tab item={byHref("/")} active={isActive("/", pathname)} />
-      <Tab item={byHref("/meetings")} active={isActive("/meetings", pathname)} />
-      <div className="flex flex-1 flex-col items-center">
-        <Link
+      <Tab href="/" icon={House} label={t("home")} active={pathname === "/"} />
+      <Tab
+        href="/services"
+        icon={Layers}
+        label={t("services")}
+        active={isActive("/services", pathname)}
+      />
+      {nav.preparation || nav.tasks ? (
+        <Tab
+          href={lessonsHref}
+          icon={BookOpenText}
+          label={t("lessons")}
+          active={isActive("/lessons", pathname)}
+        />
+      ) : null}
+      {nav.attendance ? (
+        <Tab
           href="/attendance"
-          aria-label={t("takeAttendance")}
-          aria-current={attendanceActive ? "page" : undefined}
-          className="relative -mt-5 flex size-14 items-center justify-center bg-primary text-primary-foreground shadow-lg ring-4 ring-background"
-        >
-          <ClipboardCheck className="size-6" />
-          {openSessions > 0 ? (
-            <span className="absolute -end-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center bg-foreground px-1 text-[10px] text-background">
-              {openSessions}
-            </span>
-          ) : null}
-        </Link>
-        <span
-          className={cn(
-            "mt-0.5 text-[11px] font-medium text-muted-foreground",
-            attendanceActive && "text-foreground"
-          )}
-        >
-          {t("attendance")}
-        </span>
-      </div>
-      {navAllowed("members", viewer?.permissions) ? (
-        <Tab item={byHref("/members")} active={isActive("/members", pathname)} />
+          icon={ClipboardCheck}
+          label={t("attendance")}
+          active={isActive("/attendance", pathname)}
+        />
       ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
           className={cn(
             "flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground outline-none",
-            moreActive && "text-foreground"
+            (isActive("/admin", pathname) || isActive("/settings", pathname)) && "text-foreground"
           )}
         >
           <Menu className="size-5" />
           {t("more")}
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-72" side="top" align="end">
-          {moreItems.map((item) => (
+          {more.map((item) => (
             <DropdownMenuItem key={item.href} asChild>
               <Link href={item.href}>
                 <item.icon />
-                {t(item.key)}
+                {item.label}
               </Link>
             </DropdownMenuItem>
           ))}
-          {viewer && personas ? (
-            <>
-              <DropdownMenuSeparator />
-              <PersonaMenuContent viewer={viewer} personas={personas} />
-            </>
-          ) : null}
+          {more.length > 0 ? <DropdownMenuSeparator /> : null}
+          <PersonaMenuContent viewer={viewer} personas={personas} settingsHref="/settings" />
         </DropdownMenuContent>
       </DropdownMenu>
     </nav>
   )
-}
-
-/** The tab bar with the current page highlighted; hidden on a session's attendance screen. */
-export function ActiveMobileTabBar(props: {
-  openSessions?: number
-  viewer?: ViewerInfo
-  personas?: ViewerInfo[]
-}) {
-  const pathname = usePathname()
-  if (/^\/attendance\/[^/]+$/.test(pathname)) return null
-  return <MobileTabBar pathname={pathname} {...props} />
 }

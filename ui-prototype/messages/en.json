@@ -1,37 +1,18 @@
 {
   "meta": {
-    "description": "Services, meetings and attendance for KHMK Köln."
+    "description": "Services, sessions, lessons and attendance for KHMK Köln."
   },
   "brand": {
     "church": "Coptic Orthodox Church"
   },
-  "nav": {
-    "main": "Main",
-    "dashboard": "Dashboard",
-    "services": "Services",
-    "meetings": "Meetings",
-    "attendance": "Attendance",
-    "members": "Members",
-    "settings": "Settings",
-    "takeAttendance": "Take attendance",
+  "ui": {
+    "close": "Close",
     "more": "More",
-    "openSessions": "{count, plural, other {# open}}",
-    "backTo": "Back to {page}",
+    "toggleSidebar": "Toggle sidebar",
+    "sidebar": "Sidebar",
+    "sidebarDescription": "The app’s navigation.",
+    "loading": "Loading",
     "breadcrumb": "Breadcrumb"
-  },
-  "shell": {
-    "demoData": "Demo data",
-    "demoDataHint": "Prototype on fictional demo data, kept in memory on the server. Changes are lost when it restarts. Nothing is saved to the backend yet.",
-    "prototypeViewAs": "Prototype: view the app as",
-    "nowViewingAs": "Now viewing as {name} ({role}).",
-    "openStaffApp": "Open the staff app",
-    "openParentPortal": "Open the parent portal",
-    "signOut": "Sign out",
-    "resetDemoData": "Reset demo data",
-    "demoDataReset": "Demo data reset to Sunday 8 November, 12:08.",
-    "accountMenu": "Account menu",
-    "yourAccount": "Your account",
-    "openMemberPortal": "My groups"
   },
   "prefs": {
     "language": "Language",
@@ -39,6 +20,14 @@
     "light": "Light",
     "dark": "Dark",
     "system": "Like the device"
+  },
+  "table": {
+    "noResults": "No results.",
+    "showing": "Showing {start, number}–{end, number} of {total, number}",
+    "page": "Page {page, number} of {count, number}",
+    "previous": "Previous page",
+    "next": "Next page",
+    "sortBy": "Sort by {column}"
   },
   "common": {
     "cancel": "Cancel",
@@ -67,16 +56,79 @@
     "formerAccount": "Former account",
     "disabled": "Disabled",
     "retry": "Try again",
-    "unsupportedBrowser": "This browser is too old for the app. Update it, or open the app in a current version of Safari, Chrome, Firefox or Edge."
+    "unsupportedBrowser": "This browser is too old for the app. Update it, or open the app in a current version of Safari, Chrome, Firefox or Edge.",
+    "back": "Back",
+    "clearField": "Clear {field}"
   },
-  "ui": {
-    "close": "Close",
+  "notFound": {
+    "title": "This page doesn’t exist",
+    "app": {
+      "action": "Go to Home",
+      "description": "It may have been deleted, or the link is wrong."
+    },
+    "root": {
+      "description": "The link may be wrong or out of date.",
+      "openApp": "Open the app",
+      "parentPortal": "Parent portal"
+    },
+    "portal": {
+      "action": "Go to the start page",
+      "description": "It may not be published, or it belongs to another group."
+    }
+  },
+  "nav": {
+    "main": "Main",
+    "home": "Home",
+    "administration": "Administration",
+    "accounts": "Accounts",
+    "access": "Access",
+    "data": "Data",
+    "organization": "Organization",
+    "services": "Services",
+    "showServices": "Show or hide the services",
+    "lessons": "Lessons",
+    "preparation": "Preparation",
+    "tasks": "Tasks",
+    "attendance": "Attendance",
+    "settings": "Settings",
     "more": "More",
-    "toggleSidebar": "Toggle sidebar",
-    "sidebar": "Sidebar",
-    "sidebarDescription": "The app’s navigation.",
-    "loading": "Loading",
-    "breadcrumb": "Breadcrumb"
+    "breadcrumb": "Breadcrumb",
+    "backTo": "Back to {page}"
+  },
+  "shell": {
+    "accountMenu": "Account menu",
+    "settings": "Settings",
+    "demoData": "Demo data",
+    "demoDataHint": "Prototype on fictional demo data, kept in memory on the server. Changes are lost when it restarts. Nothing is saved to the backend.",
+    "demoDataReset": "Demo data reset to Sunday 8 November, 12:08.",
+    "emptyChurchStarted": "Started an empty church: only the administrator, the roles and the church calendar.",
+    "nowViewingAs": "Now viewing the app as {name}.",
+    "openStaffApp": "Open the staff app",
+    "openParentPortal": "Open the parent portal",
+    "openMemberPortal": "Open my member portal",
+    "prototypeViewAs": "Prototype: view the app as",
+    "resetDemoData": "Reset demo data",
+    "startEmptyChurch": "Start with an empty church",
+    "signOut": "Sign out"
+  },
+  "status": {
+    "scheduled": "Scheduled",
+    "open": "Attendance open",
+    "closed": "Closed",
+    "canceled": "Canceled",
+    "rescheduled": "Rescheduled",
+    "oneOff": "One-off",
+    "draft": "Draft",
+    "lesson": {
+      "draft": "Draft",
+      "ready": "Ready",
+      "published": "Published"
+    },
+    "task": {
+      "draft": "Draft",
+      "published": "Published",
+      "archived": "Archived"
+    }
   },
   "errors": {
     "title": {
@@ -85,1803 +137,1143 @@
       "conflict": "Not possible right now",
       "invalid": "Some fields need attention"
     },
-    "forbidden": "Your roles don’t allow this.",
+    "forbidden": "Your roles don’t allow this here.",
     "checkFields": "Check the highlighted fields.",
     "invalidRequest": "The request was not valid.",
     "notFound": {
-      "service": "This service does not exist or was deleted.",
-      "stage": "This stage does not exist or was deleted.",
-      "person": "This person does not exist or was deleted.",
-      "membership": "This membership does not exist or was deleted.",
-      "schedule": "This schedule does not exist or was deleted.",
-      "session": "This session does not exist or was deleted.",
-      "attendance": "This attendance record does not exist or was deleted.",
-      "lesson": "This lesson does not exist or was deleted.",
-      "homework": "This homework does not exist or was deleted.",
-      "user": "This account does not exist or was deleted.",
-      "guardian": "This parent link does not exist or was removed.",
-      "request": "This request does not exist or was deleted.",
-      "role": "This role does not exist or was deleted.",
-      "route": "Not found. Reload the page and try again.",
-      "assignment": "This assignment does not exist or was removed."
+      "service": "This service doesn’t exist or isn’t yours to see.",
+      "stage": "This stage doesn’t exist or isn’t yours to see.",
+      "person": "This person doesn’t exist.",
+      "schedule": "This schedule doesn’t exist or isn’t yours to see.",
+      "plan": "There is no plan for this year.",
+      "session": "This session doesn’t exist or isn’t yours to see.",
+      "lesson": "This lesson doesn’t exist or isn’t yours to see.",
+      "task": "This task doesn’t exist or isn’t yours to see.",
+      "account": "This account doesn’t exist.",
+      "role": "This role doesn’t exist.",
+      "assignment": "This role assignment doesn’t exist.",
+      "guardianship": "This parent link doesn’t exist.",
+      "request": "This request doesn’t exist.",
+      "occasion": "This calendar entry doesn’t exist."
     },
     "validation": {
-      "tooLong": "Use at most {max} characters.",
       "chooseDate": "Choose a date.",
-      "invalidDate": "Enter a valid date.",
       "chooseTime": "Choose a time.",
+      "invalidDate": "Enter a valid date.",
       "invalidTime": "Enter a time like 18:30.",
-      "invalidType": "This value has the wrong format.",
-      "unexpectedField": "This field isn’t accepted here.",
-      "invalidRange": "Choose an end on or after the start, at most {max} days later.",
-      "birthDateInFuture": "The birth date can’t be in the future.",
-      "addressIncomplete": "Enter street, postal code and city, or none of them."
+      "tooLong": "Use at most {max} characters.",
+      "firstNameRequired": "Enter the first name.",
+      "lastNameRequired": "Enter the last name."
+    },
+    "username": {
+      "required": "Enter a username.",
+      "length": "Use 3 to 32 characters.",
+      "characters": "Use only the letters a–z, digits, dots, hyphens and underscores.",
+      "start": "Start with a letter.",
+      "end": "End with a letter or a digit.",
+      "separators": "Don’t put two dots, hyphens or underscores next to each other.",
+      "taken": "Another account already uses this username."
+    },
+    "password": {
+      "tooShort": "Use at least {min, number} characters.",
+      "currentWrong": "This isn’t the current password.",
+      "sameAsBefore": "Choose a password that is different from the one you were given.",
+      "mismatch": "The two passwords are not the same."
+    },
+    "accounts": {
+      "personHasAccount": "This person already has an account.",
+      "roleRequired": "Choose at least one role.",
+      "notYourOwn": "Ask another administrator to change your own account.",
+      "morePowerful": "This account may do more than you. Ask an administrator."
+    },
+    "access": {
+      "ownAssignments": "Nobody can change their own roles. Ask another administrator.",
+      "cannotGive": "You can’t give the role {role}: it allows more than your own roles do.",
+      "roleNeedsChurch": "{role} can only be given for the whole church.",
+      "unknownScope": "Choose a service or a class of that service.",
+      "alreadyAssigned": "This person already has this role there.",
+      "lastAccessManager": "Someone active must still be able to manage access. Give this to another person first."
+    },
+    "roles": {
+      "nameRequired": "Enter a name for the role.",
+      "nameTaken": "Another role already has this name.",
+      "permissionRequired": "Choose at least one permission.",
+      "protected": "{role} is protected and can’t be deleted.",
+      "protectedKeepsAccess": "{role} always keeps “Manage roles and assignments”.",
+      "hasGroupAssignments": "This role is given for single services or classes. Remove those assignments before adding church-wide permissions.",
+      "inUse": "Remove this role from everyone who has it first."
+    },
+    "guardians": {
+      "notParent": "Give this account the Parent role first.",
+      "self": "An account can’t be linked to itself.",
+      "alreadyLinked": "This member is already linked to this parent.",
+      "notMember": "Only members can be linked to a parent. Create a member account first."
     },
     "services": {
-      "adminOnlyCreate": "You can’t create services.",
-      "adminOnlyArchive": "You can’t archive services.",
-      "adminOnlyRestore": "You can’t restore services.",
-      "adminOnlyDelete": "You can’t delete services.",
       "nameRequired": "Enter a name for the service.",
-      "nameTaken": "A service called “{name}” already exists.",
-      "nameTakenArchived": "An archived service is already called “{name}”. Restore it instead of creating a new one.",
-      "alreadyArchived": "{name} is already archived.",
-      "notArchived": "{name} is not archived.",
-      "takingAttendance": "{name} is taking attendance right now. Close the open sessions first.",
-      "hasHistory": "{name} has meeting history ({count, plural, one {# session} other {# sessions}}). Archive it instead of deleting it.",
-      "archivedNoStageChanges": "{name} is archived. Restore it before changing its stages.",
-      "hasLessons": "{name} has lessons ({count, plural, one {# lesson} other {# lessons}}). Archive it instead of deleting it."
+      "nameTaken": "Another service already has this name.",
+      "structureLocked": "This service already has sessions, members or lessons. Its structure can’t change any more.",
+      "noStages": "This service has no stages.",
+      "openSession": "A session of this service is taking attendance right now.",
+      "hasHistory": "This service has sessions, members or lessons. Archive it instead."
     },
     "stages": {
       "nameRequired": "Enter a name for the stage.",
-      "nameTaken": "This service already has a stage called “{name}”.",
-      "nameTakenArchived": "An archived stage is already called “{name}”. Restore it instead.",
-      "reorderStale": "The stages changed while you were sorting them. Reload the page and try again.",
-      "alreadyArchived": "{name} is already archived.",
-      "notArchived": "{name} is not archived.",
-      "takingAttendance": "{name} is taking attendance right now. Close the session first.",
-      "hasHistory": "{name} has meeting history ({count, plural, one {# session} other {# sessions}}). Archive it instead of deleting it.",
-      "hasMembers": "{count, plural, one {# person is} other {# people are}} still in {name}. Move them to another stage first, or archive the stage.",
-      "hasLessons": "{name} has lessons ({count, plural, one {# lesson} other {# lessons}}). Archive it instead of deleting it."
+      "nameTaken": "Another stage of this service already has this name.",
+      "atLeastOne": "Add at least one stage.",
+      "openSession": "This stage is taking attendance right now."
     },
-    "meetings": {
-      "chooseService": "Choose a service.",
-      "serviceArchived": "{name} is archived.",
-      "chooseStage": "Choose a stage of this service.",
-      "stageArchived": "{name} is archived.",
-      "scheduleNameRequired": "Enter a name, for example “Sunday class”.",
-      "endAfterStart": "The meeting has to end after it starts.",
-      "chooseRosterMode": "Choose who is expected.",
-      "serviceArchivedRestoreFirst": "{name} is archived. Restore it first.",
-      "stageArchivedRestoreFirst": "{name} is archived. Restore the stage first.",
-      "scheduleHasSessions": "{count, plural, one {# session was} other {# sessions were}} already created from this schedule. Deactivate it instead: no new sessions are created and the history stays.",
-      "sessionCanceled": "This session was canceled.",
-      "attendanceClosed": "Attendance for this session is closed. Reopen it to make corrections.",
-      "opensOnTheDay": "Attendance opens on the day of the session.",
-      "onlyActiveCanClose": "Only a session that is taking attendance can be closed.",
-      "onlyCompletedCanReopen": "Only a completed session can be reopened.",
-      "onlyScheduledCanCancel": "Only a session that has not started can be canceled.",
-      "sessionEndAfterStart": "The session has to end after it starts.",
-      "onlyScheduledCanMove": "Only a session that has not started can be moved.",
-      "chooseFutureTime": "Choose a time in the future.",
-      "titleRequired": "Enter a title.",
-      "noMeetingOnDate": "The schedule has no meeting on that date.",
-      "scheduleInactive": "This schedule is inactive. Activate it first.",
-      "reopenNotAllowed": "You can’t reopen meetings.",
-      "reopenLeadersOnly": "You can’t reopen closed sessions.",
-      "dateInPast": "Choose today or a later date."
+    "plans": {
+      "startTime": "Choose the start time.",
+      "endTime": "Enter a time like 13:15.",
+      "endBeforeStart": "The end must be after the start.",
+      "startsOn": "Enter a valid first date.",
+      "endsOn": "Enter a valid last date.",
+      "lastBeforeFirst": "The last date must be on or after the first date.",
+      "outsideYear": "This date is outside the year you are planning.",
+      "interval": "Choose how often the sessions repeat.",
+      "noDates": "With these dates there would be no session in this year.",
+      "chooseUnit": "Choose at least one stage to plan.",
+      "year": "You can plan this year and the next two years.",
+      "alreadyConfirmed": "This year’s plan is already confirmed. Use “Change from a date” instead.",
+      "stale": "Someone else changed this plan in the meantime. Reload the page and check it again.",
+      "notConfirmed": "Confirm the plan first.",
+      "changeFrom": "Choose a date after today in the planned year.",
+      "mandatoryException": "Only an administrator can keep a session on a day the church has canceled."
     },
-    "recurrence": {
-      "interval": "The interval must be between 1 and 52.",
-      "weekdays": "Choose at least one weekday.",
-      "weekdayRange": "Weekdays are numbered 1 (Monday) to 7 (Sunday).",
-      "monthlyOneDay": "A monthly meeting happens on exactly one weekday.",
-      "monthWeek": "Choose the first, second, third, fourth or last weekday of the month.",
-      "monthWeekOnlyMonthly": "Only monthly meetings have a week of the month.",
-      "endBeforeStart": "The end date cannot be before the start date."
+    "sessions": {
+      "notScheduled": "Only a scheduled session can be changed.",
+      "notCanceled": "This session isn’t canceled.",
+      "inThePast": "Choose today or a later date.",
+      "tooFar": "Choose a date within the next two years.",
+      "conflict": "There is already a session at this time."
     },
     "attendance": {
-      "openFirst": "Open attendance for this session first.",
-      "closedReopen": "Attendance is closed. Reopen the session to correct it.",
-      "personInactive": "{name} is inactive. Reactivate them in Members first.",
-      "alreadyPresent": "{name} is already marked present ({time}).",
-      "alreadyPresentBy": "{name} is already marked present ({time}, by {by}).",
-      "alreadyRemoved": "This entry was already removed."
+      "notScheduled": "Attendance for this session was already opened.",
+      "notToday": "Attendance opens on the day of the session.",
+      "notOpen": "Attendance isn’t open.",
+      "notClosed": "Attendance isn’t closed.",
+      "reasonRequired": "Say why the attendance needs a correction."
     },
-    "people": {
-      "firstNameRequired": "Enter a first name.",
-      "lastNameRequired": "Enter a last name.",
-      "duplicateTitle": "Possible duplicate",
-      "duplicate": "{count, plural, one {Someone called {name} already exists.} other {# people called {name} already exist.}} Check that this is a different person.",
-      "alreadyIn": "{name} is already in {where}.",
-      "membershipEnded": "This membership has already ended.",
-      "addNotAllowed": "You can’t add people.",
-      "changeNotAllowed": "You can’t change people or their stages.",
-      "removeNotAllowed": "You can’t take people out of stages.",
-      "editOutsideServices": "You can only edit people in the services you serve in. {name} is not in any of them.",
-      "addOutsideServices": "You can only add people to the services and stages you serve in.",
-      "chooseJoinService": "Choose the service this person joins.",
-      "membershipOutsideServices": "You can only change memberships in the services and stages you serve in.",
-      "moveOutsideStages": "You can only move people into stages you serve in."
-    },
-    "roles": {
-      "adminOnly": "You can’t give or remove roles.",
-      "alreadyHasRole": "{name} already has this role.",
-      "chooseRole": "Choose at least one role.",
-      "nameRequired": "Enter a name for the role.",
-      "nameTaken": "A role called “{name}” already exists.",
-      "lastRoleManager": "At least one active account must be able to change roles. Give that permission to someone else first.",
-      "unknownPermission": "Some of these permissions don’t exist.",
-      "createNotAllowed": "You can’t add roles.",
-      "updateNotAllowed": "You can’t change roles.",
-      "deleteNotAllowed": "You can’t delete roles.",
-      "unknown": "This role doesn’t exist any more. Choose another one.",
-      "chooseService": "Choose the service this role applies to.",
-      "ownAdminRole": "You can’t remove your own administrator role. Ask another administrator.",
-      "stageOnlyForServants": "Only servant roles can be limited to a stage.",
-      "lastAdministrator": "The last active administrator keeps this role. Make someone else an administrator first."
-    },
-    "materials": {
-      "labelTooLong": "Use at most 120 characters for the label.",
-      "url": "Enter a web address starting with https://",
-      "tooMany": "Add at most 10 items."
-    },
-    "lessons": {
-      "titleRequired": "Enter a title, e.g. “The Good Samaritan”.",
-      "chooseMeeting": "Choose a meeting of this stage.",
-      "chooseDate": "Choose a date.",
-      "noMeetingThatDay": "{name} does not meet on that date.",
-      "chooseWhen": "Choose when the lesson will be taught.",
-      "meetingHasLesson": "This meeting already has a lesson: “{title}”. Edit that one, or pick another date.",
-      "chooseResponsible": "Choose someone who may change lessons.",
-      "helpersInStage": "Everyone helping must be allowed to change lessons.",
-      "stageArchived": "{name} is archived.",
-      "archived": "This lesson is archived.",
-      "taughtAfterDate": "A lesson is marked as taught on or after its teaching date.",
-      "deleteDraftsOnly": "Only draft lessons can be deleted. Archive it instead.",
-      "homeworkPublished": "Homework of this lesson was published to parents. Archive the lesson instead.",
-      "createNotAllowed": "You can’t prepare lessons.",
-      "changeNotAllowed": "You can’t change lessons.",
-      "deleteNotAllowed": "You can’t archive or delete lessons.",
-      "prepareStageOnly": "You can’t prepare lessons for this stage.",
-      "changeStageOnly": "You can’t change lessons of this stage."
-    },
-    "homework": {
-      "titleRequired": "Enter a title, e.g. “Learn the memory verse”.",
-      "instructionsRequired": "Write what to do at home.",
-      "instructionsTooLong": "Use at most 2,000 characters.",
-      "dueBeforeLesson": "The due date can’t be before the lesson.",
-      "lessonWithoutStage": "Homework is assigned to a stage. Add the lesson to a stage first.",
-      "lessonArchived": "The lesson is archived. Restore the lesson first.",
-      "archivedNoEdit": "Archived homework can’t be edited.",
-      "archivedNoPublish": "Archived homework can’t be published. Restore it first.",
-      "notArchived": "Only archived homework can be restored.",
-      "onlyPublishedBack": "Only published homework can be taken back.",
-      "alreadyReported": "Parents have already reported it as completed. Archive it instead.",
-      "publishedStays": "Homework that was published stays in the history. Archive it instead.",
-      "ownChildrenOnly": "You can only report homework for your own children.",
-      "notAvailable": "This homework is not available.",
-      "otherClass": "This homework is for another class than {name}’s.",
-      "createNotAllowed": "You can’t give homework.",
-      "changeNotAllowed": "You can’t change homework.",
-      "deleteNotAllowed": "You can’t archive or delete homework.",
-      "changeStageOnly": "You can’t change homework of this stage.",
-      "assignStageOnly": "You can’t give homework to this stage."
-    },
-    "guardians": {
-      "adminOnlyGrant": "You can’t give parents access to children.",
-      "alreadyHasAccess": "{parent} already has access to {child}.",
-      "adminOnlyApprove": "You can’t approve parent access.",
-      "adminOnlyRemove": "You can’t remove parent access."
-    },
-    "accounts": {
-      "firstNameRequired": "Enter your first name.",
-      "lastNameRequired": "Enter your last name.",
-      "emailRequired": "Enter your email address.",
-      "emailInvalid": "Enter an email address like name@example.org.",
-      "emailTaken": "There is already an account with this email address. Sign in, or reset the password if you forgot it.",
-      "passwordTooShort": "Use at least {min, number} characters.",
-      "childrenRequired": "Write the names and classes of your children, so the church office can link them to your account.",
-      "serviceDetailsRequired": "Write where you serve, so the church office can give you the right access.",
-      "chooseService": "Choose the service you serve in.",
-      "acceptPrivacy": "Please confirm that you have read the privacy notice.",
-      "adminOnly": "You can’t approve or decline account requests.",
-      "alreadyApproved": "This account has already been approved.",
-      "chooseChild": "Choose at least one child.",
-      "childNotFound": "One of the chosen children no longer exists or is inactive.",
-      "groupsRequired": "Write which groups you take part in, so the church office can link your account to your record.",
-      "choosePerson": "Choose the member record this account belongs to.",
-      "personNotFound": "This member record no longer exists or is inactive.",
-      "personHasAccount": "{name} already has an account. Check that you chose the right person.",
-      "chooseAge": "Choose whether the member is 16 or older, or under 16 with a parent’s agreement.",
-      "notLinked": "This account isn’t linked to a member record.",
-      "unlinkNotAllowed": "You can’t remove member links.",
-      "notApproved": "This account hasn’t been approved yet. Approve it under Account requests first.",
-      "nameRequired": "Enter the name to show for the account.",
-      "chooseServiceForRole": "Choose the service for this role.",
-      "stageNotInService": "This stage doesn’t belong to the chosen service.",
-      "privacyNoticeOutdated": "The privacy notice has changed. Reload the page, read it and confirm again.",
-      "currentPasswordWrong": "This is not your current password."
+    "learning": {
+      "titleRequired": "Enter a title.",
+      "instructionsRequired": "Write what to do.",
+      "labelRequired": "Enter a name for the link or item.",
+      "invalidUrl": "Enter a web address starting with https://.",
+      "sessionOfOtherGroup": "Choose a session of this group.",
+      "chooseDate": "Choose the session this lesson is for.",
+      "summaryBeforePublishing": "Write a summary before publishing the lesson.",
+      "publishedLesson": "Unpublish the lesson before deleting it.",
+      "lessonHasTasks": "Delete the tasks of this lesson first.",
+      "taskHasReports": "Someone already reported this task as done. Archive it instead.",
+      "onlyDraftsDeleted": "Only drafts can be deleted. Archive the task instead."
     },
     "privacy": {
-      "adminOnly": "You can’t handle data protection requests.",
-      "chooseSubject": "Choose the member or account the request is about.",
-      "requestedByRequired": "Enter who made the request.",
-      "receivedInFuture": "The date can’t be in the future.",
-      "alreadyRequested": "You have already asked for your account and data to be deleted. The church office will answer within one month of your request.",
-      "notOpen": "This request has already been closed.",
-      "notErasure": "Only erasure requests delete data.",
-      "notCopy": "This is not a request for a copy.",
-      "subjectGone": "The data this request is about no longer exists.",
-      "ownAccount": "You can’t erase your own account. Ask someone else who handles data protection requests.",
-      "declineReasonRequired": "Give the reason. The person must be told why, and that they can complain to the data protection authority."
+      "requestedByRequired": "Write who asked.",
+      "reasonRequired": "Write why the request is declined.",
+      "alreadyRequested": "You already asked for your account to be deleted.",
+      "closed": "This request is already closed.",
+      "wrongKind": "This doesn’t fit the kind of request.",
+      "ownErasure": "Ask another administrator to erase your own data."
     },
-    "loadFailed": "This couldn’t be loaded.",
-    "notSaved": "Not saved. Check your connection and try again.",
-    "conflict": "Someone else changed this at the same time. Reload the page and try again.",
-    "tooManyRequests": "Too many requests. Wait a moment and try again.",
-    "internal": "Something went wrong on our side. Try again later.",
-    "unavailable": "The app can’t be reached right now. Try again in a few minutes.",
-    "network": "No connection. Check your internet connection and try again.",
-    "sessionExpired": "You were signed out. Sign in again to continue.",
-    "auth": {
-      "unauthenticated": "Please sign in.",
-      "invalidCredentials": "The email address or the password is not right.",
-      "unconfirmed": "Confirm your email address first: open the link we sent you when you registered.",
-      "pending": "Your account is waiting for approval by the church office.",
-      "disabled": "This account can no longer sign in. Ask the church office if you think this is a mistake.",
-      "tooManyAttempts": "Too many attempts. Wait a few minutes and try again.",
-      "resetLinkInvalid": "This link no longer works. Ask the church office for a new one.",
-      "confirmationLinkInvalid": "This confirmation link is invalid or has expired. Register again to get a new one."
-    },
-    "assignments": {
-      "alreadyAssigned": "{name} is already assigned to {where}.",
-      "notAllowed": "You can’t assign people to this group or take them out of it."
+    "calendar": {
+      "nameRequired": "Enter a name for the event.",
+      "computed": "Feast days come from the calendar and can’t be deleted."
     }
   },
   "toast": {
-    "saved": "Saved.",
-    "orderSaved": "Order saved.",
-    "created": "Created {name}.",
-    "added": "Added {name}.",
-    "archived": "Archived {name}.",
-    "restored": "Restored {name}.",
-    "deleted": "Deleted {name}.",
-    "serviceArchived": "Archived {name}. No new sessions will be created for it.",
-    "scheduleCreated": "Schedule created.{created, plural, =0 {} one { # session was created for today and tomorrow.} other { # sessions were created for today and tomorrow.}}",
-    "scheduleSaved": "Schedule saved. Sessions created from now on use the new details.{created, plural, =0 {} one { # session was created for today and tomorrow.} other { # sessions were created for today and tomorrow.}}",
-    "scheduleActivated": "Schedule activated.{created, plural, =0 {} one { # session was created for today and tomorrow.} other { # sessions were created for today and tomorrow.}}",
-    "scheduleDeactivated": "Schedule deactivated. No new sessions will be created; existing ones stay.",
-    "scheduleDeleted": "Schedule deleted.",
-    "attendanceOpen": "Attendance is open.",
-    "attendanceClosed": "Attendance closed.",
-    "sessionReopened": "Session reopened for corrections.",
-    "sessionCanceled": "Session canceled. The schedule and its other sessions are unchanged.",
-    "sessionMoved": "Session moved. The schedule and its other sessions are unchanged.",
-    "sessionSaved": "Session saved. The schedule is unchanged.",
-    "dateCanceled": "That date is canceled. The schedule and its other dates are unchanged.",
-    "dateMoved": "That date is moved. The schedule and its other dates are unchanged.",
-    "oneOffCreated": "One-off session created.",
-    "personReactivated": "Reactivated.",
-    "personInactive": "Marked as inactive. They no longer appear on rosters.",
-    "membershipAdded": "Added.",
-    "membershipEnded": "Removed. Past attendance is kept.",
-    "membershipMoved": "Moved. Past attendance stays with the old stage.",
-    "roleAssigned": "Role given.",
-    "roleRemoved": "Role removed.",
-    "lessonReady": "“{title}” is ready to teach.",
-    "lessonDraftSaved": "Draft saved: “{title}”.",
-    "lessonSavedReady": "Saved. The lesson is ready to teach.",
-    "lessonTaught": "Marked as taught.",
-    "lessonMarkedReady": "Marked as ready.",
-    "lessonBackToDraft": "Back to draft.",
-    "archivedTitle": "Archived “{title}”.",
-    "restoredTitle": "Restored “{title}”.",
-    "deletedTitle": "Deleted “{title}”.",
-    "homeworkPublishedNew": "Published. Parents and members of the class can see it now.",
-    "homeworkDraftSaved": "Saved as a draft. Parents and members can’t see it yet.",
-    "homeworkSavedPublished": "Saved. Parents and members see the new version.",
-    "homeworkSavedDraft": "Saved as a draft.",
-    "homeworkPublished": "Published “{title}”. Parents and members of the class can see it now.",
-    "homeworkUnpublished": "“{title}” is a draft again and hidden from parents and members.",
-    "homeworkArchived": "Archived “{title}”. Reported completions are kept.",
-    "homeworkRestoredPublished": "Restored “{title}”. Parents and members of the class see it again.",
-    "homeworkRestoredDraft": "Restored “{title}” as a draft.",
-    "accessGiven": "Access given. The parent sees this child’s published homework.",
-    "approved": "Approved.",
-    "accessRemoved": "Access removed.",
-    "registered": "Account created. It is waiting for approval.",
-    "accountApproved": "{name} can sign in now.",
-    "accountDeclined": "Declined. {name}’s registration was deleted.",
-    "dataRequestRecorded": "Request recorded. The answer is due in one month.",
-    "dataErased": "Data erased. The request stays in the log, without the name.",
-    "copySent": "Marked as sent.",
-    "dataRequestDeclined": "Request declined. Tell the person why, and that they can complain to the data protection authority.",
-    "erasureRequested": "Your request was sent to the church office. It will answer within one month.",
-    "memberUnlinked": "Link removed for {name}.",
-    "roleCreated": "Role “{name}” created.",
+    "passwordChanged": "Your new password is saved.",
+    "accountCreated": "The account of {name} is ready.",
+    "passwordReset": "The temporary password is set.",
+    "usernameChanged": "The username is changed.",
+    "groupAdded": "Group added.",
+    "groupRemoved": "Group removed.",
+    "childLinked": "The member is linked to the parent.",
+    "childUnlinked": "The link is removed.",
+    "roleCreated": "Role created.",
     "roleSaved": "Role saved.",
-    "roleDeleted": "Role “{name}” deleted.",
-    "groupAssigned": "{name} now serves in {where}.",
-    "groupRemoved": "{name} no longer serves in {where}."
+    "roleDeleted": "Role deleted.",
+    "roleAssigned": "Role given.",
+    "assignmentRemoved": "Role removed.",
+    "serviceCreated": "{name} is created.",
+    "serviceSaved": "Service saved.",
+    "structureChanged": "The structure is changed.",
+    "serviceArchived": "Service archived.",
+    "serviceRestored": "Service restored.",
+    "serviceDeleted": "Service deleted.",
+    "stageAdded": "Stage added.",
+    "stageSaved": "Stage saved.",
+    "stageArchived": "Stage archived.",
+    "stageRestored": "Stage restored.",
+    "planConfirmed": "The {year} plan is confirmed: {count, plural, one {# session} other {# sessions}} created.",
+    "draftSaved": "The draft for {year} is saved.",
+    "draftDiscarded": "The draft is discarded.",
+    "planChanged": "The plan is changed.",
+    "sessionCanceled": "The session is canceled.",
+    "sessionRestored": "The session takes place again.",
+    "sessionRescheduled": "The session is rescheduled.",
+    "oneOffAdded": "The one-off session is added.",
+    "attendanceOpened": "Attendance is open.",
+    "attendanceClosed": "Attendance is closed.",
+    "attendanceReopened": "Attendance is open again for corrections.",
+    "lessonSaved": "Lesson saved.",
+    "lessonDeleted": "Lesson deleted.",
+    "lessonStatus": {
+      "draft": "The lesson is a draft again.",
+      "ready": "The lesson is ready.",
+      "published": "The lesson is published for parents and members."
+    },
+    "taskSaved": "Task saved.",
+    "taskPublished": "Task published.",
+    "taskDeleted": "Task deleted.",
+    "taskStatus": {
+      "draft": "The task is a draft again.",
+      "published": "The task is published.",
+      "archived": "The task is archived."
+    },
+    "taskDone": "Marked as done.",
+    "taskNotDone": "Marked as not done.",
+    "requestRecorded": "The request is recorded.",
+    "erasureRequested": "Your request is sent to the church office.",
+    "copyHandedOver": "The request is closed.",
+    "requestDeclined": "The request is declined.",
+    "erased": "The data is erased.",
+    "eventAdded": "The event is added to the calendar.",
+    "eventRemoved": "The event is removed.",
+    "calendarChecked": "The {year} calendar is checked.",
+    "accountDeleted": "The account is deleted.",
+    "daysOffCustom": "The days are now marked by hand.",
+    "daysOffAutomatic": "The system chooses the days again."
   },
-  "roles": {
-    "summary": {
-      "parentOf": "Parent of {children}",
-      "parentWaiting": "Parent, waiting for access",
-      "none": "No role yet",
-      "memberOf": "Member · {groups}",
-      "member": "Member"
-    }
-  },
-  "dashboard": {
+  "home": {
     "greeting": {
       "morning": "Good morning, {name}",
       "afternoon": "Good afternoon, {name}",
       "evening": "Good evening, {name}"
     },
-    "stagesCount": "{count, plural, one {# stage} other {# stages}}",
-    "summary": {
-      "none": "There are no meetings today.",
-      "open": "{count, plural, one {# meeting is} other {# meetings are}} taking attendance",
-      "notOpened": "{count, plural, other {# not opened yet}}"
-    },
-    "today": {
-      "title": "Today",
-      "description": "All of today’s meetings.",
-      "allMeetings": "All meetings",
-      "empty": "No meetings today",
-      "tomorrow": "Tomorrow: {names}.",
-      "checkMeetings": "Check Meetings for the coming days."
-    },
-    "attention": {
-      "title": "Needs attention",
-      "description": "Earlier sessions whose attendance was never taken or never closed.",
-      "notClosed": "Not closed",
-      "notTaken": "Not taken"
-    },
-    "recent": {
-      "title": "Recently closed",
-      "description": "Attendance that was closed recently.",
-      "link": "Attendance",
-      "empty": "Nothing closed yet.",
-      "closedAt": "closed at {time}",
-      "closedAtBy": "closed at {time} by {name}"
-    },
-    "comingUp": {
-      "title": "Coming up",
-      "description": "The next seven days.",
-      "empty": "Nothing planned."
-    },
-    "services": {
-      "title": "Services",
-      "link": "Services",
-      "next": "next {when}, {time}",
-      "ofRoster": "of roster, 4 weeks",
-      "onAverage": "on average",
-      "noSessionsYet": "No sessions yet"
-    }
-  },
-  "stages": {
-    "deleteBlocked": {
-      "history": "Has meeting history ({count, plural, one {# session} other {# sessions}})",
-      "members": "{count, plural, one {# person is} other {# people are}} still in this stage"
-    },
-    "title": "Stages",
-    "kind": "Stage",
-    "tabs": {
-      "overview": "Overview",
-      "lessons": "Lessons",
-      "homework": "Homework"
-    },
-    "sections": "{name} sections",
-    "meets": "{pattern}, {time}",
-    "noSchedule": "No schedule",
-    "pastSessions": "{count, plural, one {# past session} other {# past sessions}}",
-    "archivedOn": "Archived {date}",
-    "form": {
-      "add": "Add stage",
-      "addTitle": "Add a stage to {service}",
-      "editTitle": "Edit {name}",
-      "addDescription": "A stage is a group within the service, such as a class or a level. It is added at the end of the list; you can reorder stages afterwards.",
-      "editDescription": "The new name shows everywhere, including past sessions.",
-      "name": "Name",
-      "namePlaceholder": "e.g. 3rd Class",
-      "description": "Description",
-      "descriptionPlaceholder": "e.g. Ages 8 to 9"
-    },
-    "actions": {
-      "rename": "Rename",
-      "moveUp": "Move up",
-      "moveDown": "Move down"
-    },
-    "archive": {
-      "title": "Archive {name}?",
-      "description": "It is hidden from {service}’s stage list. Nothing is deleted.",
-      "schedules": "Its schedules stop creating new sessions.",
-      "members": "{count, plural, one {# person stays} other {# people stay}} assigned to it; move them to another stage if they continue.",
-      "sessions": "Its {count, plural, one {# past session} other {# past sessions}} and their attendance are kept."
-    },
-    "restore": {
-      "title": "Restore {name}?",
-      "description": "It goes back to the end of the stage list. Activate its schedules again if it meets."
-    },
-    "delete": {
-      "title": "Delete {name}?",
-      "description": "It has no members and has never met, so it can be removed completely.",
-      "schedules": "Its schedules are deleted too.",
-      "cantUndo": "This can’t be undone."
-    },
-    "page": {
-      "title": "Stages of {name}",
-      "description": "Each stage has its own members, meetings, lessons and homework. Names are unique within the service.",
-      "hint": "Drag the rows, or use Move up and Move down, to set the order used everywhere stages are listed.",
-      "withoutStage": "{count, plural, one {# person belongs} other {# people belong}} to {name} without a stage."
-    },
-    "manager": {
-      "dragHandle": "Drag to reorder {name}",
-      "instructions": "To reorder, press space or enter, use the arrow keys, then press space or enter again.",
-      "announce": {
-        "pickedUp": "Picked up {name}, position {position, number} of {total, number}.",
-        "moved": "{name} was moved to position {position, number} of {total, number}.",
-        "dropped": "{name} was dropped at position {position, number} of {total, number}.",
-        "canceled": "Reordering was canceled. {name} is back in its place."
-      },
-      "columns": {
-        "order": "Order",
-        "position": "#",
-        "stage": "Stage",
-        "members": "Members",
-        "meets": "Meets",
-        "sessions": "Sessions",
-        "actions": "Actions"
-      },
-      "empty": "No stages yet. {name} meets as one group until you add some.",
-      "archived": "Archived stages"
-    },
-    "overview": {
-      "members": "Members ({count, number})",
-      "squares": "Squares show the last {count, plural, one {# session} other {# sessions}}, oldest first. Filled means marked present.",
-      "squaresEmpty": "Attendance appears here after the first session.",
-      "empty": "No members yet",
-      "emptyDescription": "Add the children or people of this stage to build its roster.",
-      "since": "since {date}",
-      "presentAt": "Present at {present, number} of the last {total, plural, one {# session} other {# sessions}}",
-      "dayPresent": "{date}: present",
-      "dayNotMarked": "{date}: not marked present",
-      "comingUp": "Coming up",
-      "nothingPlanned": "Nothing planned.",
-      "nextLesson": "Next lesson",
-      "noLesson": "No lesson prepared yet.",
-      "openHomework": "Open homework",
-      "noHomework": "No published homework is due.",
-      "due": "Due {date}",
-      "noDueDate": "No due date",
-      "completedOf": "{completed, number} of {assigned, plural, one {# child} other {# children}}"
-    }
-  },
-  "history": {
-    "createdFromSchedule": "Created from the schedule, the day before",
-    "createdByHand": "Created by hand as a one-off session",
-    "movedFrom": "Was {date} at {time}",
-    "created": "Created",
-    "opened": "Attendance opened",
-    "closed": "Attendance closed",
-    "reopened": "Reopened for corrections",
-    "canceled": "Canceled",
-    "moved": "Moved",
-    "edited": "Title or place changed"
-  },
-  "lessons": {
-    "theSchedule": "The schedule",
-    "title": "Lessons",
-    "lesson": "Lesson",
-    "newLesson": "New lesson",
-    "editLesson": "Edit lesson",
-    "editTitle": "Edit “{title}”",
-    "newDescription": "Prepare it as far ahead as you like. Parents and members never see the lesson plan, only the passage, the memory verse and the homework you publish.",
-    "backToLessons": "Back to lessons",
-    "backToLesson": "Back to the lesson",
-    "completion": "<strong>{completed, number}</strong> of {assigned, number} reported done",
-    "status": {
-      "draft": "Draft",
-      "ready": "Ready",
-      "completed": "Completed",
-      "taught": "Taught",
-      "published": "Published",
-      "draftHidden": "Parents and members can’t see drafts",
-      "publishedVisible": "Visible to parents and members of the class"
-    },
-    "visibility": {
-      "parents": "Parents and members see this",
-      "servants": "Servants only"
-    },
-    "meeting": {
-      "none": "{date} · no meeting linked",
-      "when": "{title}, {date} {time}",
-      "createdOn": "session is created on {date}",
-      "notOnSchedule": "{name} no longer meets on {date}. Choose another date.",
-      "canceled": "The meeting on {date} was canceled. Move the lesson to another date.",
-      "canceledReason": "The meeting on {date} was canceled: <bdi>{reason}</bdi> Move the lesson to another date.",
-      "moved": "moved",
-      "attendanceOpen": "attendance open now",
-      "held": "held"
-    },
-    "fields": {
-      "teachingPlan": "Teaching plan",
-      "objectives": "Objectives",
-      "teachingPoints": "Main teaching points",
-      "activities": "Activities",
-      "materials": "Materials",
-      "notes": "Preparation notes",
-      "passage": "Biblical passage",
-      "memoryVerse": "Memory verse",
-      "servants": "Servants",
-      "responsible": "Responsible",
-      "teachingDate": "Teaching date",
-      "status": "Status"
-    },
-    "list": {
-      "sectionTitle": "Lesson preparation",
-      "sectionDescription": "What will be taught at each meeting. Prepare weeks ahead: a lesson is linked to a meeting date, not to a session, so it doesn’t wait for the session to be created.",
-      "upcoming": "Upcoming ({count, number})",
-      "previous": "Previous ({count, number})",
-      "archived": "Archived ({count, number})",
-      "search": "Search lessons",
-      "searchPlaceholder": "Title, passage or date",
-      "anyStatus": "Any status",
-      "servant": "Servant",
-      "anyServant": "Any servant",
-      "noMatch": "No lesson matches",
-      "noUpcoming": "No lessons prepared yet",
-      "noPrevious": "No previous lessons",
-      "noArchived": "Nothing archived",
-      "noMatchHint": "Try another search or clear the filters.",
-      "noUpcomingHint": "Prepare the next lesson now. Sessions don’t need to exist yet: pick any upcoming meeting date.",
-      "noPreviousHint": "Lessons appear here after their date.",
-      "clearFilters": "Clear filters",
-      "withHelpers": "{name} with {helpers}",
-      "drafts": "{count, plural, other {# draft}}",
-      "onlyServants": "Only the servants of this stage and service leaders can prepare its lessons."
-    },
-    "detail": {
-      "readyHint": "Ready to teach. Mark it as taught after the meeting on {date}.",
-      "noObjectives": "No objectives yet.",
-      "noTeachingPoints": "No teaching points yet.",
-      "noActivities": "No activities yet.",
-      "noMaterials": "No materials listed.",
-      "homework": "Homework",
-      "homeworkDescription": "Parents of {stage}, and members with their own account, see published homework and tick it off when it is done.",
-      "addHomework": "Add homework",
-      "noHomework": "No homework for this lesson. Add one if the children should continue at home, for example learning the memory verse.",
-      "archivedHomework": "{count, plural, one {# archived homework task} other {# archived homework tasks}} kept in the <link>homework history</link>.",
-      "sharedWithParents": "Shared with parents and members",
-      "sharedHint": "Shown next to this lesson’s published homework{count, plural, =0 {, once there is some} other { (# now)}}.",
-      "noPassage": "No passage.",
-      "noMemoryVerse": "No memory verse.",
-      "helping": "Helping",
-      "session": "Session",
-      "openSession": "Open the session",
-      "created": "Created",
-      "lastChange": "Last change",
-      "markedTaught": "Marked taught"
-    },
-    "editor": {
-      "title": "Title",
-      "titlePlaceholder": "e.g. The Good Samaritan",
-      "summary": "Summary",
-      "summaryPlaceholder": "The story in one or two sentences",
-      "scripture": "Scripture",
-      "passagePlaceholder": "e.g. Luke 10:25–37",
-      "memoryVersePlaceholder": "The verse and its reference",
-      "objectivesPlaceholder": "What the children should understand or be able to do",
-      "teachingPointsHint": "One point per line.",
-      "activitiesHint": "Games, crafts, songs. One per line.",
-      "material": "Material {n, number}",
-      "materialPlaceholder": "e.g. Felt board figures",
-      "materialLink": "Link for material {n, number}",
-      "materialLinkPlaceholder": "https:// (optional)",
-      "removeMaterial": "Remove material {n, number}",
-      "addMaterial": "Add material",
-      "notesLabel": "Notes for the servants",
-      "notesPlaceholder": "Who brings what, things to keep in mind about the class",
-      "when": "When",
-      "meeting": "Meeting",
-      "otherDate": "Another date, no meeting",
-      "hint": {
-        "none": "Not linked to a meeting. Use this for a lesson outside the regular schedule.",
-        "planned": "The session for this date is created on {date}. The lesson is linked by its date, so it can be prepared now.",
-        "canceled": "This meeting was canceled. Pick another date.",
-        "completed": "This meeting has taken place.",
-        "today": "The meeting is today.",
-        "exists": "The session for this date already exists. The lesson is linked to it."
-      },
-      "option": {
-        "when": "{day}, {time}",
-        "canceled": "canceled",
-        "taken": "has “{title}”"
-      },
-      "helping": "Helping",
-      "statusHint": "Save a draft while preparing. Mark it ready when the preparation is done. After the meeting, mark it as taught on the lesson page.",
-      "saveAsDraft": "Save as draft",
-      "saveDraft": "Save draft"
-    },
-    "actions": {
-      "markReady": "Mark ready",
-      "markTaught": "Mark as taught",
-      "backToDraft": "Back to draft",
-      "notTaughtYet": "Not taught yet",
-      "deleteDraft": "Delete draft",
-      "archiveTitle": "Archive “{title}”?",
-      "archiveDescription": "Archived lessons leave the lists but stay in the history. You can restore it later.",
-      "archiveHomework": "{count, plural, one {Its # published homework task disappears for parents and members.} other {Its # published homework tasks disappear for parents and members.}}",
-      "archiveKept": "What was already reported as done is kept.",
-      "deleteTitle": "Delete “{title}”?",
-      "deleteDescription": "The draft and its draft homework are removed for good. Nothing of it ever reached parents or members."
-    },
-    "noAccess": {
-      "prepareTitle": "You can’t prepare lessons here",
-      "prepareBody": "Only the servants of {stage} and the service leaders can prepare its lessons.",
-      "changeTitle": "You can’t change this lesson",
-      "changeBody": "Only the servants of {stage} and the service leaders can change its lessons.",
-      "archivedTitle": "This lesson is archived",
-      "archivedBody": "Restore it first to make changes."
-    }
-  },
-  "settings": {
-    "unknownAccount": "Unknown account",
-    "unknownPerson": "Unknown",
-    "description": "Accounts and roles, parent access, and the church’s basic settings.",
-    "users": {
-      "title": "Staff accounts and roles",
-      "descriptionReadOnly": "Who has which role. Your roles let you see this, not change it.",
-      "addRole": "Role",
-      "removeRoleLabel": "Remove role {role} from {name}",
-      "removeTitle": "Remove “{role}” from {name}?",
-      "removeDescription": "They lose access that comes with this role straight away. Their past attendance records and lessons stay.",
-      "remove": "Remove role",
-      "assign": {
-        "title": "Give {name} a role",
-        "description": "Roles decide what someone can see and change: everywhere, or in the groups the account serves in. An account can have several.",
-        "role": "Role",
-        "submit": "Give role",
-        "roleHint": "See what each role allows under <link>Roles</link>.",
-        "choose": "Choose a role"
-      },
-      "description": "Give each account the roles it needs and the groups it serves in. Some roles hold everywhere in the church, others only in the account’s groups.",
-      "addGroup": "Group",
-      "addGroupLabel": "Assign {name} to a group…",
-      "noGroups": "No group yet: sees no service until assigned."
-    },
-    "parents": {
-      "title": "Parent access",
-      "description": "Which parent accounts see which children’s homework.",
-      "give": "Give a parent access",
-      "giveTitle": "Give a parent access to a child",
-      "giveDescription": "Check the family first, for example in person after the liturgy. The parent then sees this child’s published homework.",
-      "parentAccount": "Parent account",
-      "child": "Child",
-      "giveAccess": "Give access",
-      "summary": "{count, plural, one {# link} other {# links}} between parent accounts and children. A child can have several parents, a parent several children.",
-      "waiting": "Waiting for approval ({count, number})",
-      "asks": "<b>{parent}</b> asks to see <b>{child}</b>",
-      "asksWithGroup": "<b>{parent}</b> asks to see <b>{child}</b> ({group})",
-      "requested": "requested {when}",
-      "approve": "Approve",
-      "decline": "Decline",
-      "parent": "Parent",
-      "approved": "Approved",
-      "actions": "Actions",
-      "approvedAtBy": "{when} by {name}",
-      "approvedBy": "by {name}",
-      "remove": "Remove",
-      "declineTitle": "Decline {name}’s request?",
-      "declineDescription": "The parent won’t see anything about this child.",
-      "removeTitle": "Remove {parent}’s access to {child}?",
-      "removeDescription": "The parent no longer sees this child in the portal. Completions they reported stay in the history.",
-      "removeAccess": "Remove access"
-    },
-    "church": {
-      "title": "Church",
-      "name": "Name",
-      "timeZone": "Time zone",
-      "calendar": "Calendar",
-      "calendarValue": "Dates with the Coptic date, e.g. {date} is {coptic}",
-      "language": "Language",
-      "languageValue": "English, German and Arabic; everyone chooses theirs in the account menu"
-    },
-    "generator": {
-      "title": "Session generator",
-      "description": "Creates each schedule’s sessions on the day before, for today and tomorrow, and never touches a date twice.",
-      "simulated": "Simulated in this prototype: it runs hourly on the demo clock while pages load. The backend job is not built yet.",
-      "noRuns": "No runs yet.",
-      "ran": "Ran",
-      "for": "For",
-      "created": "Created",
-      "existing": "({count, number} already there)"
-    },
-    "prototype": {
-      "title": "Prototype",
-      "data": "All data is fictional and kept in memory on the prototype’s server; nothing is saved to the backend.",
-      "clockFrozen": "The demo clock started on Sunday 8 November 2026 at 12:08 and is frozen there (for screenshots).",
-      "clockRunning": "The demo clock started on Sunday 8 November 2026 at 12:08 and runs in real time from there.",
-      "reset": "Reset demo data",
-      "resetTitle": "Reset the demo data?",
-      "resetDescription": "Everything you changed in the prototype is replaced by the original demo data, and the clock goes back to Sunday 8 November, 12:08.",
-      "resetConfirm": "Reset",
-      "resetDone": "Demo data reset."
-    },
-    "members": {
-      "title": "Member accounts",
-      "description": "Accounts linked to a member’s own record. The member sees their groups, the next meetings and their homework.",
-      "empty": "No member accounts yet.",
-      "alsoParent": "Also a parent",
-      "disabled": "Disabled",
-      "record": "Record: <strong>{name}</strong>",
-      "inactive": "inactive",
-      "noGroup": "not in a group",
-      "sixteenOrOlder": "16 or older",
-      "guardianConsent": "Under 16, a parent agreed",
-      "guardianConsentNote": "Under 16, a parent agreed: {note}",
-      "linkedByOffice": "Linked by the church office",
-      "approved": "approved {when}",
-      "approvedBy": "approved {when} by {name}",
-      "remove": "Remove link",
-      "removeTitle": "Remove the link to {member}’s record?",
-      "removeDescription": "The account no longer shows the member’s groups, meetings and homework.",
-      "removeKept": "Homework reports made with the account stay in the history.",
-      "removeAgain": "An account without another role goes back to the account requests, so you can link it to the right record or decline it.",
-      "removeConfirm": "Remove link"
-    },
-    "roles": {
-      "title": "Roles",
-      "description": "What each role allows. Give roles to accounts under Staff accounts and roles.",
-      "newRole": "New role",
-      "role": "Role",
-      "accounts": "Accounts",
-      "permissionCount": "{count, number} of {total, number} permissions",
-      "holders": "{count, plural, =0 {No one} one {# account} other {# accounts}}",
-      "actionsFor": "Actions for {role}",
-      "edit": "Edit",
-      "view": "View",
-      "delete": "Delete",
-      "deleteTitle": "Delete the role “{name}”?",
-      "deleteDescription": "{count, plural, =0 {Nobody has it.} one {# account has it and loses what it allows at once.} other {# accounts have it and lose what it allows at once.}}",
-      "deleteConfirm": "Delete role",
-      "readOnly": "Your roles let you see roles, not change them.",
-      "allows": "Allows",
-      "global": "Some roles hold everywhere in the church, others only in the services and stages an account is assigned to. Which children a parent sees still comes from parent access; members see their own groups without a role.",
-      "scope": {
-        "church": "Everywhere",
-        "assignedGroups": "In assigned groups"
-      }
-    }
-  },
-  "session": {
-    "present": "{count, plural, other {# present}}",
-    "presentOf": "{present, plural, other {#}} of {total, plural, other {#}} present",
-    "notOnRoster": "+{count, plural, other {#}} not on roster",
-    "canceled": "Canceled",
-    "openRosterScheduled": "Open to everyone, no roster",
-    "openRoster": "Open to everyone",
-    "everyoneHere": "Everyone on the roster is here",
-    "notCheckedIn": "{count, plural, other {# not yet checked in}}",
-    "everyoneWasPresent": "Everyone on the roster was present",
-    "notMarkedPresent": "{count, plural, other {# not marked present}}",
-    "notTaken": "Attendance was not taken",
-    "onRoster": "{count, plural, one {# person} other {# people}} on the roster",
-    "createdToday": "Created today",
-    "createdTomorrow": "Created tomorrow",
-    "createdOn": "Created on {date}"
-  },
-  "status": {
-    "scheduled": "Scheduled",
-    "active": "Attendance open",
-    "completed": "Completed",
-    "canceled": "Canceled",
-    "planned": "Planned",
-    "moved": "Moved",
-    "oneOff": "One-off"
-  },
-  "roster": {
-    "cells": "{present, plural, other {#}} of {total, plural, other {#}} present",
-    "cellsExtra": "{present, plural, other {#}} of {total, plural, other {#}} present, plus {extra, plural, other {#}} not on the roster"
-  },
-  "table": {
-    "noResults": "No results.",
-    "showing": "Showing {start, number}–{end, number} of {total, number}",
-    "page": "Page {page, number} of {count, number}",
-    "previous": "Previous page",
-    "next": "Next page",
-    "sortBy": "Sort by {column}"
-  },
-  "counts": {
-    "stages": "{count, plural, one {# stage} other {# stages}}",
-    "members": "{count, plural, one {# member} other {# members}}",
-    "people": "{count, plural, one {# person} other {# people}}",
-    "sessions": "{count, plural, one {# session} other {# sessions}}",
-    "schedules": "{count, plural, one {# schedule} other {# schedules}}",
-    "children": "{count, plural, one {# child} other {# children}}",
-    "parents": "{count, plural, one {# parent} other {# parents}}",
-    "lessons": "{count, plural, one {# lesson} other {# lessons}}",
-    "homework": "{count, plural, one {# homework task} other {# homework tasks}}",
-    "servants": "{count, plural, one {# servant} other {# servants}}",
-    "days": "{count, plural, one {# day} other {# days}}",
-    "weeks": "{count, plural, one {# week} other {# weeks}}"
-  },
-  "attendance": {
-    "sessionDetails": "Session details",
-    "open": "Open attendance",
-    "take": "Take attendance",
-    "view": "View attendance",
-    "home": {
-      "description": "{date}. Open today’s meeting, tick off who is there, and close it when you are done.",
-      "today": "Today",
-      "empty": "No meetings to take attendance for today",
-      "emptyLink": "Sessions appear here on their day. <link>See the coming days</link>.",
-      "emptyStaff": "Servants and service leaders take attendance for their own groups.",
-      "earlier": "Still open from earlier",
-      "earlierDescription": "Earlier sessions whose attendance was never taken or never closed.",
-      "notClosed": "Not closed",
-      "notTaken": "Not taken",
-      "recent": "Recently closed",
-      "recentEmpty": "Nothing closed yet.",
-      "closedAt": "Closed {when}",
-      "closed": "Closed"
-    },
-    "session": {
-      "canceled": "This session was canceled.",
-      "noAttendance": "No attendance is taken.",
-      "notOpen": "Attendance isn’t open yet",
-      "opensOn": "It can be opened on {date}, the day of the session.",
-      "openWhenStarts": "Open it when the meeting starts. You can mark people present right after.",
-      "servantsOpen": "The servants of this group open it when the meeting starts."
-    },
-    "summary": {
-      "metaTitle": "Attendance summary",
-      "crumb": "{group}, {date}",
-      "continue": "Continue taking attendance",
-      "ofRoster": "of {total, number} on the roster present",
-      "present": "present",
-      "closedAt": "closed {when}",
-      "closedAtBy": "closed {when} by {name}",
-      "presentTitle": "Present ({count, number})",
-      "nobodyPresent": "Nobody was marked present.",
-      "extraTitle": "Present, not on the roster ({count, number})",
-      "extraDescription": "Visitors or members of other groups.",
-      "notMarkedTitle": "Not marked present ({count, number})",
-      "notMarkedNote": "Not marked present is not the same as absent: someone may have been there without being ticked. The MVP does not record absences or excuses.",
-      "everyoneMarked": "Everyone on the roster was marked present.",
-      "corrections": "Corrections",
-      "correction": "<person>{name}</person> was marked at {time} and removed {when}.",
-      "correctionBy": "<person>{name}</person> was marked at {time} and removed {when} by {by}.",
-      "correctionReason": "<person>{name}</person> was marked at {time} and removed {when}: “{reason}”",
-      "correctionByReason": "<person>{name}</person> was marked at {time} and removed {when} by {by}: “{reason}”",
-      "history": "History",
-      "erasedPresent": "{count, plural, one {Plus # person whose data was erased: counted in the totals, no longer listed by name.} other {Plus # people whose data was erased: counted in the totals, no longer listed by name.}}"
-    },
-    "board": {
-      "noGroup": "No group",
-      "present": "Present",
-      "undo": "Undo: {name} not present",
-      "mark": "Mark {name} present",
-      "notMarked": "Not marked",
-      "counter": "<num>{present, plural, other {#}}</num> of {total, plural, other {#}} present",
-      "counterOpen": "<num>{count, plural, other {#}}</num> present",
-      "notOnRoster": "+{count, plural, other {#}} not on the roster",
-      "find": "Find a person",
-      "findOnRoster": "Find someone on the roster, or anyone else",
-      "tabAll": "All ({count, number})",
-      "tabOpen": "Not yet ({count, number})",
-      "tabPresent": "Present ({count, number})",
-      "roster": "Roster",
-      "noRosterMatch": "Nobody on the roster matches. People not on the roster are listed below.",
-      "everyoneMarked": "Everyone on the roster is marked present.",
-      "nobodyYet": "Nobody here yet.",
-      "presentNotOnRoster": "Present, not on the roster",
-      "presentList": "Present",
-      "addSomeone": "Add someone else",
-      "someoneNotOnRoster": "Someone not on the roster?",
-      "markSomeone": "Mark someone present",
-      "typeTwoLetters": "Type at least two letters of a name above. Visitors and members of other groups can be marked present too.",
-      "noOtherMatch": "Nobody else matches “{query}”. New people are added under Members.",
-      "notMarkedYet": "{count, plural, one {# person} other {# people}} not marked present yet.",
-      "close": "Close attendance",
-      "closeShort": "Close",
-      "viewOnly": "You can see this attendance, but only the servants of this group take it.",
-      "recent": "Recently marked",
-      "correctMistake": "Correct a mistake with a note",
-      "corrections": "Corrections",
-      "removed": "{name} removed {when}",
-      "removedReason": "{name} removed {when}: {reason}",
-      "confirm": {
-        "title": "Close attendance for {group}?",
-        "description": "The list is saved as it is now. Service leaders can reopen it for corrections.",
-        "presentOf": "{present, plural, other {#}} of {total, plural, other {#}} on the roster marked present",
-        "present": "{count, plural, other {# marked present}}",
-        "extra": "{count, plural, one {# person} other {# people}} present who are not on the roster",
-        "notMarked": "{count, plural, one {# person} other {# people}} not marked present. That is not the same as absent."
-      },
-      "correct": {
-        "title": "Remove someone marked by mistake",
-        "description": "The mark is removed from the list. The correction and your note stay in the history.",
-        "note": "Note",
-        "placeholder": "e.g. Tapped the wrong name",
-        "confirm": "Remove mark",
-        "person": "Person"
-      }
-    },
-    "reopen": {
-      "button": "Reopen for corrections",
-      "title": "Reopen attendance for {group}?",
-      "description": "Servants can mark or unmark people again until it is closed once more. Reopening is noted in the history.",
-      "hint": "For example: “Mina was there but not ticked.”",
-      "placeholder": "What needs correcting",
-      "confirm": "Reopen"
-    },
-    "stage": {
-      "metaTitle": "Stage attendance",
-      "title": "Last sessions",
-      "description": "Today’s members against the last closed sessions. A filled square means marked present; an empty one means not marked present. Lines show sessions before someone joined.",
-      "empty": "No closed sessions yet.",
-      "member": "Member",
-      "present": "Present",
-      "presentOf": "{present, plural, other {#}} of {total, plural, other {#}}",
-      "cell": {
-        "present": "Present",
-        "notMarked": "Not marked present",
-        "notInStage": "Not in the stage yet"
-      },
-      "cellSr": {
-        "present": "present",
-        "notMarked": "not marked",
-        "notInStage": "not yet in stage"
-      },
-      "footnote": "Counts include people who came but are not on the roster. Absence is not recorded: an empty square only means nobody marked the person present."
-    }
-  },
-  "members": {
-    "description": "Everyone who takes part, and the services and stages they belong to. Rosters for attendance come from here.",
-    "addPerson": "Add person",
-    "name": "Name",
-    "belongsTo": "Belongs to",
-    "lastPresent": "Last marked present",
-    "last4Weeks": "Last 4 weeks",
-    "notYet": "Not yet",
-    "lastPresentInline": "last {when}",
-    "noService": "No service",
-    "tabs": {
-      "active": "Active ({count, number})",
-      "inactive": "Inactive ({count, number})",
-      "all": "All"
-    },
-    "search": "Search people",
-    "searchPlaceholder": "Search by name",
-    "service": "Service",
-    "stage": "Stage",
-    "allServices": "All services",
-    "empty": {
-      "noMatch": "Nobody matches “{query}”",
-      "noMatchHint": "Check the spelling, or look in the other tabs.",
-      "title": "Nobody here",
-      "hint": "People you add appear here."
-    },
-    "showing": "Showing {start, number}–{end, number} of {total, plural, one {# person} other {# people}}",
-    "fields": {
-      "firstName": "First name",
-      "lastName": "Last name",
-      "displayName": "Display name",
-      "displayNameHint": "What everyone calls them, e.g. “Kiro” for Kirollos.",
-      "displayNameHintShort": "What everyone calls them.",
-      "noStage": "No stage"
-    },
-    "newPerson": {
-      "title": "Add a person",
-      "description": "Name and where they belong. Nothing else is needed for attendance.",
-      "duplicateFallback": "Someone with this name already exists.",
-      "duplicateHint": "Search for them first; namesakes are common.",
-      "addAnyway": "It’s a different person, add anyway"
-    },
-    "addMember": {
-      "trigger": "Add member",
-      "title": "Add a member to {stage}",
-      "searchFirst": "Search first: the person may already be registered in another service.",
-      "registerNew": "Register someone new. They join {stage} from today.",
-      "typeName": "Type a name",
-      "typeTwoLetters": "Type at least two letters.",
-      "nobodyFound": "Nobody found with that name.",
-      "notInAnyService": "Not in any service",
-      "add": "Add",
-      "registerPerson": "Register a new person"
-    },
-    "membership": {
-      "change": "Change {name}’s membership",
-      "moveFromToday": "Move from today to",
-      "removeFrom": "Remove from {where}",
-      "removeTitle": "Remove {name} from {where}?",
-      "removeDescription": "They leave the roster from today. Their past attendance and homework stay in the history.",
-      "remove": "Remove"
-    },
-    "sheet": {
-      "member": "Member",
-      "saveName": "Save name",
-      "addTo": "Add to",
-      "add": "Add",
-      "serviceNoStage": "{service} (no stage)",
-      "noServiceNow": "No service at the moment.",
-      "since": "since {date}",
-      "earlier": "Earlier",
-      "pastPlacement": "{where}, {from} to {to}",
-      "recentlyPresent": "Recently marked present",
-      "notPresentYet": "Not marked present in any session yet.",
-      "last4Weeks": "{count, plural, one {# session} other {# sessions}} in the last four weeks. Not being marked present doesn’t mean someone was absent.",
-      "reactivate": "Reactivate",
-      "markInactive": "Mark as inactive",
-      "inactiveTitle": "Mark {name} as inactive?",
-      "inactiveDescription": "For people who no longer come, for example after moving away.",
-      "inactiveConsequences": {
-        "rosters": "They no longer appear on rosters or in searches for marking present.",
-        "history": "Their attendance and memberships stay in the history.",
-        "reactivate": "You can reactivate them at any time."
-      }
-    },
-    "noAccess": "You can’t see the member list",
-    "noAccessHint": "Seeing members needs a role with “Members: See”."
-  },
-  "homework": {
-    "title": "Homework",
-    "newHomework": "New homework",
-    "editHomework": "Edit homework",
-    "backToList": "Back to homework",
-    "notYet": "Not yet",
-    "childrenWithoutAccount": "{count, plural, one {# person} other {# people}} without an account",
-    "hiddenFromParents": "Hidden from parents and members",
-    "notVisibleYet": "Not visible to parents and members yet",
-    "due": {
-      "none": "No due date",
-      "today": "Due today",
-      "tomorrow": "Due tomorrow",
-      "inDays": "Due {weekday}, in {count, plural, one {# day} other {# days}}",
-      "yesterday": "Was due yesterday",
-      "past": "Was due {date}",
-      "on": "Due {date}"
-    },
-    "list": {
-      "description": "Small tasks for home, given with a lesson. Parents of {stage}, and members with their own account, tick them off. It shows who reported it done, not grades.",
-      "needsLesson": "Homework belongs to a lesson. <link>Prepare a lesson</link> first."
-    },
-    "new": {
-      "description": "A small task to do at home. Parents, or members with their own account, tick it off when it’s done; there are no grades.",
-      "noAccessTitle": "You can’t assign homework here",
-      "noAccess": "Only the servants of {stage} and the service leaders can assign its homework.",
-      "lessonFirstTitle": "Prepare a lesson first",
-      "lessonFirst": "Homework is always given with a lesson.",
-      "newLesson": "New lesson"
-    },
-    "edit": {
-      "title": "Edit “{title}”",
-      "noAccessTitle": "You can’t change this homework",
-      "noAccess": "Only the servants of {stage} and the service leaders can change its homework.",
-      "archivedTitle": "This homework is archived",
-      "archived": "Archived homework stays as it was, together with what was reported.",
-      "backToHomework": "Back to the homework"
-    },
-    "progress": {
-      "noAccessTitle": "You can’t see this progress",
-      "noAccess": "Only the servants of {stage} and the service leaders see what was reported.",
-      "lessonOn": "<link>{lesson}</link>, {date}",
-      "note": "Parents, or members with their own account, report this at home. “Done” means someone ticked it off; it says nothing about how well anyone learned, and nobody is ranked.",
-      "childrenIn": "In {stage}",
-      "reportedDone": "Reported done",
-      "afterDue": "{count, number} after the due date",
-      "withoutAccount": "Without an account",
-      "cantReportOnline": "Can’t report online",
-      "draftNote": "This homework is a draft. Parents and members can’t see it yet.",
-      "whatParentsRead": "What parents and members read"
-    },
-    "completion": {
-      "tabAll": "All ({count, number})",
-      "tabDone": "Reported done ({count, number})",
-      "tabOpen": "Not yet ({count, number})",
-      "tabNoAccount": "No account ({count, number})",
-      "searchLabel": "Search names",
-      "searchPlaceholder": "Search a name",
-      "child": "Name",
-      "reported": "Reported",
-      "noMatch": "No one matches the search.",
-      "empty": "Nobody in this list.",
-      "leftStage": "No longer in {stage}; the report is kept",
-      "done": "Done",
-      "afterDue": "after the due date",
-      "noAccount": "No account",
-      "accounts": "Accounts",
-      "ownAccount": "Own account",
-      "bySelf": "{name} (own account)"
-    },
-    "actions": {
-      "publish": "Publish",
-      "progress": "Who reported it done",
-      "publishToParents": "Publish",
-      "unpublish": "Back to draft",
-      "deleteDraft": "Delete draft",
-      "unpublishTitle": "Take “{title}” back?",
-      "unpublishText": "It becomes a draft again and disappears for parents and members. You can publish it again later.",
-      "archiveTitle": "Archive “{title}”?",
-      "archiveText": "Archived homework disappears for parents and members, and from the open lists.",
-      "archiveKept": "{count, plural, one {The # reported completion is kept in the history.} other {The # reported completions are kept in the history.}}",
-      "deleteTitle": "Delete “{title}”?",
-      "deleteText": "The draft is removed for good. Parents and members never saw it.",
-      "restoreTitle": "Restore “{title}”?",
-      "restorePublished": "It comes back published. Parents and members of the class will see it again.",
-      "restoreDraft": "It comes back as a draft. Parents and members won’t see it until you publish it."
-    },
-    "table": {
-      "published": "Published ({count, number})",
-      "drafts": "Drafts ({count, number})",
-      "archived": "Archived ({count, number})",
-      "homework": "Homework",
-      "due": "Due",
-      "status": "Status",
-      "reported": "Reported done",
-      "actions": "Actions",
-      "empty": {
-        "published": {
-          "title": "Nothing published",
-          "text": "Publish homework from a lesson. Parents and members of the class see it right away."
-        },
-        "draft": {
-          "title": "No drafts",
-          "text": "Drafts stay hidden from parents and members until you publish them."
-        },
-        "archived": {
-          "title": "Nothing archived",
-          "text": "Archived homework keeps what was reported."
-        }
-      }
-    },
-    "editor": {
-      "lesson": "Lesson",
-      "givenWith": "Given with the lesson",
-      "lessonNote": "Parents and members see the lesson’s passage and memory verse with the homework.",
-      "homework": "Homework",
-      "startFrom": "Start from:",
-      "templates": {
-        "verse": {
-          "title": "Learn the memory verse",
-          "text": "Learn the memory verse by heart together. Say it once a day, for example at bedtime, so it is easy by next week.",
-          "textRef": "Learn the memory verse ({ref}) by heart together. Say it once a day, for example at bedtime, so it is easy by next week."
-        },
-        "story": {
-          "title": "Read the Bible story",
-          "text": "Read the story together. Afterwards, let your child tell the story in their own words.",
-          "textPassage": "Read {passage} together. Afterwards, let your child tell the story in their own words."
-        },
-        "prayer": {
-          "title": "Pray together",
-          "text": "Pray together once this week and thank God for one thing from the lesson."
-        }
-      },
-      "titleLabel": "Title",
-      "titlePlaceholder": "e.g. Learn the memory verse",
-      "instructionsLabel": "What to do",
-      "instructionsPlaceholder": "What to do at home, and how long it takes",
-      "instructionsHint": "Keep it short. Parents and members read this on their phone.",
-      "dueDate": "Due date",
-      "weekAfter": "One week after the lesson ({date})",
-      "clearDue": "No due date",
-      "dueHint": "A gentle guide. It can still be ticked off afterwards.",
-      "resources": "Resources",
-      "resourcesEmpty": "A link to a story, a song or a colouring page, if it helps.",
-      "resource": "Resource {n, number}",
-      "resourcePlaceholder": "e.g. The story as a video",
-      "resourceLink": "Link for resource {n, number}",
-      "resourceRemove": "Remove resource {n, number}",
-      "addResource": "Add resource",
-      "preview": "Preview",
-      "previewLabel": "Preview of what parents and members see",
-      "visible": "Visible for {count, plural, one {# member} other {# members}} of {stage}, through their parents or in their own account. Changes show right away{completions, plural, =0 {} one {; the # completion already reported stays} other {; the # completions already reported stay}}.",
-      "hiddenUntilPublished": "Once published, it is visible for {count, plural, one {# member} other {# members}} of {stage}, through their parents or in their own account. Until then it stays hidden.",
-      "saveDraft": "Save draft"
+    "today": "Today’s sessions",
+    "todayHint": "Open a session to take or review its attendance.",
+    "emptyTitle": "No sessions today",
+    "emptyDescription": "None of your groups meets today.",
+    "planning": {
+      "title": "The schedule for {year} hasn’t been prepared yet.",
+      "missing": "{count, plural, one {# group not planned} other {# groups not planned}}",
+      "drafts": "{count, plural, one {# draft to confirm} other {# drafts to confirm}}",
+      "prepare": "Prepare schedule",
+      "later": "Review later"
     }
   },
   "services": {
-    "description": "The ministries of the church. Each service can be divided into stages, such as the classes of Sunday School, and has its own meeting schedules.",
-    "kind": "Service",
-    "new": "New service",
-    "nothingPlanned": "Nothing planned",
-    "form": {
-      "editTitle": "Edit {name}",
-      "newDescription": "A ministry of the church, like Sunday School or the Youth Meeting. You can add stages and meeting schedules next.",
-      "editDescription": "Changes show everywhere the service appears, including past sessions.",
+    "title": "Services",
+    "description": "Every service of the church, its stages and its schedule.",
+    "calendar": "Church calendar",
+    "active": "Active",
+    "archived": "Archived",
+    "archivedBadge": "Archived",
+    "emptyTitle": "No services yet",
+    "noArchived": "No archived services",
+    "emptyDescription": "Services you serve in, or may see, appear here.",
+    "stagesOf": "Stages of {name}",
+    "noStages": "Meets as one group, without stages",
+    "members": "{count, plural, =0 {No members yet} one {# member} other {# members}}",
+    "next": "Next: {when}",
+    "noNext": "No upcoming session",
+    "withStages": "With stages",
+    "withoutStages": "Without stages",
+    "tabs": {
+      "stages": "Stages",
+      "schedule": "Schedule"
+    },
+    "stagesHint": "Open a stage to see its schedule and sessions.",
+    "openSchedule": "Schedule",
+    "noStagesYet": "No stages yet.",
+    "archivedStages": "Archived stages",
+    "schedule": "Schedule",
+    "stageScheduleHint": "The sessions of this stage, planned year by year.",
+    "create": {
+      "open": "New service",
+      "step": "Step {step, number} of {total, number}",
+      "title": "New service",
+      "description": "Name the service and say how it is organized. Schedules are planned afterwards on the service’s page.",
       "name": "Name",
-      "namePlaceholder": "e.g. Sunday School",
-      "description": "Description",
-      "descriptionPlaceholder": "Who it is for and when it meets",
+      "namePlaceholder": "For example Sunday School",
+      "descriptionLabel": "Description",
+      "structureQuestion": "Does this service have stages or classes?",
+      "withStages": "Yes, it has stages",
+      "withStagesHint": "For example 1st, 2nd and 3rd Class. Each stage gets its own schedule.",
+      "withoutStages": "No, one group",
+      "withoutStagesHint": "Everyone meets together, with one schedule for the whole service.",
+      "chooseStructure": "Choose whether the service has stages.",
+      "scheduleLater": "You plan the schedule later, on the service’s page.",
+      "stagesTitle": "The stages of {name}",
+      "stagesDescription": "Add the stages in the order they should appear. You can change them later.",
+      "stageName": "Name of stage {position, number}",
+      "stageNamePlaceholder": "For example 1st Class",
+      "stageDescription": "Description of stage {position, number}",
+      "stageDescriptionPlaceholder": "Optional description",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "removeStage": "Remove {name}",
+      "addStage": "Add a stage",
+      "next": "Next",
       "create": "Create service"
     },
     "actions": {
-      "editDetails": "Edit name and description",
-      "deleteBlocked": "Has meeting history ({count, plural, one {# session} other {# sessions}}). Archive it instead."
-    },
-    "archive": {
-      "title": "Archive {name}?",
-      "description": "Archived services are hidden from everyday lists. Nothing is deleted.",
-      "schedules": "No new sessions are created for its {count, plural, one {# active schedule} other {# active schedules}}.",
-      "noSchedules": "It has no active schedules.",
-      "upcoming": "{count, plural, one {# session already created for the coming days stays. Cancel it if it won’t happen.} other {# sessions already created for the coming days stay. Cancel them if they won’t happen.}}",
-      "kept": "Stages, members and attendance history are kept. You can restore it at any time.",
-      "note": "It is taking attendance right now. Close the open sessions before archiving."
-    },
-    "restore": {
-      "title": "Restore {name}?",
-      "description": "It appears in everyday lists again. Its schedules stay inactive until you activate them."
-    },
-    "delete": {
-      "title": "Delete {name}?",
-      "description": "It has never met, so it can be removed completely.",
-      "removes": "Removes the service.",
-      "removesStages": "Removes the service and {stages, plural, one {# stage} other {# stages}}.",
-      "removesSchedules": "Removes the service and {schedules, plural, one {# schedule} other {# schedules}}.",
-      "removesAll": "Removes the service, {stages, plural, one {# stage} other {# stages}} and {schedules, plural, one {# schedule} other {# schedules}}.",
-      "members": "{count, plural, one {# person} other {# people}} will no longer be listed in it.",
-      "cantUndo": "This can’t be undone."
-    },
-    "table": {
-      "service": "Service",
-      "stages": "Stages",
-      "members": "Members",
-      "next": "Next meeting",
-      "attendance": "Attendance, 4 wk",
-      "attendanceHint": "Share of the roster marked present over the last four weeks",
-      "actions": "Actions",
-      "onAverage": "{count, number} <muted>on average</muted>",
-      "noSessions": "No sessions",
-      "when": "{day}, {time}",
-      "nextAt": "next {when}, {time}",
-      "archivedOn": "Archived {date}",
-      "search": "Search services",
-      "searchPlaceholder": "Search services or stages",
-      "tabs": {
-        "active": "Active ({count, number})",
-        "archived": "Archived ({count, number})",
-        "all": "All ({count, number})"
-      },
-      "noMatch": "No service matches “{query}”",
-      "noArchived": "No archived services",
-      "none": "No services yet",
-      "checkSpelling": "Check the spelling, or search the other tab.",
-      "appearHere": "Services you create appear here."
-    },
-    "detail": {
-      "archivedOn": "Archived on {date}",
-      "archivedNote": "No new sessions are created for this service. Its stages, members and attendance history are kept.",
-      "stats": {
-        "stages": "Stages",
-        "members": "Members",
-        "activeSchedules": "Active schedules",
-        "attendance": "Attendance, last 4 weeks",
-        "average": "{count, number} avg"
-      },
-      "stages": {
-        "description": "Groups within the service, in their display order. Open a stage for its members, meetings, lessons and homework.",
-        "manage": "Manage stages",
-        "empty": "No stages",
-        "emptyDescription": "{name} meets as one group. Its {count, plural, one {# member belongs} other {# members belong}} to the service itself. Add stages if it splits into classes or levels.",
-        "addFirst": "Add the first stage",
-        "next": "Next: {day}, {time}",
-        "noAttendance": "No attendance yet",
-        "archived": "Archived: {names}. <link>Manage stages</link>"
-      },
-      "schedules": {
-        "title": "Meeting schedules",
-        "description": "Recurring meetings. Each session is created automatically the day before.",
-        "empty": "No schedules yet."
-      },
-      "recent": {
-        "title": "Recent attendance",
-        "empty": "No completed sessions yet."
-      },
-      "upcoming": {
-        "title": "Coming up",
-        "empty": "Nothing planned in the next two weeks."
-      },
-      "servants": {
-        "title": "Servants",
-        "description": "Who serves in this service. Leaders are assigned to the whole service.",
-        "empty": "Nobody is assigned yet.",
-        "assign": "Assign",
-        "dialog": {
-          "title": "Assign a servant to {service}",
-          "account": "Account",
-          "chooseAccount": "Choose an account"
-        }
-      }
-    }
-  },
-  "parent": {
-    "meta": {
-      "title": "Parents"
-    },
-    "brand": {
-      "forParents": "For parents"
-    },
-    "nav": {
-      "label": "Parent portal",
-      "home": "Home",
-      "children": "My children",
-      "homework": "Homework",
-      "account": "Account"
-    },
-    "menu": {
-      "accountOf": "Account of {name}"
-    },
-    "home": {
-      "greeting": {
-        "morning": "Good morning, {name}",
-        "afternoon": "Good afternoon, {name}",
-        "evening": "Good evening, {name}"
-      },
-      "pendingAccess": "A request to see one of your children is waiting for the church office. <link>Details</link>",
-      "noChild": {
-        "title": "No child linked yet",
-        "description": "The church office links your account to your children. Once that is done, their homework appears here."
-      },
-      "toDoFor": "To do for {name}",
-      "emptyToDo": "Nothing to do right now. New homework appears here after the lesson.",
-      "doneRecently": "Done recently",
-      "howItWorks": {
-        "title": "How homework works",
-        "afterLesson": "After the lesson, the servants of {stage} may give a small task to do at home together.",
-        "afterLessonNoStage": "After the lesson, the servants of the class may give a small task to do at home together.",
-        "tickOff": "Tick it off when it’s done. It isn’t graded, and ticking it off after the due date is fine."
-      }
-    },
-    "account": {
-      "description": "Your parent account at KHMK Köln.",
+      "editTitle": "Edit the service",
       "name": "Name",
-      "email": "Email",
-      "children": "Children",
-      "noneLinked": "None linked yet",
-      "waiting": "{count, plural, other {# waiting for approval}}",
-      "churchSees": {
-        "title": "What the church sees",
-        "body": "The servants of your child’s class see whether you ticked off a homework task and when. They don’t see anything else from this portal, and other parents see nothing about your family."
-      },
-      "prototype": {
-        "title": "Prototype",
-        "body": "No emails are sent in this prototype. Use the menu with your name to view the portal as another parent, or <link>choose another demo account</link>."
-      }
+      "changeStructure": "Change the structure",
+      "structureHint": "Possible only while the service has no sessions, members or lessons, so that no history is lost.",
+      "firstStage": "Name of the first stage",
+      "applyStructure": "Change structure",
+      "lockedHint": "The structure can’t change and the service can’t be deleted once it has sessions, members or lessons.",
+      "archiveTitle": "Archive {name}?",
+      "archiveHint": "It disappears from the lists and its schedule stops. Its history stays.",
+      "restoreTitle": "Restore {name}?",
+      "restoreHint": "It appears in the lists again.",
+      "deleteTitle": "Delete {name}?",
+      "deleteHint": "The service and its stages are deleted. This can’t be undone."
     },
-    "children": {
-      "description": "The children the church office linked to your account. You see their class and the homework the servants publish, nothing about other families.",
-      "empty": "No child is linked to your account yet.",
-      "noClass": "Not in a class at the moment",
-      "toDo": "{count, plural, other {<num>#</num> to do}}",
-      "nothingToDo": "Nothing to do",
-      "done": "{count, plural, other {# done}}",
-      "pendingTitle": "Waiting for approval",
-      "pending": "Access to {name}, requested {date}. The church office checks every request before you see anything.",
-      "pendingUnknown": "Access to a child, requested {date}. The church office checks every request before you see anything.",
-      "help": "Missing a child, or something isn’t right? Talk to the servants of the class or the church office. Children under 16 get an account of their own only with your agreement."
-    },
-    "homework": {
-      "description": "Everything the servants of {stage} gave {name}.",
-      "descriptionNoStage": "Everything the servants of the class gave {name}.",
-      "noChild": "No child linked yet.",
-      "toDo": "To do",
-      "done": "Done",
-      "emptyToDo": "Nothing to do for {name} right now.",
-      "emptyDone": "Nothing ticked off yet.",
-      "backFor": "Homework for {name}"
-    },
-    "switcher": {
-      "label": "Children",
-      "noClass": "No class",
-      "toDo": "{count, plural, other {# to do}}",
-      "allDone": "all done"
-    },
-    "task": {
-      "doneByYou": "Done · reported by you {when}",
-      "doneBy": "Done · reported by {name} {when}",
-      "doneByParent": "Done · reported by a parent {when}",
-      "done": "Done",
-      "toDo": "To do"
-    },
-    "completion": {
-      "markDone": "Mark as done",
-      "hint": "Tap when {name} has done it. You can undo it.",
-      "done": "Done",
-      "byYou": "You reported it {when}.",
-      "byName": "{name} reported it {when}.",
-      "byParent": "A parent reported it {when}.",
-      "saving": "Saving…",
-      "undo": "Undo",
-      "undone": "Marked as not done for {name}."
-    },
-    "view": {
-      "forChild": "For {name}",
-      "forYourChild": "For your child",
-      "titlePlaceholder": "Homework title",
-      "whatToDo": "What to do",
-      "instructionsPlaceholder": "The instructions appear here.",
-      "fromLessonLabel": "From the lesson",
-      "fromLesson": "From the lesson “{title}”, {date}",
-      "resources": "Resources"
-    }
+    "daysOff": "Days without sessions"
   },
-  "notFound": {
-    "title": "This page doesn’t exist",
-    "app": {
-      "description": "It may have been deleted, or the link is wrong.",
-      "action": "Go to the dashboard"
-    },
-    "root": {
-      "description": "The link may be wrong or out of date.",
-      "openApp": "Open the app",
-      "parentPortal": "Parent portal"
-    },
-    "parent": {
-      "title": "This page isn’t available",
-      "description": "The homework may have been taken back by the servants, or the link is not meant for your account.",
-      "action": "See your homework"
-    },
-    "member": {
-      "title": "This page isn’t available",
-      "description": "The homework may have been taken back by the servants, or it belongs to another group.",
-      "action": "See your homework"
-    }
+  "stages": {
+    "add": "Add stage",
+    "addTitle": "Add a stage",
+    "editTitle": "Edit the stage",
+    "name": "Name",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "archiveTitle": "Archive {name}?",
+    "archiveHint": "It no longer appears in the service. Its sessions, attendance and lessons stay.",
+    "restoreTitle": "Restore {name}?",
+    "restoreHint": "It appears in the service again."
   },
-  "meetings": {
-    "tabs": {
+  "schedule": {
+    "status": {
+      "none": "Not planned",
+      "draft": "Draft",
+      "confirmed": "Confirmed"
+    },
+    "overview": {
+      "title": "Schedule {year}",
+      "hint": "Each stage has one schedule. Plan a year for one stage or for several at once.",
+      "prepareAll": "{count, plural, one {Prepare {year}} other {Prepare {year} for # stages}}",
+      "noRule": "Not planned yet",
+      "counts": "{count, plural, one {# session} other {# sessions}}{canceled, plural, =0 {} other {, # canceled}}"
+    },
+    "year": {
+      "chooseYear": "Year",
+      "hint": "The sessions of this service, planned year by year.",
+      "notPlannedTitle": "The schedule for {year} hasn’t been prepared yet.",
+      "notPlannedHint": "Choose the weekday and time, check the feast days, then confirm. All sessions of the year are created at once.",
+      "notPlannedReadOnly": "The service leader prepares it.",
+      "prepare": "Prepare {year}",
+      "draftTitle": "Plan for {year}",
+      "savedBy": "saved by {name}",
+      "continue": "Continue planning",
+      "discard": "Discard draft",
+      "discardTitle": "Discard the draft for {year}?",
+      "discardHint": "No sessions exist yet, so nothing else changes.",
+      "draftCounts": "{count, plural, one {# session} other {# sessions}} planned{canceled, plural, =0 {} one {, # canceled for a feast day or by you} other {, # canceled for feast days or by you}}. Nothing is created until the plan is confirmed.",
+      "confirmedTitle": "{year} is planned",
+      "confirmedBy": "Confirmed by {name} on {date}",
       "sessions": "Sessions",
-      "schedules": "Schedules"
+      "canceled": "Canceled",
+      "noSessionsYet": "No sessions in this year yet.",
+      "canceledByHand": "Canceled",
+      "dayOff": "Day without sessions"
     },
-    "fields": {
-      "service": "Service",
-      "stage": "Stage",
-      "wholeService": "Whole service",
-      "title": "Title",
-      "name": "Name",
-      "place": "Place",
-      "placePlaceholder": "e.g. Church hall",
-      "date": "Date",
-      "starts": "Starts",
-      "ends": "Ends",
-      "whoIsExpected": "Who is expected"
-    },
-    "roster": {
-      "open": "Open to everyone",
-      "size": "Roster: {count, plural, one {# person} other {# people}}"
-    },
-    "filter": {
-      "allServices": "All services"
-    },
-    "agenda": {
-      "description": "The last week and the next seven days. Regular sessions come from the schedules and are created automatically the day before.",
-      "range": "{from} to {to}",
-      "none": "No meetings.",
-      "count": "{count, plural, one {# meeting} other {# meetings}}",
-      "open": "{count, plural, other {# taking attendance}}",
-      "canceled": "{count, plural, other {# canceled}}",
-      "planned": "{count, plural, other {# planned, created the day before}}",
-      "emptyTitle": "No meetings on this day",
-      "emptyFiltered": "Try all services, or pick another day.",
-      "emptyOtherDay": "Pick another day above."
-    },
-    "days": {
-      "label": "Days",
-      "day": "{date}: {count, plural, =0 {no meetings} one {# meeting} other {# meetings}}"
-    },
-    "schedules": {
-      "pageTitle": "Meeting schedules",
-      "description": "Schedules describe meetings that repeat. Each creates its sessions automatically the day before they take place.",
-      "statusNav": "Schedule status",
-      "active": "Active ({count, number})",
-      "inactive": "Inactive ({count, number})",
-      "all": "All",
-      "emptyTitle": "No schedules yet",
-      "emptyDescription": "Create a schedule for each meeting that repeats.",
-      "emptyInactiveTitle": "No inactive schedules",
-      "emptyInactiveDescription": "Deactivated schedules appear here.",
-      "emptyService": "No schedules."
-    },
-    "list": {
-      "next": "Next: {when}, {time}",
-      "nextCanceled": "{when}, {time} canceled",
-      "nowOpen": "Now: attendance open",
-      "noUpcoming": "No upcoming date",
-      "inactive": "Inactive",
-      "sessionsSoFar": "{count, plural, one {# session} other {# sessions}} so far"
-    },
-    "schedule": {
-      "pageTitle": "Schedule",
-      "when": "{pattern}, {time}",
-      "archived": "{name} is archived.",
-      "inactiveNote": "This schedule is inactive: no new sessions are created from it. Its past sessions stay in the history.",
-      "restoreService": "{name} is archived. Restore it before activating the schedule.",
-      "restoreStage": "{name} is archived. Restore it before activating the schedule.",
-      "nextTitle": "Next dates",
-      "nextDescription": "Each session is created automatically the day before. Cancel or move a single date ahead of time; the other dates stay as they are.",
-      "nextEmpty": "No upcoming dates.",
-      "nextInactive": "Nothing is planned while the schedule is inactive.",
-      "pastTitle": "Past sessions",
-      "pastEmpty": "No sessions yet.",
+    "rule": {
       "repeats": "Repeats",
-      "time": "Time",
-      "notSet": "Not set",
-      "who": "Who",
-      "members": "The members of {group} ({count, number} today)",
-      "sessions": "Sessions",
-      "generating": "Created the day before",
-      "notGenerating": "Not created (inactive)",
-      "created": "Created",
-      "updated": "Last change"
-    },
-    "actions": {
-      "edit": "Edit schedule",
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "delete": "Delete schedule",
-      "cantDelete": "Can’t delete: has sessions",
-      "deactivateTitle": "Deactivate “{name}”?",
-      "deactivateDescription": "No new sessions are created from it. You can activate it again later.",
-      "deactivateExisting": "Sessions that already exist stay, including today’s and tomorrow’s.",
-      "deactivateHistory": "{count, plural, =0 {No sessions were created from it yet.} one {The # past session and its attendance stay in the history.} other {The # past sessions and their attendance stay in the history.}}",
-      "deleteTitle": "Delete “{name}”?",
-      "deleteDescription": "No session was created from it yet, so nothing else is affected."
-    },
-    "form": {
-      "newButton": "New schedule",
-      "newTitle": "New meeting schedule",
-      "newDescription": "A meeting that repeats. Each session is created automatically the day before it takes place.",
-      "editAlertTitle": "You are changing the whole schedule",
-      "editAlertDescription": "Sessions created from now on use the new details. Sessions that already exist (today’s and tomorrow’s at most) and past sessions stay as they are. To change a single date, open that session and edit it there.",
-      "namePlaceholder": "e.g. Sunday class",
-      "nameHint": "Shown on every session, together with the stage.",
-      "placePlaceholder": "e.g. Room 4",
-      "rosterOf": "The roster of {group}",
-      "rosterOfService": "The roster of the service",
-      "rosterToday": "{count, plural, one {# person} other {# people}} today.",
-      "rosterStage": "Members of the stage.",
-      "rosterServiceOnly": "Only people in the service without a stage; members of its stages are on their stage’s roster.",
-      "rosterService": "Everyone in the service.",
-      "rosterHint": "Attendance shows who has not been marked yet.",
-      "openHint": "No roster: attendance is a list of who came.",
-      "notes": "Notes",
-      "frequency": "Frequency",
-      "weekly": "Weekly",
-      "monthly": "Monthly",
-      "everyWeeks": "Every <interval></interval> {count, plural, one {week} other {weeks}}, on",
-      "weeksInterval": "Every how many weeks",
-      "weekdays": "Weekdays",
-      "monthlyOn": "On the <week></week> <weekday></weekday> of every <interval></interval> {count, plural, one {month} other {months}}",
-      "monthWeek": "Week of the month",
-      "weekday": "Weekday",
-      "monthsInterval": "Every how many months",
-      "startsAt": "Starts at",
-      "endsAt": "Ends at",
+      "weekly": "Every week",
+      "biweekly": "Every other week",
+      "monthly": "Once a month",
+      "weekday": "Day",
+      "week": "Which week",
+      "weekOfMonth": "{week} {day} of the month",
+      "start": "Starts at",
+      "end": "Ends at",
+      "endHint": "Leave empty if there is no fixed end.",
       "firstDate": "First date",
+      "firstDateHint": "Leave empty to start on 1 January {year}.",
       "lastDate": "Last date",
-      "lastDateHint": "Leave empty if it keeps going.",
-      "preview": "Preview",
-      "previewNone": "No dates in the next year.",
-      "previewPattern": "{pattern}, {time}.",
-      "previewNext": "Next: {dates}.",
-      "dateSeparator": ", ",
-      "firstRightAway": "The first session is created right away.",
-      "firstTomorrow": "The first session is created tomorrow.",
-      "firstOn": "The first session is created on {date}.",
-      "save": "Save schedule",
-      "create": "Create schedule"
+      "lastDateHint": "Leave empty to plan until the end of {year}.",
+      "location": "Place",
+      "locationPlaceholder": "For example Room 4",
+      "timeZone": "Times are Cologne time. Sessions keep their time when the clocks change."
+    },
+    "editor": {
+      "crumb": "Plan {year}",
+      "title": "{name}: plan {year}",
+      "description": "Set when the group meets. The preview shows every session of the year; days without sessions of this service are suggested as canceled, and you decide.",
+      "planFor": "Plan for",
+      "planForHint": "All chosen stages get the same plan. Each keeps its own schedule.",
+      "status": {
+        "none": "Not planned",
+        "draft": "Draft",
+        "confirmed": "Confirmed"
+      },
+      "when": "When",
+      "saveDraft": "Save draft",
+      "confirm": "Confirm plan",
+      "previewTitle": "Sessions in {year}",
+      "previewCounts": "{count, plural, one {# session} other {# sessions}}{canceled, plural, =0 {} other {, # canceled}}",
+      "legendSuggested": "Day without sessions",
+      "legendMandatory": "Church decision",
+      "unverified": "The church calendar for {year} hasn’t been checked yet, so no feast days are suggested. Check it in the church calendar first.",
+      "noDates": "With these settings there is no session in this year.",
+      "meets": "Meets",
+      "canceledByYou": "Canceled by you",
+      "mandatory": "Canceled by the church",
+      "suggestedCancel": "Suggested: no session",
+      "canceledByChurch": "No session: the church decided",
+      "keptAnyway": "Meets anyway",
+      "meetsOn": "Session on {date}",
+      "confirmTitle": "Confirm the plan for {year}?",
+      "confirmDescription": "{count, plural, one {# session} other {# sessions}} for {where}.",
+      "confirmCreates": "{count, plural, one {# session is} other {# sessions are}} created now and can be opened for attendance on their day.",
+      "confirmCanceled": "{count, plural, =0 {No date is canceled.} one {# date is kept as a canceled session, with its reason.} other {# dates are kept as canceled sessions, with their reasons.}}",
+      "confirmLater": "Single sessions can still be canceled, moved or added later.",
+      "markedByHand": "Marked by hand",
+      "dayOff": "Day without sessions"
+    },
+    "times": {
+      "date": "Date",
+      "start": "Starts at",
+      "end": "Ends at",
+      "location": "Place"
     },
     "oneOff": {
-      "button": "One-off session",
-      "title": "New one-off session",
-      "description": "A meeting that happens once, outside the regular schedules.",
-      "titlePlaceholder": "e.g. Extra rehearsal before the feast",
-      "membersOf": "The members of {group}",
-      "membersOfService": "The members of the service",
-      "onRosterToday": "{count, plural, one {# person} other {# people}} on the roster today",
-      "openHint": "No roster; anyone can be marked present",
-      "hint": "Attendance can be taken on the day itself.",
-      "create": "Create session"
+      "add": "Add one-off session",
+      "title": "Add a one-off session",
+      "description": "An extra session of {name}, outside the regular plan. It works like any other session, attendance included."
     },
     "session": {
-      "pageTitle": "Session",
-      "crumb": "{group}, {date}",
-      "viewAttendance": "View attendance",
-      "canceled": "This session was canceled.",
-      "reason": "Reason: {reason}",
-      "noReason": "No reason was given.",
-      "noAttendance": "No attendance for a canceled session.",
-      "notOpenYet": "Attendance isn’t open yet.",
-      "takenOn": "Attendance can be taken on {date}.",
-      "rosterIs": "The roster is the {count, plural, one {# member} other {# members}} of {group} on that day.",
-      "lesson": "Lesson",
-      "lessonPrepared": "Prepared for this meeting",
-      "lessonCanceled": "Prepared for this meeting, which was canceled. Move the lesson to another date.",
-      "noLesson": "No lesson is linked to this meeting.",
-      "stageLessons": "Lessons of {stage}",
-      "fromSchedule": "Created from the schedule <link>{name}</link> ({pattern}). Changes here affect only this date; to change every week, edit the schedule.",
-      "oneOff": "A one-off session, not part of a schedule.",
-      "history": "History"
+      "attendance": "Attendance",
+      "reschedule": "Reschedule",
+      "rescheduleTitle": "Reschedule the session",
+      "rescheduleDescription": "{name}. Only this session changes; the plan stays as it is.",
+      "cancel": "Cancel session",
+      "cancelTitle": "Cancel {name}?",
+      "cancelDescription": "Only this session is canceled. It stays in the schedule as canceled and can be restored.",
+      "cancelReason": "Reason",
+      "keep": "Keep session",
+      "restore": "Take place again"
     },
-    "dialogs": {
-      "moveDescription": "Only this date changes. The schedule and its other dates stay as they are.",
-      "move": "Move",
-      "editTitle": "Title and place of this session",
-      "editDescription": "For example a different room this week. The schedule is not changed.",
-      "sessionMenu": "Change this session",
-      "moveSession": "Move to another time",
-      "editSession": "Change title or place",
-      "cancelSession": "Cancel this session",
-      "moveTitle": "Move {group} on {date}",
-      "cancelTitle": "Cancel {group} on {date}?",
-      "cancelSessionDescription": "Members see it as canceled. The schedule and its other dates stay as they are.",
-      "cancelReasonHint": "Shown with the canceled session, e.g. “Church trip to Hamburg”.",
-      "cancelReasonPlaceholder": "Why it doesn’t take place",
-      "confirmCancelSession": "Cancel session",
-      "keepSession": "Keep the session",
-      "dateMenu": "Change {group} on {date}",
-      "moveDate": "Move this date",
-      "cancelDate": "Cancel this date",
-      "cancelDateDescription": "Its session is created now and marked as canceled, so nothing is generated for that date. The schedule and its other dates stay as they are.",
-      "keepDate": "Keep the date"
+    "change": {
+      "open": "Change from a date",
+      "title": "Change the {year} plan",
+      "description": "The new plan applies from the date you choose. Sessions before it, sessions with attendance and sessions changed by hand stay as they are.",
+      "from": "Applies from",
+      "fromHint": "The first day the new plan applies to.",
+      "check": "Check what changes",
+      "apply": "Apply change",
+      "outcome": "{replaced, plural, one {# session is} other {# sessions are}} replaced by {added, plural, one {# new session} other {# new sessions}}.",
+      "kept": "Kept unchanged because they have attendance or were changed by hand: {dates}."
+    }
+  },
+  "calendar": {
+    "title": "Church calendar",
+    "description": "Coptic feast days, public holidays and church events of a year. Each service has its own days without sessions, chosen by the system or marked by hand.",
+    "source": "Coptic feast days are calculated from the Coptic calendar and the Julian date of Easter, and compared with the published table of the Coptic Orthodox Church (copticchurch.net). The church checks each year before it is used. Events marked “sample” are fictional.",
+    "verify": "Mark {year} as checked",
+    "verifyTitle": "Mark the {year} calendar as checked?",
+    "verifyHint": "{count, plural, one {# date} other {# dates}} will then be suggested when planning.",
+    "unverifiedCount": "{count, plural, one {# date not checked yet} other {# dates not checked yet}}",
+    "verified": "Checked by the church",
+    "verifiedBy": "Checked by {name}",
+    "occasions": "Dates in {year}",
+    "allServices": "All services",
+    "mandatory": "No sessions",
+    "notVerified": "Not checked",
+    "removeEvent": "Remove {name}",
+    "removeHint": "Plans that are already confirmed keep their canceled sessions.",
+    "event": {
+      "add": "Add church event",
+      "title": "Add a church event",
+      "description": "A day on which the church decides about sessions, for example a parish festival or a retreat.",
+      "name": "Name",
+      "date": "Date",
+      "allServices": "All services",
+      "mode": {
+        "mandatory": "No sessions that day",
+        "suggested": "Suggest canceling"
+      },
+      "modeHint": {
+        "mandatory": "Sessions on this day are canceled when plans are prepared. Only administrators can keep one.",
+        "suggested": "The planners see the day as a suggestion and decide."
+      }
     },
-    "stage": {
-      "pageTitle": "Stage meetings",
-      "schedulesDescription": "Recurring meetings of this stage. Their sessions are created automatically the day before.",
-      "noSchedule": "This stage has no schedule yet.",
-      "upcomingTitle": "Next five weeks",
-      "upcomingDescription": "Sessions already created, and planned dates that will be created the day before.",
-      "nothingPlanned": "Nothing planned."
+    "perService": "Days without sessions per service",
+    "perServiceHint": "Each service decides which days it doesn’t meet. Plans suggest canceling sessions on these days.",
+    "automatic": "{count, plural, one {Chosen by the system: # day} other {Chosen by the system: # days}}",
+    "custom": "{count, plural, one {Marked by hand: # day} other {Marked by hand: # days}}",
+    "openDays": "Open calendar"
+  },
+  "occasionCategories": {
+    "lordsMajorFeast": "Major feast of the Lord",
+    "lordsMinorFeast": "Minor feast of the Lord",
+    "holyWeek": "Holy Week",
+    "otherFeast": "Church feast",
+    "publicHoliday": "Public holiday",
+    "churchEvent": "Church event"
+  },
+  "occasions": {
+    "nativity": "Nativity",
+    "theophany": "Theophany",
+    "annunciation": "Annunciation",
+    "palmSunday": "Palm Sunday",
+    "easter": "Easter",
+    "ascension": "Ascension",
+    "pentecost": "Pentecost",
+    "circumcision": "Circumcision of the Lord",
+    "cana": "Wedding at Cana",
+    "entryIntoTemple": "Entry into the Temple",
+    "thomasSunday": "Thomas Sunday",
+    "entryIntoEgypt": "Entry of the Lord into Egypt",
+    "transfiguration": "Transfiguration",
+    "holyThursday": "Holy Thursday",
+    "goodFriday": "Good Friday",
+    "holySaturday": "Holy Saturday",
+    "apostles": "Feast of the Apostles",
+    "assumption": "Assumption of St Mary",
+    "nayrouz": "Nayrouz (Coptic New Year)",
+    "feastOfTheCross": "Feast of the Cross",
+    "newYear": "New Year’s Day",
+    "westernGoodFriday": "Good Friday (public holiday)",
+    "easterMonday": "Easter Monday",
+    "labourDay": "Labour Day",
+    "westernAscension": "Ascension Day (public holiday)",
+    "whitMonday": "Whit Monday",
+    "corpusChristi": "Corpus Christi",
+    "germanUnity": "Day of German Unity",
+    "allSaints": "All Saints’ Day",
+    "christmasDay": "Christmas Day",
+    "boxingDay": "Second Day of Christmas"
+  },
+  "attendance": {
+    "title": "Attendance",
+    "description": "Today’s sessions and the ones of the last three weeks.",
+    "today": "Today",
+    "noneToday": "No sessions today",
+    "noneTodayHint": "Your groups don’t meet today.",
+    "unfinished": "Not finished",
+    "unfinishedHint": "Earlier sessions whose attendance was never opened or never closed.",
+    "recent": "Recent sessions",
+    "recentHint": "Closed in the last three weeks.",
+    "noRecent": "No recent sessions.",
+    "schedule": "Schedule",
+    "presentOf": "{present, number} of {roster, number} present",
+    "onRoster": "{count, plural, one {# person on the list} other {# people on the list}}",
+    "canceledFor": "Canceled: {occasion}.",
+    "canceledInPlan": "Canceled in the annual plan.",
+    "canceledBecause": "Canceled: {reason}",
+    "actions": {
+      "open": "Open attendance",
+      "continue": "Continue attendance",
+      "review": "Review",
+      "details": "Details"
+    },
+    "board": {
+      "count": "{present, number} of {roster, number} present",
+      "counted": "Counted when marked present. Not marked doesn’t mean absent.",
+      "visitors": "{count, plural, one {including # person not on the list} other {including # people not on the list}}",
+      "open": "Open attendance",
+      "close": "Close attendance",
+      "closeTitle": "Close attendance?",
+      "closeHint": "{present, number} of {roster, number} marked present. Corrections are still possible afterwards.",
+      "reopen": "Reopen for a correction",
+      "reopenTitle": "Reopen the attendance?",
+      "reopenHint": "The correction is recorded with your name and the reason.",
+      "reopenReason": "Reason",
+      "notYet": "Attendance opens on the day of the session.",
+      "neverOpened": "Attendance for this session was never opened.",
+      "roster": "Who belongs to this group",
+      "filter": "Find a name",
+      "nobody": "Nobody found.",
+      "present": "Present",
+      "markPresent": "Mark present",
+      "mark": "Mark {name} present",
+      "unmark": "Remove {name} from present",
+      "notMarked": "Not marked",
+      "markedAt": "Marked at {time}",
+      "notOnRoster": "Present, not on the list",
+      "visitor": "Someone not on the list",
+      "visitorPlaceholder": "Name of someone not on the list"
+    },
+    "history": {
+      "title": "History",
+      "created": "Added",
+      "opened": "Attendance opened",
+      "closed": "Attendance closed",
+      "reopened": "Reopened for a correction",
+      "canceled": "Canceled",
+      "restored": "Takes place again",
+      "rescheduled": "Rescheduled"
+    }
+  },
+  "lessons": {
+    "crumb": "Lessons",
+    "preparation": "Preparation",
+    "preparationHint": "The lessons of your groups, next session first.",
+    "noGroups": "No groups to prepare for",
+    "noGroupsHint": "Lessons appear here for the stages your roles let you prepare.",
+    "new": "New lesson",
+    "newTitle": "New lesson",
+    "edit": "Edit",
+    "editTitle": "Edit lesson",
+    "nothingPlanned": "No lesson prepared for the coming sessions yet.",
+    "earlier": "{count, plural, one {# earlier lesson} other {# earlier lessons}}",
+    "tasks": "{count, plural, one {# task} other {# tasks}}",
+    "responsible": "Prepared by {name}",
+    "internal": "Only for servants",
+    "internalHint": "Preparation notes and internal materials are never shown to parents or members.",
+    "visibility": {
+      "title": "Parents and members",
+      "published": "Published: parents and members see the summary, objectives, teaching points and shared materials.",
+      "hidden": "Not published: parents and members don’t see this lesson."
+    },
+    "tasksTitle": "Tasks",
+    "addTask": "Add task",
+    "noTasks": "No tasks for this lesson.",
+    "doneOf": "{done, number} of {total, number} done",
+    "actions": {
+      "markReady": "Mark as ready",
+      "backToDraft": "Back to draft",
+      "publish": "Publish",
+      "publishTitle": "Publish this lesson?",
+      "publishHint": "Parents and members of this group can then read it.",
+      "publishShows": "They see the title, summary, objectives, teaching points and shared materials.",
+      "publishHides": "They never see the preparation notes and the internal materials.",
+      "unpublish": "Unpublish",
+      "unpublishTitle": "Unpublish this lesson?",
+      "unpublishHint": "Parents and members no longer see it. Its tasks stay published.",
+      "delete": "Delete lesson",
+      "deleteTitle": "Delete this lesson?",
+      "deleteHint": "This can’t be undone."
+    },
+    "editor": {
+      "overview": "Overview",
+      "title": "Title",
+      "summary": "Summary",
+      "summaryHint": "Two or three sentences, with the Bible passage.",
+      "teachingPlan": "Teaching plan",
+      "objectives": "Learning objectives",
+      "teachingPoints": "Teaching points",
+      "onePerLine": "One per line.",
+      "preparation": "Preparation",
+      "preparationNote": "Shared materials only",
+      "materials": "Materials and resources",
+      "shareMaterial": "Share with parents and members",
+      "notes": "Preparation notes",
+      "notesHint": "Only servants see these.",
+      "linkLabel": "Name of item {position, number}",
+      "linkLabelPlaceholder": "For example Children’s Bible, page 18",
+      "linkUrl": "Web address of item {position, number}",
+      "removeLink": "Remove item {position, number}",
+      "addLink": "Add item",
+      "when": "When",
+      "session": "Session",
+      "visibleOnPublish": "Visible once published",
+      "create": "Save lesson",
+      "draftHint": "A new lesson is a draft. Publish it when parents and members may read it."
+    },
+    "reading": {
+      "objectives": "What we learn",
+      "teachingPoints": "Teaching points",
+      "materials": "Materials"
+    }
+  },
+  "tasks": {
+    "title": "Tasks",
+    "description": "What children and members are asked to do at home, by group.",
+    "noGroups": "No groups with tasks",
+    "noGroupsHint": "Tasks appear here for the stages your roles let you give tasks to.",
+    "none": "No tasks yet. Add one from a lesson.",
+    "archivedCount": "{count, plural, one {# archived task} other {# archived tasks}}",
+    "forLesson": "For: {lesson}",
+    "due": "Due {date}",
+    "noDue": "No due date",
+    "doneOf": "{done, number} of {total, number} done",
+    "new": "New task",
+    "newTitle": "New task",
+    "edit": "Edit",
+    "editTitle": "Edit task",
+    "whatTheyRead": "What they read",
+    "whatTheyReadHint": "Parents and members see exactly this.",
+    "progress": "Who has done it",
+    "notPublishedYet": "Not published yet: nobody sees it.",
+    "ownAccount": "Own account",
+    "viaParent": "Through a parent",
+    "reportedBy": "Reported by {name}, {when}",
+    "reportedThemselves": "Reported themselves, {when}",
+    "done": "Done",
+    "notYet": "Not yet",
+    "editor": {
+      "task": "Task",
+      "title": "Title",
+      "instructions": "What to do",
+      "instructionsHint": "Plain words for children, parents and members.",
+      "dueDate": "Due date",
+      "resources": "Links and resources",
+      "saveDraft": "Save as draft",
+      "publish": "Publish"
+    },
+    "actions": {
+      "edit": "Edit",
+      "publish": "Publish",
+      "archive": "Archive",
+      "archiveTitle": "Archive this task?",
+      "archiveHint": "Parents and members no longer see it. What was reported stays.",
+      "restore": "Publish again",
+      "delete": "Delete draft",
+      "deleteTitle": "Delete this draft?",
+      "deleteHint": "Nobody has seen it yet. This can’t be undone."
+    }
+  },
+  "accounts": {
+    "title": "Accounts",
+    "description": "Every account is created here by the church office. People sign in with their username.",
+    "search": "Search by name or username",
+    "filters": {
+      "all": "All",
+      "staff": "Servants and staff",
+      "parents": "Parents",
+      "members": "Members"
+    },
+    "columns": {
+      "person": "Person",
+      "roles": "Roles",
+      "status": "Status",
+      "lastSignIn": "Last sign-in"
+    },
+    "status": {
+      "active": "Active",
+      "mustChange": "Must change password"
+    },
+    "never": "Never",
+    "noResults": "No accounts found.",
+    "system": "the system",
+    "createdBy": "Created on {date} by {name}",
+    "signIn": {
+      "title": "Sign-in",
+      "hint": "Passwords are never shown. Reset it to hand over a new temporary password.",
+      "username": "Username",
+      "password": "Password",
+      "mustChange": "Temporary: must be changed at the next sign-in",
+      "changedOn": "Chosen on {date}",
+      "unknown": "Not set",
+      "lastSignIn": "Last sign-in"
+    },
+    "roles": {
+      "title": "Roles and where they apply",
+      "hint": "What this person may do, and in which services or classes.",
+      "manage": "All assignments in Access"
+    },
+    "groups": {
+      "title": "Groups",
+      "hint": "The services and classes this person belongs to as a member.",
+      "none": "Not in any group.",
+      "add": "Add to a group",
+      "addTitle": "Add to a group",
+      "addHint": "The person appears on the group’s attendance list from today.",
+      "remove": "Remove from {name}"
+    },
+    "children": {
+      "title": "Children",
+      "hint": "The members this parent may follow in the parent portal.",
+      "none": "No member linked yet.",
+      "manage": "Manage in Parental access"
+    },
+    "credentials": {
+      "username": "Username",
+      "usernameHint": "Lower-case letters, digits, dots, hyphens or underscores. Not case-sensitive.",
+      "temporaryPassword": "Temporary password",
+      "temporaryHint": "At least 10 characters. Shown only once, after saving. The person must change it when signing in.",
+      "show": "Show password",
+      "hide": "Hide password",
+      "generate": "Suggest a new password",
+      "copy": "Copy",
+      "copied": "Copied",
+      "handOverTitle": "Hand these details to {name}",
+      "handOverHint": "Give them in person or in a sealed letter.",
+      "handOverOnce": "The temporary password is shown only now and can’t be looked up later.",
+      "handOverChange": "At the first sign-in a new password must be chosen.",
+      "handOverPrivately": "Don’t send it by chat or email.",
+      "handedOver": "Done"
+    },
+    "create": {
+      "open": "New account",
+      "step": "Step {step, number} of 3",
+      "title1": "Who is the account for?",
+      "hint1": "Choose someone the church already knows, so nobody is entered twice.",
+      "title2": "What may {name} do?",
+      "hint2": "Choose one or more roles. Roles for servants apply only where you say.",
+      "title3": "Sign-in for {name}",
+      "hint3": "Choose the username and a temporary password to hand over.",
+      "mode": {
+        "new": "A new person",
+        "existing": "Already in the church records"
+      },
+      "modeHint": {
+        "new": "Enter the name.",
+        "existing": "For example a servant who is already on a list."
+      },
+      "firstName": "First name",
+      "lastName": "Last name",
+      "duplicate": "Someone called {name} is already in the records. Check “Already in the church records” first.",
+      "searchPeople": "Find a person",
+      "existing": "People without an account",
+      "noPeople": "Nobody found.",
+      "noGroups": "In no group",
+      "choosePerson": "Choose the person.",
+      "enterName": "Enter the first and the last name.",
+      "preset": {
+        "servant": "Servant",
+        "parent": "Parent",
+        "member": "Member"
+      },
+      "otherRoles": "Other roles",
+      "where": "Where {role} applies",
+      "groups": "Groups",
+      "children": "Members this parent may follow",
+      "searchChildren": "Find a member",
+      "childrenLater": "Members can also be linked later in Access › Parental access.",
+      "chooseRole": "Choose at least one role.",
+      "next": "Next",
+      "create": "Create account"
+    },
+    "reset": {
+      "open": "Reset password",
+      "title": "Reset the password of {name}",
+      "description": "The new temporary password replaces the old one at once and must be changed at the next sign-in.",
+      "confirm": "Set temporary password"
+    },
+    "username": {
+      "change": "Change",
+      "title": "Change the username",
+      "description": "The person signs in with the new username from now on. Tell them."
+    },
+    "delete": {
+      "open": "Delete account",
+      "title": "Delete the account of {name}?",
+      "hint": "Signing in is no longer possible. This can’t be undone.",
+      "removes": "The sign-in, the roles and the parent links are deleted.",
+      "keeps": "The person’s church records, attendance and what they prepared stay, without the account.",
+      "confirm": "Delete account"
+    }
+  },
+  "access": {
+    "title": "Access",
+    "description": "Roles, who has them and where, and which parents may follow which children.",
+    "tabs": {
+      "roles": "Roles & permissions",
+      "assignments": "Assignments",
+      "parents": "Parental access"
+    },
+    "roles": {
+      "hint": "A role is a set of permissions. Give it to people in Assignments.",
+      "new": "New role",
+      "protected": "Protected role",
+      "holders": "{count, plural, =0 {Nobody} one {# person} other {# people}}",
+      "churchWide": "Given for the whole church",
+      "inGroups": "Given for a service or a class"
+    },
+    "editor": {
+      "hint": "Choose what the role allows. Where it applies is chosen when it is given to someone.",
+      "protectedHint": "This role is protected: it can’t be deleted and always manages roles and assignments.",
+      "name": "Name",
+      "noneYet": "Choose what this role allows.",
+      "givenChurchWide": "Because of the administration or portal permissions, this role can only be given for the whole church.",
+      "givenInGroups": "This role can be given for the whole church, one service or one class.",
+      "holders": "{count, plural, =0 {Nobody has this role} one {# person has this role} other {# people have this role}}",
+      "create": "Create role",
+      "delete": "Delete role",
+      "deleteTitle": "Delete {name}?",
+      "deleteHint": "Nobody has this role. This can’t be undone.",
+      "deleteInUse": "People still have this role. Remove it from them first."
+    },
+    "assignments": {
+      "hint": "Who has which role, and where it applies. A role for a service also applies in all its stages.",
+      "search": "Find a person",
+      "wholeChurch": "whole church",
+      "portalHidden": "Accounts that only have Parent or Member are found by searching.",
+      "remove": "Remove {assignment}",
+      "removeTitle": "Remove {assignment}?",
+      "removeHint": "The person immediately loses what this role allowed there.",
+      "removeConfirm": "Remove"
+    },
+    "assign": {
+      "open": "Give a role",
+      "title": "Give a role",
+      "description": "The person may then do what the role allows, only where you choose.",
+      "person": "Person",
+      "searchPerson": "Find by name or username",
+      "role": "Role",
+      "where": "Where",
+      "churchOnly": "This role can only be given for the whole church.",
+      "scopeHint": "A service includes all its stages. A stage covers only that class.",
+      "confirm": "Give role"
+    },
+    "scope": {
+      "church": "Whole church",
+      "wholeService": "{name} (all stages)"
+    },
+    "parents": {
+      "hint": "Parents see only the members linked here, with their lessons and tasks. Links are made directly by the church office.",
+      "noChildren": "No member linked yet.",
+      "alsoWith": "also {names}",
+      "link": "Link a member",
+      "linkTitle": "Link a member to a parent",
+      "linkHint": "The parent can follow the member’s lessons and tasks and mark tasks as done.",
+      "parent": "Parent",
+      "searchParent": "Find a parent",
+      "unlink": "Remove the link to {name}",
+      "unlinkTitle": "Remove the link to {name}?",
+      "unlinkHint": "The parent no longer sees this member. The member’s account and records stay.",
+      "unlinkConfirm": "Remove link",
+      "member": "Member",
+      "searchMember": "Find a member",
+      "membersOnly": "Children are members with their own account. Create one in Accounts first.",
+      "noGroup": "In no group"
+    }
+  },
+  "permissions": {
+    "groups": {
+      "organization": "Services and stages",
+      "schedule": "Schedule and sessions",
+      "attendance": "Attendance",
+      "learning": "Lessons and tasks",
+      "administration": "Administration",
+      "portals": "Portals"
+    },
+    "labels": {
+      "services_view": "See the service",
+      "services_manage": "Create and archive services",
+      "stages_manage": "Manage stages",
+      "schedule_manage": "Plan the schedule",
+      "attendance_record": "Take attendance",
+      "attendance_correct": "Correct closed attendance",
+      "lessons_prepare": "Prepare lessons",
+      "lessons_publish": "Publish lessons",
+      "tasks_manage": "Give tasks",
+      "accounts_manage": "Manage accounts",
+      "access_manage": "Manage roles and assignments",
+      "guardians_manage": "Manage parental access",
+      "data_manage": "Handle data requests",
+      "portal_parent": "Use the parent portal",
+      "portal_member": "Use the member portal"
+    },
+    "hints": {
+      "services_view": "See the service or class, its schedule and who belongs to it.",
+      "services_manage": "Create, rename, archive and delete services, and keep the church calendar.",
+      "stages_manage": "Add, rename, reorder and archive the stages of a service.",
+      "schedule_manage": "Prepare and confirm annual plans, choose the service’s days without sessions, cancel, move and add single sessions.",
+      "attendance_record": "Open, take and close attendance on the day of a session.",
+      "attendance_correct": "Reopen closed attendance to correct it, with a reason.",
+      "lessons_prepare": "Write and edit lessons and their preparation notes.",
+      "lessons_publish": "Make lessons visible to parents and members.",
+      "tasks_manage": "Create, publish and archive tasks, and see who has done them.",
+      "accounts_manage": "Create and delete accounts, reset passwords.",
+      "access_manage": "Create roles and give them to people.",
+      "guardians_manage": "Link parents to the members they may follow.",
+      "data_manage": "Record and carry out requests for a copy or the erasure of personal data.",
+      "portal_parent": "Follow the linked children’s lessons and tasks.",
+      "portal_member": "See one’s own groups, sessions, lessons and tasks."
+    }
+  },
+  "data": {
+    "title": "Data",
+    "description": "Requests to see or erase personal data. The church answers within one month.",
+    "open": "Open requests",
+    "openHint": "Oldest deadline first.",
+    "noneOpen": "No open requests.",
+    "closed": "Closed",
+    "kinds": {
+      "copy": "Copy of the data",
+      "erasure": "Erasure"
+    },
+    "status": {
+      "open": "Open",
+      "done": "Done",
+      "declined": "Declined"
+    },
+    "dueIn": "{days, plural, =0 {Due today} one {Due in # day} other {Due in # days}}",
+    "erasedSubject": "Erased: {what}",
+    "received": "Received on {date}, answer by {due}",
+    "requestedBy": "Asked by",
+    "channel": "How",
+    "note": "Note",
+    "subject": "Whose data",
+    "hasAccount": "has an account",
+    "copyTitle": "Prepare the copy",
+    "copyHint": "Download the file and hand it over in person. Nothing is sent by email.",
+    "erasureTitle": "Erase the data",
+    "erasureHint": "This is deleted. Past attendance totals stay as numbers without a name.",
+    "outcome": "Outcome",
+    "declinedBecause": "Declined: {reason}",
+    "closedBy": "Closed by {name} on {date}.",
+    "formerAccount": "a former account",
+    "impact": {
+      "person": "{count, plural, one {the person record} other {# person records}}",
+      "account": "{count, plural, one {the account and its sign-in} other {# accounts}}",
+      "memberships": "{count, plural, one {# group membership} other {# group memberships}}",
+      "attendance": "{count, plural, one {# attendance mark} other {# attendance marks}}",
+      "completions": "{count, plural, one {# completed task} other {# completed tasks}}",
+      "guardianships": "{count, plural, one {# parent link} other {# parent links}}",
+      "assignments": "{count, plural, one {# role} other {# roles}}"
+    },
+    "record": {
+      "open": "Record a request",
+      "title": "Record a request",
+      "description": "For requests made in person or by letter. Requests made in the app appear here by themselves.",
+      "kind": "Request",
+      "kinds": {
+        "copy": "A copy of the data",
+        "erasure": "Erase the data"
+      },
+      "person": "Whose data",
+      "requestedBy": "Who asked",
+      "requestedByPlaceholder": "For example the mother, in person",
+      "channel": "How it arrived",
+      "channels": {
+        "in_person": "In person",
+        "letter": "By letter",
+        "app": "In the app"
+      },
+      "note": "Note",
+      "save": "Record request"
+    },
+    "actions": {
+      "download": "Download copy (JSON)",
+      "handedOver": "Handed over",
+      "erase": "Erase data",
+      "eraseTitle": "Erase the data of {name}?",
+      "eraseHint": "This can’t be undone.",
+      "decline": "Decline",
+      "declineTitle": "Decline the request?",
+      "declineHint": "Only with a reason the law allows, for example a legal duty to keep the data.",
+      "declineReason": "Reason"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Your account, language, appearance and password.",
+    "account": {
+      "title": "Your account",
+      "hint": "Ask the church office to change your name, username or roles.",
+      "name": "Name",
+      "username": "Username",
+      "roles": "Roles",
+      "noRoles": "No roles"
+    },
+    "preferences": {
+      "title": "Language and appearance",
+      "hint": "Saved with your account."
+    },
+    "password": {
+      "title": "Password",
+      "hint": "Choose a password only you know."
+    },
+    "data": {
+      "title": "Your data",
+      "hint": "What the app stores about you is yours to see.",
+      "copy": "A copy of your data",
+      "copyHint": "Download it as a file, at once.",
+      "download": "Download",
+      "delete": "Delete your account and data",
+      "deleteHint": "The church office carries it out within one month.",
+      "deletePending": "Requested. The church office carries it out by {date}.",
+      "deleteButton": "Ask for deletion",
+      "deleteTitle": "Ask for your account to be deleted?",
+      "deleteConfirm": "The church office receives your request and deletes your account and data within one month."
     }
   },
   "auth": {
-    "footer": {
-      "privacy": "Privacy notice",
-      "prototype": "Prototype with fictional demo data."
+    "signIn": {
+      "title": "Sign in",
+      "description": "With the username and password from the church office.",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "wrong": "The username or the password is not right, or the account is deactivated.",
+      "forgot": "Forgot your password? Ask the church office for a new one.",
+      "demo": "Prototype: every demo account uses the password khmk-demo, or <link>choose a demo account</link>.",
+      "asideTitle": "Accounts come from the church office",
+      "asideText": "Servants, parents and members receive their username and a temporary password from the church office, and choose their own password at the first sign-in.",
+      "asidePrivacy": "There is no registration and the app sends no emails."
+    },
+    "changePassword": {
+      "title": "Choose your password",
+      "welcome": "Welcome, {name}. You are signed in as {username}.",
+      "why": "Your password was given to you by the church office. Choose your own before you continue.",
+      "whyOptional": "Change your password.",
+      "temporary": "Password from the church office",
+      "current": "Current password",
+      "next": "New password",
+      "rules": "At least 10 characters. A short sentence is easy to remember.",
+      "confirmation": "New password again",
+      "submitRequired": "Save and continue",
+      "submit": "Change password"
+    },
+    "demo": {
+      "title": "Demo accounts",
+      "description": "Prototype only: sign in as one of the fictional people. Their password is khmk-demo."
     },
     "password": {
       "show": "Show password",
       "hide": "Hide password"
     },
-    "signIn": {
-      "title": "Sign in",
-      "intro": "Use the email address and password of your church account.",
-      "email": "Email address",
-      "password": "Password",
-      "forgot": "Forgot your password?",
-      "submit": "Sign in",
-      "wrong": "The email address or the password is not right.",
-      "disabled": "This account can no longer sign in. Ask the church office if you think this is a mistake.",
-      "newHere": "New here?",
-      "newHereText": "Parents and servants create their account once. The church office checks every new account before it can be used.",
-      "register": "Create an account",
-      "prototypeTitle": "Prototype",
-      "prototypeText": "All demo accounts use the password <password></password>, or you can skip typing:",
-      "chooseDemo": "Choose a demo account",
-      "emails": "See the emails the app sends"
-    },
-    "demo": {
-      "title": "Choose a demo account",
-      "intro": "Pick someone to see the app with their permissions. The data is fictional.",
-      "back": "Sign in with email and password",
-      "staff": "Church staff",
-      "staffHint": "Administrators, the church office, service leaders and servants",
-      "parents": "Parents",
-      "parentsHint": "The parent portal: their children’s homework",
-      "members": "Members",
-      "membersHint": "The member portal: their own groups and homework"
-    },
-    "unconfirmed": {
-      "title": "Confirm your email address first",
-      "text": "Your email address and password are right, but the address isn’t confirmed yet. The church office only sees your registration once you open the link in the email we sent you.",
-      "valid": "The link works for 7 days. Check your spam folder too.",
-      "again": "No email, or the link has expired? Register again with the same address to get a new link.",
-      "register": "Register again",
-      "back": "Back to sign-in"
-    },
-    "pending": {
-      "title": "Your account is waiting for approval",
-      "text": "Your email address and password are right, but the church office hasn’t approved the account yet. Every new account is checked by hand, because the app shows information about children.",
-      "parents": "For parents, the office links the account to their children.",
-      "servants": "For servants, it gives them the roles they need.",
-      "email": "The church office tells you when the account is ready.",
-      "slow": "Taking longer than a week? Ask in the church office, for example after the liturgy.",
-      "back": "Back to sign-in",
-      "members": "For members, it links the account to their own record in the church’s groups."
-    },
-    "register": {
-      "title": "Create an account",
-      "intro": "For parents, for members of our services and for servants. The church office checks every new account before it can be used.",
-      "firstName": "First name",
-      "lastName": "Last name",
-      "email": "Email address",
-      "emailHint": "You sign in with it, and the church office writes to you there.",
-      "password": "Password",
-      "passwordHint": "At least {min, number} characters. A short sentence is easy to remember.",
-      "as": "I’m registering as",
-      "asParent": "Parent",
-      "asParentHint": "My children come to Sunday School or another service. I want to see their homework.",
-      "asServant": "Servant",
-      "asServantHint": "I serve in one of the church’s services and take attendance or prepare lessons.",
-      "service": "Service",
-      "chooseService": "Choose a service",
-      "children": "Your children",
-      "childrenHint": "First and last names and their classes, for example: Mina Hanna, 3rd Class.",
-      "whereYouServe": "Where do you serve?",
-      "whereYouServeHint": "Your class or group and since when, and who in the church knows you.",
-      "privacy": "I have read the <link>privacy notice</link>.",
-      "privacyHint": "It explains what the app stores about you and your children, and your rights.",
-      "submit": "Create account",
-      "haveAccount": "Already have an account? <link>Sign in</link>",
-      "nextTitle": "What happens next",
-      "step1": "You create your account. You can’t use it yet.",
-      "step2": "The church office checks your details: parents are linked to their children, members to their own record, servants get the roles they need.",
-      "step3": "The church office tells you when your account is ready, and you can sign in.",
-      "childrenNoAccounts": "Children under 16 get an account of their own only with a parent’s agreement. Until then, their parents see their homework.",
-      "asMember": "Member",
-      "asMemberHint": "I take part in a service myself, for example the Youth Meeting or the Coptic course, and want to see my groups and homework.",
-      "yourGroups": "Your groups",
-      "yourGroupsHint": "The services or classes you take part in, for example: Youth Meeting, Deacons’ School. Under 16? A parent or guardian has to agree; the church office will ask them."
-    },
-    "registered": {
-      "title": "Thank you for registering",
-      "confirm": "We’ve sent you an email. Open the link in it to confirm your address; only then does the church office see your registration.",
-      "text": "The church office checks every new account by hand, usually within a few days. Until then you can’t sign in.",
-      "email": "The church office tells you when your account is ready.",
-      "prototype": "Prototype: no email is sent. <confirm>Open the link from the email</confirm>, then an administrator approves the account under Settings › Account requests, for example with the demo account Mariam Fahmy. <link>See the “Your account is ready” email</link>",
-      "back": "Back to sign-in"
-    },
-    "confirmEmail": {
-      "title": "Confirm your email address",
-      "confirming": "Confirming your email address…",
-      "confirmedTitle": "Your email address is confirmed",
-      "confirmedText": "The church office now checks your registration by hand, usually within a few days, and tells you when your account is ready.",
-      "linkInvalid": "This confirmation link is invalid or has expired. Register again to get a new one.",
-      "register": "Register again",
-      "back": "Back to sign-in"
-    },
-    "forgot": {
-      "title": "Forgot your password?",
-      "intro": "Enter the email address of your account. We’ll send you a link to choose a new password.",
-      "email": "Email address",
-      "submit": "Send link",
-      "back": "Back to sign-in",
-      "sent": "If there is an account for <email></email>, we’ve sent it a link to choose a new password.",
-      "sentHint": "The link works for one hour. Check your spam folder too.",
-      "prototype": "Prototype: no email is sent. <link>See the email with the link</link>"
-    },
-    "forgotOffice": {
-      "title": "Forgot your password?",
-      "text": "Ask the church office for a new password link, for example after the liturgy. The office checks who is asking and gives you a one-time link.",
-      "valid": "The link works once, for 24 hours. With it you choose a new password yourself.",
-      "back": "Back to sign-in"
-    },
-    "setPassword": {
-      "title": "Choose a new password",
-      "intro": "Choose the password you’ll sign in with from now on.",
-      "password": "New password",
-      "passwordHint": "At least {min, number} characters. A short sentence is easy to remember.",
-      "submit": "Save password",
-      "successTitle": "Your password is saved",
-      "successText": "Sign in with your email address and the new password.",
-      "signIn": "Sign in",
-      "linkInvalid": "This link no longer works; ask the church office for a new one."
-    },
-    "noRole": {
-      "title": "Your account has no role yet",
-      "text": "Your account is approved, but it has no role yet. Ask the church office to give you one, then reload this page.",
-      "signOut": "Sign out"
+    "footer": {
+      "privacy": "Privacy notice",
+      "prototype": "Prototype with fictional demo data."
     }
+  },
+  "portal": {
+    "parentTitle": "Parent portal",
+    "memberTitle": "Member portal",
+    "nav": {
+      "label": "Portal",
+      "home": "Home",
+      "lessons": "Lessons",
+      "tasks": "Tasks",
+      "settings": "Settings"
+    },
+    "hello": "Hello, {name}",
+    "parentIntro": "What {name} learns and what is still to do.",
+    "noChildren": "No child is linked to your account yet. Ask the church office.",
+    "chooseChild": "Choose a child",
+    "toDo": "To do for {name}",
+    "allDone": "Nothing left to do.",
+    "allDoneSelf": "Nothing left to do. Well done!",
+    "doneRecently": "Done recently",
+    "nothingDone": "Nothing reported yet.",
+    "recentLessons": "Recent lessons",
+    "noLessons": "No lessons published yet.",
+    "lessonsTitle": "Lessons",
+    "lessonsFor": "The lessons of {name}’s group.",
+    "tasksTitle": "Tasks",
+    "tasks": "{count, plural, one {# task} other {# tasks}}",
+    "yourTasks": "Your tasks",
+    "tasksFor": "Tasks for {name}",
+    "taskFor": "For {name}",
+    "nextSessions": "Next sessions",
+    "canceled": "Canceled",
+    "due": "Due {date}",
+    "done": "Done",
+    "open": "To do",
+    "doneOn": "Done on {date}, reported by {name}",
+    "markDone": "Mark as done",
+    "markDoneFor": "Mark as done for {name}",
+    "undo": "Not done after all",
+    "backToLessons": "All lessons",
+    "backToTasks": "All tasks"
   },
   "privacyNotice": {
     "title": "Privacy notice",
     "back": "Back",
     "version": "Version {version}",
     "draft": "Draft for the prototype. The church’s data protection adviser checks and completes this text, including the parts in brackets, before the app is used.",
-    "intro": "The app of the Coptic Orthodox Church KHMK Köln helps servants organise meetings, attendance, lessons and homework, shows parents their children’s homework, and shows members their own groups and homework. This notice explains which personal data the app stores, why, who can see it, and what rights you have.",
+    "intro": "The app of the Coptic Orthodox Church KHMK Köln helps servants plan sessions, take attendance and prepare lessons and tasks, shows parents their children’s lessons and tasks, and shows members their own groups, lessons and tasks. This notice explains which personal data the app stores, why, who can see it, and what rights you have.",
     "responsible": {
       "title": "Who is responsible",
       "text": "Coptic Orthodox Church KHMK Köln, [address of the church office]. Questions about data protection: [email address of the church office or the data protection adviser]."
@@ -1889,13 +1281,12 @@
     "data": {
       "title": "What the app stores",
       "items": {
-        "accounts": "Accounts: name, email address, password (only in a form that can’t be read back), language, roles, and when you accepted this notice.",
+        "accounts": "Accounts: name, username, password (only in a form that can’t be read back), language, roles and where they apply, and who created the account. Accounts are created by the church office; there is no registration.",
         "members": "Members: first and last name, a preferred name, and the services and classes they belong to, from when to when.",
         "attendance": "Attendance: who was marked present at which meeting, and by whom. The app records presence only, never absence.",
-        "homework": "Homework: which homework was reported as done for whom, by which account, and when.",
         "links": "Parent access: which parent accounts may see which children.",
-        "registration": "When you register: what you write about your children or your service, until the church office has decided on your account.",
-        "memberAccounts": "Member accounts: which member record an account belongs to, and for members under 16, that and how a parent or guardian agreed."
+        "memberAccounts": "Member accounts: the groups a member belongs to.",
+        "tasks": "Tasks: which task was reported as done for whom, by which account, and when."
       },
       "text": "The app stores nothing else: no photos, no addresses, no birthdays, no grades."
     },
@@ -1906,11 +1297,11 @@
     "who": {
       "title": "Who can see it",
       "items": {
-        "servants": "Servants and service leaders see what their roles allow, in every service of the church: for example people’s details, attendance, lessons and homework.",
+        "servants": "Servants and service leaders see what their roles allow, only in the services and classes the church office gives them: for example attendance, lessons and tasks.",
         "leaders": "The church office decides which role allows what and who has which role, and keeps this to what each person’s service needs.",
         "admins": "Administrators in the church office manage accounts, roles and parent access.",
-        "parents": "Parents see only their own children’s published homework: never attendance, notes or other families.",
-        "members": "Members with their own account see their own groups and meeting times, the passage and memory verse of their lessons, and their homework: never attendance, notes or other members."
+        "parents": "Parents see only their own children’s published lessons and tasks: never attendance, preparation notes or other families.",
+        "members": "Members see their own groups and sessions and the published lessons and tasks of their groups: never attendance, preparation notes or other members."
       },
       "text": "The app is hosted by [hosting provider in the EU] under a data processing agreement. No data is sold or passed on."
     },
@@ -1918,482 +1309,35 @@
       "title": "How long it is kept",
       "items": {
         "accounts": "Accounts: until you or the church office delete them.",
-        "declined": "Registrations that are declined: deleted at once.",
         "members": "Members who leave: [period decided by the church], then deleted."
       },
       "text": "When data is deleted, the numbers of past meetings stay right, but nobody can tell who was there."
     },
     "rights": {
       "title": "Your rights",
-      "text": "You can ask for a copy of your data, have it corrected or deleted, restrict its use or object to it. You can also complain to a data protection authority; in North Rhine-Westphalia that is the Landesbeauftragte für Datenschutz und Informationsfreiheit (LDI NRW).\n\nIn the app, open your account and go to “Your data” to download a copy or to ask for your account to be deleted. Or ask the church office. We answer within one month."
+      "text": "You can ask for a copy of your data, have it corrected or deleted, restrict its use or object to it. You can also complain to a data protection authority; in North Rhine-Westphalia that is the Landesbeauftragte für Datenschutz und Informationsfreiheit (LDI NRW).\n\nIn the app, open Settings and go to “Your data” to download a copy or to ask for your account to be deleted. Or ask the church office. We answer within one month."
     }
   },
-  "account": {
-    "title": "Your account",
-    "description": "Your details, language, password and the data the app stores about you.",
-    "details": "Details",
-    "name": "Name",
-    "email": "Email address",
-    "roles": "Roles",
-    "detailsHint": "To change your name, email address or roles, ask an administrator.",
-    "preferences": "Language and appearance",
-    "password": {
-      "title": "Password",
-      "text": "We’ll email you a link to choose a new password.",
-      "send": "Send link",
-      "sent": "We’ve sent you a link. (Prototype: no email is sent.)",
-      "intro": "Change the password you sign in with.",
-      "current": "Current password",
-      "new": "New password",
-      "newHint": "At least {min, number} characters.",
-      "submit": "Change password",
-      "saved": "Your password is changed."
-    },
-    "data": "Your data",
-    "dataDescription": "What the app stores about you, and your rights under data protection law (DSGVO)."
-  },
-  "accountRequests": {
-    "title": "{count, plural, =0 {Account requests} other {Account requests (#)}}",
-    "description": "People who registered themselves. Their accounts can’t be used until you approve them: link a parent’s children, or give a servant their roles.",
-    "empty": "No accounts are waiting for approval.",
-    "asParent": "Parent",
-    "asServant": "Servant",
-    "registered": "registered {when}",
-    "approveButton": "Approve…",
-    "declineButton": "Decline",
-    "approve": {
-      "title": "Approve {name}’s account",
-      "parentDescription": "Check the family first, for example in person after the liturgy. The parent then sees these children’s published homework.",
-      "servantDescription": "Check with the service leader first. The roles decide what the servant can see and do; the groups, where.",
-      "children": "Children",
-      "childrenHint": "Children whose names {name} wrote are already chosen. Search to add others.",
-      "findChild": "Find a child by name or class",
-      "noChildMatches": "No child matches.",
-      "searchToAdd": "Type a name to find a child.",
-      "selected": "{count, plural, =0 {No child chosen yet} one {# child chosen} other {# children chosen}}",
-      "submit": "Approve account",
-      "memberDescription": "Link the account to the member’s own record. Then they see their groups, the next meetings and their homework. Check first who the account belongs to.",
-      "memberRecord": "Member record",
-      "memberRecordHint": "Choose the record of {name}. Check the groups: different people can have the same name.",
-      "sameName": "{count, plural, other {# people are called {name}.}} Check the groups to choose the right one.",
-      "findMember": "Find a member by name or group",
-      "noMemberMatches": "No member matches.",
-      "searchMember": "Search for the member’s name.",
-      "noGroup": "Not in a group",
-      "hasAccount": "Has an account",
-      "age": "Age",
-      "ageHint": "Under 16, a parent or guardian has to agree before a member gets an account of their own.",
-      "ageCheck": {
-        "sixteenOrOlder": "16 or older",
-        "guardianConsent": "Under 16, and a parent or guardian agreed"
-      },
-      "consentNote": "How did they agree? (optional)",
-      "consentNotePlaceholder": "For example: his mother agreed in person on 8 November.",
-      "roles": "Roles",
-      "rolesHint": "What the account may do. You can change it later under Staff accounts and roles.",
-      "servesIn": "Says they serve in {service}.",
-      "groups": "Groups",
-      "groupsHint": "Where they serve. Roles that hold only in assigned groups hold here. The service they named is already chosen.",
-      "noGroups": "No group yet. A servant without a group sees no service.",
-      "addGroup": "Add group",
-      "removeGroup": "Remove {group}"
-    },
-    "decline": {
-      "title": "Decline {name}’s registration?",
-      "description": "For example when the person isn’t known to the church, or doesn’t need an account.",
-      "deleted": "The account and everything the person entered are deleted.",
-      "tell": "Let them know, in person or by email.",
-      "confirm": "Decline and delete"
-    },
-    "asMember": "Member"
-  },
-  "privacy": {
-    "subject": {
-      "erasedMemberOf": "Erased member of {group}",
-      "erasedMember": "Erased member",
-      "erasedAccount": "Erased account"
-    },
-    "kind": {
-      "erasure": "Erasure",
-      "copy": "Copy of data"
-    },
-    "due": {
-      "late": "{count, plural, one {# day late} other {# days late}}",
-      "today": "due today",
-      "left": "{count, plural, one {# day left} other {# days left}}"
-    },
-    "status": {
-      "open": "Open",
-      "done": "Done",
-      "declined": "Declined"
-    },
-    "channel": {
-      "app": "In the app",
-      "email": "By email",
-      "letter": "By letter",
-      "in_person": "In person"
-    },
-    "list": {
-      "title": "Data protection requests",
-      "description": "Requests to see or delete personal data (DSGVO). Each one must be answered within one month of arriving.",
-      "adminsOnly": "You can’t handle data protection requests",
-      "adminsOnlyHint": "If someone asks you about their data, pass it on to the church office.",
-      "open": "{count, plural, =0 {Open} other {Open (#)}}",
-      "noneOpen": "No open requests.",
-      "closed": "Closed",
-      "closedDescription": "Kept as proof that the church answered. After an erasure, the name is gone from here too.",
-      "noneClosed": "Nothing closed yet.",
-      "subject": "About",
-      "kind": "Request",
-      "received": "Received",
-      "due": "Answer due",
-      "status": "Status",
-      "closedOn": "Closed",
-      "requestedBy": "Asked by",
-      "closedBy": "{when} by {name}",
-      "erasedCrumb": "Erased",
-      "notice": "What people are told about their data is in the <link>privacy notice</link>."
-    },
-    "summary": {
-      "title": "Data protection",
-      "description": "Requests to see or delete personal data. Each one must be answered within one month.",
-      "all": "All requests",
-      "noneOpen": "No open requests."
-    },
-    "record": {
-      "open": "Record a request",
-      "title": "Record a data protection request",
-      "description": "For requests that came by email, letter or in person. Check who is asking first: parents may ask for their children.",
-      "kind": "What do they ask for?",
-      "kinds": {
-        "erasure": "Delete their data",
-        "erasureHint": "DSGVO Art. 17: delete the member record or account, and what belongs to it.",
-        "copy": "A copy of their data",
-        "copyHint": "DSGVO Art. 15: everything the app stores about them, as a file."
-      },
-      "about": "About whom?",
-      "abouts": {
-        "member": "A member",
-        "account": "An account"
-      },
-      "findMember": "Find a member by name",
-      "findAccount": "Find an account by name or email",
-      "noMatches": "No one matches.",
-      "searchHint": "Type a name to search.",
-      "aboutHint": "A servant’s member record and account belong together and are handled in one request.",
-      "requestedBy": "Asked by",
-      "requestedByPlaceholder": "e.g. The mother, Hoda Farag",
-      "channel": "How it came",
-      "receivedOn": "Received on",
-      "note": "Note",
-      "noteHint": "For example how you checked who is asking. Don’t copy the person’s data here.",
-      "submit": "Record request"
-    },
-    "actions": {
-      "downloadCopy": "Download the copy",
-      "downloadFirst": "Download a copy",
-      "decline": "Decline…",
-      "erase": "Erase data…",
-      "markSent": "Mark as sent",
-      "eraseTitle": "Erase {name}’s data?",
-      "eraseDescription": "This can’t be undone. If the person also asked for a copy, download it first.",
-      "eraseKeeps": "Past attendance totals and the request itself stay, without the name.",
-      "clearNotes": "{count, plural, one {Also empty the note that may mention them} other {Also empty the # notes that may mention them}}",
-      "eraseConfirm": "Erase data",
-      "declineTitle": "Decline this request?",
-      "declineDescription": "For example when you couldn’t confirm who is asking, or when the data must be kept by law. The person must be told the reason, and that they can complain to the data protection authority.",
-      "declineReason": "Reason",
-      "declinePlaceholder": "e.g. We couldn’t confirm that the sender is the child’s parent.",
-      "declineConfirm": "Decline request",
-      "sentTitle": "Mark the copy as sent?",
-      "sentDescription": "Send the downloaded file to the person in a safe way, for example in person or by encrypted email. The request is then closed."
-    },
-    "detail": {
-      "requestedBy": "Asked by {name}.",
-      "ownAccount": "This request is about your own account. Someone else who handles data protection requests has to carry it out.",
-      "request": "Request",
-      "received": "Received",
-      "channel": "How it came",
-      "due": "Answer due",
-      "note": "Note",
-      "who": "Who it is about",
-      "memberRecord": "Member record: {name}",
-      "noMemberships": "No memberships.",
-      "membershipCurrent": "{group}, since {from}",
-      "membershipEnded": "{group}, {from} to {until}",
-      "accountRecord": "Account: {name}",
-      "erases": "What erasing deletes",
-      "erasesDescription": "Everything the app stores about them.",
-      "keeps": "What stays, without the name",
-      "keepsDescription": "The church’s own records keep their numbers, but no longer say who.",
-      "mentions": "{count, plural, =0 {Notes that may mention them} other {Notes that may mention them (#)}}",
-      "mentionsDescription": "Free text where the first name appears, in the groups they belonged to. Check them: they may be about someone else with the same name.",
-      "noMentions": "No notes mention their name.",
-      "mentionWhere": "{where} · {group} · {date}",
-      "copy": "What the copy contains",
-      "copyDescription": "A JSON file with everything the app stores about them. Other people’s contact details are left out.",
-      "outcome": "Outcome",
-      "erasedOn": "Erased {when}",
-      "sentOn": "Copy sent {when}",
-      "declinedOn": "Declined {when}",
-      "by": "by {name}",
-      "erasedNote": "The name was removed from this log as well."
-    },
-    "erase": {
-      "person": "{count, plural, one {The member record} other {# member records}}",
-      "memberships": "{count, plural, one {# membership in a group} other {# memberships in groups}}",
-      "attendance": "{count, plural, one {# attendance mark} other {# attendance marks}}",
-      "completions": "{count, plural, one {# homework report} other {# homework reports}}",
-      "guardianLinks": "{count, plural, one {# parent link} other {# parent links}}",
-      "account": "{count, plural, one {The account and its sign-in} other {# accounts}}",
-      "roles": "{count, plural, one {# role} other {# roles}}",
-      "notes": "{count, plural, one {# note that mentioned them, emptied} other {# notes that mentioned them, emptied}}",
-      "assignments": "{count, plural, one {# group they serve in} other {# groups they serve in}}"
-    },
-    "keep": {
-      "sessionTotals": "{count, plural, one {Attendance totals of # meeting} other {Attendance totals of # meetings}}",
-      "recordedMarks": "{count, plural, one {# attendance mark they recorded} other {# attendance marks they recorded}}",
-      "reportedCompletions": "{count, plural, one {# homework report they made} other {# homework reports they made}}",
-      "lessons": "{count, plural, one {# lesson they prepared} other {# lessons they prepared}}",
-      "homework": "{count, plural, one {# homework task they created} other {# homework tasks they created}}",
-      "sessionHistory": "{count, plural, one {# entry in meeting histories} other {# entries in meeting histories}}"
-    },
-    "mention": {
-      "sessionNote": "Meeting note",
-      "correctionNote": "Correction note",
-      "cancelReason": "Reason for canceling",
-      "lessonNote": "Lesson notes"
-    },
-    "own": {
-      "copyTitle": "Download a copy",
-      "copyText": "Everything the app stores about you, as a file you can keep or take elsewhere.",
-      "download": "Download (JSON)",
-      "deleteTitle": "Delete your account",
-      "deleteText": "Ask the church office to delete your account and what the app stores about you. Attendance totals of past meetings stay, without your name.",
-      "delete": "Ask to delete…",
-      "requested": "You asked {when} for your account and data to be deleted. The church office will answer by {due}.",
-      "confirmTitle": "Ask to delete your account and data?",
-      "confirmText": "The church office deletes your account and what the app stores about you within one month, and tells you when it is done. Until then you can keep using the app.",
-      "noteLabel": "Anything the office should know?",
-      "noteHint": "Optional. For example, whether your children’s data should be deleted too.",
-      "confirm": "Send request"
-    }
-  },
-  "member": {
-    "meta": {
-      "title": "Members"
-    },
-    "brand": {
-      "forMembers": "For members"
-    },
-    "nav": {
-      "label": "Member portal",
-      "home": "Home",
-      "homework": "Homework",
-      "account": "Account"
-    },
-    "menu": {
-      "accountOf": "Account of {name}"
-    },
-    "home": {
-      "toDo": "To do",
-      "emptyToDo": "Nothing to do right now. New homework appears here after the lesson.",
-      "doneRecently": "Done recently",
-      "nextMeetings": "Next meetings",
-      "nextMeetingsHint": "The next two weeks in your groups.",
-      "yourGroups": "Your groups",
-      "noGroups": "You aren’t in any group at the moment. Talk to the servants or the church office.",
-      "whatYouSee": "You see your own groups, when and where they meet, your servants, the passage and memory verse of the lessons, and your homework. Attendance and the servants’ notes stay with the servants.",
-      "notLinked": {
-        "title": "Your account isn’t linked yet",
-        "description": "The church office links your account to your record in the church’s groups. Then your groups, the next meetings and your homework appear here."
-      }
-    },
-    "meetings": {
-      "empty": "No meetings in the next two weeks.",
-      "canceled": "Canceled",
-      "moved": "Moved"
-    },
-    "groups": {
-      "noSchedule": "No regular meetings at the moment.",
-      "lastLesson": "Last lesson: “{title}”, {date}",
-      "servants": "Servants: {names}"
-    },
-    "homework": {
-      "description": "Everything the servants of your groups gave you.",
-      "notLinked": "Your account isn’t linked to your record yet. The church office does this.",
-      "toDo": "To do",
-      "done": "Done",
-      "emptyToDo": "Nothing to do right now.",
-      "emptyDone": "Nothing ticked off yet.",
-      "forYou": "For you"
-    },
-    "completion": {
-      "hint": "Tap when you’ve done it. You can undo it.",
-      "undone": "Marked as not done."
-    },
-    "account": {
-      "description": "Your member account at KHMK Köln.",
-      "groups": "Groups",
-      "noGroups": "Not in a group at the moment",
-      "notLinked": "Not linked to your record yet",
-      "churchSees": {
-        "title": "What the church sees",
-        "body": "The servants of your groups see whether you ticked off a homework task and when. Other members see nothing about you in this portal."
-      },
-      "prototype": "No emails are sent in this prototype. Use the menu with your name to view the portal as someone else, or <link>choose another demo account</link>."
-    }
-  },
-  "roleEditor": {
-    "titleNew": "New role",
-    "descriptionNew": "Name the role and choose what it allows. You give it to accounts afterwards.",
-    "roles": "Roles",
-    "details": "Role",
-    "name": "Name",
-    "nameHint": "For example: Church office, Attendance helper.",
-    "description": "What the role allows, where it holds, and who has it.",
-    "permissions": "What it allows",
-    "permissionsHint": "Ticking Add, Change or Delete ticks See too.",
-    "chosen": "{count, number} of {total, number} chosen",
-    "readOnlyNote": "You can see this role, but your roles don’t let you change it.",
-    "create": "Create role",
-    "save": "Save changes",
-    "deleteRole": "Delete role",
-    "holdersTitle": "Who has this role",
-    "holdersNone": "Nobody yet. Give the role to accounts in <link>Staff accounts and roles</link>.",
-    "holdersNew": "After you create the role, give it to accounts in <link>Staff accounts and roles</link>.",
-    "disabledAccount": "disabled",
-    "applyCount": "{count, plural, =0 {Nobody has this role yet.} one {Changes apply to # account at once.} other {Changes apply to # accounts at once.}}",
-    "sensitive": "Sensitive",
-    "sensitiveHint": "Lets people see everyone’s personal data or decide who may do what. Only for people you would trust as an administrator.",
-    "noAccess": "You can’t see roles",
-    "noAccessHint": "Seeing roles needs a role with “Roles: See”; adding them needs “Roles: Add”.",
-    "nameTaken": "There is already a role called “{name}”.",
-    "area": "Area",
-    "cell": "{resource}: {action}",
-    "opensNothing": "Accounts with only this role can’t open the staff app or the parent portal. Tick Services: See to let them into the staff app.",
-    "locksOut": "Nobody else can change roles. Without “Roles: Change” here, no one could repair roles any more, so this change would be refused.",
-    "deleteLocksOut": "Nobody else can change roles, so this role can’t be deleted. Give another role “Roles: Change” first.",
-    "added": "Added {when}",
-    "changed": "Last changed {when}",
-    "scope": "Where it applies",
-    "scopeChurch": "Everywhere in the church",
-    "scopeChurchHint": "In every service and stage. For the administrator, the church office and parents.",
-    "scopeAssigned": "Only in the account’s assigned groups",
-    "scopeAssignedHint": "In the services and stages the account is assigned to under Staff accounts and roles. For servants and service leaders."
-  },
-  "permissions": {
-    "actions": {
-      "read": "See",
-      "create": "Add",
-      "update": "Change",
-      "delete": "Delete"
-    },
-    "resources": {
-      "services": {
-        "name": "Services",
-        "description": "See: open the staff app with every service, stage and meeting. Add: start services. Change: edit them. Delete: archive, restore and delete them."
-      },
-      "stages": {
-        "name": "Stages",
-        "description": "Add, Change, Delete: add, rename, reorder, archive and delete a service’s stages. Whoever sees services sees the stages."
-      },
-      "sessions": {
-        "name": "Meetings",
-        "description": "Add: plan schedules and one-off meetings. Change: edit, move, cancel and reopen meetings. Delete: delete schedules. Whoever sees services sees the meetings."
-      },
-      "attendance": {
-        "name": "Attendance",
-        "description": "See: attendance lists and history. Add: take attendance (open a meeting, mark who is there, close it). Delete: remove a mark set by mistake. Change isn’t used yet."
-      },
-      "members": {
-        "name": "Members",
-        "description": "See: the member list and people’s details. Add: add people. Change: edit people, put them in stages and move them. Delete: take people out of stages."
-      },
-      "lessons": {
-        "name": "Lessons",
-        "description": "See: lessons. Add: prepare lessons. Change: edit and complete them. Delete: archive and delete them."
-      },
-      "homework": {
-        "name": "Homework",
-        "description": "See: homework and who reported it done. Add: give homework. Change: edit, publish and take it back. Delete: archive and delete it."
-      },
-      "parentPortal": {
-        "name": "Parent portal",
-        "description": "See: open the parent portal, for the children the account has parent access to. Add, Change and Delete aren’t used yet."
-      },
-      "users": {
-        "name": "Accounts",
-        "description": "See: accounts, account requests, parent access and member accounts. Add: approve and decline account requests. Change: give and remove roles, parent access and member links. Delete: data protection requests and erasure."
-      },
-      "roles": {
-        "name": "Roles",
-        "description": "See: the roles and what they allow. Add, Change, Delete: create, change and delete roles."
-      }
-    }
-  },
-  "emails": {
-    "title": "Emails",
-    "intro": "The emails the app sends, in the language of each account. The backend sends them through Mailgun (backend #17); here they are filled with demo data and nothing is sent.",
-    "back": "Back to sign-in",
-    "all": "All emails",
-    "items": {
-      "password-link": {
-        "name": "Password link",
-        "when": "Someone needs a new password. At the launch the church office has the link sent, and it works for 24 hours; later people ask for it on the sign-in page, and it works for one hour.",
-        "tickets": "Template password_link, backend #30 at the launch and #97 after it"
-      },
-      "account-approved": {
-        "name": "Account approved",
-        "when": "The church office approves the registration of a parent or a servant. Declining a registration sends nothing.",
-        "tickets": "Template account_approved, backend #97 after the launch"
-      }
-    },
-    "language": "Language",
-    "link": "Who made the link",
-    "links": {
-      "office": "Church office, 24 hours",
-      "forgot": "Sign-in page, 1 hour"
-    },
-    "show": "Show",
-    "views": {
-      "desktop": "Computer",
-      "phone": "Phone",
-      "text": "Text"
-    },
-    "colors": "Colors",
-    "schemes": {
-      "light": "Light",
-      "dark": "Dark"
-    },
-    "envelope": "Sender, recipient and subject",
-    "from": "From",
-    "to": "To",
-    "subject": "Subject",
-    "preheader": "Preview text",
-    "frame": "Preview: {name}",
-    "openHtml": "HTML on its own",
-    "openText": "Text on its own",
-    "notes": "Latin letters appear in the reader’s own font, so the email looks a little different on every device; Arabic letters are in Vazirmatn, as in the app, where the client loads fonts (Apple Mail, iOS Mail, Outlook for Mac). Dark colors appear in clients that support them, such as Apple Mail; Gmail darkens emails by itself."
-  },
-  "assignments": {
-    "notAssigned": {
-      "title": "You are not assigned to a group yet",
-      "description": "Ask the church office. Once you are assigned to a service or a stage, its meetings, members, lessons and homework appear here."
-    },
-    "wholeService": "The whole service",
-    "service": "Service",
-    "stage": "Stage",
-    "chooseService": "Choose a service",
-    "stageHint": "The whole service covers its own roster and all its stages, as for a service leader; a stage covers that stage only.",
-    "assign": "Assign",
-    "remove": "Take out",
-    "removeLabel": "Take {name} out of {where}",
-    "removeTitle": "Take {name} out of {where}?",
-    "removeDescription": "Roles that hold in assigned groups no longer hold there for them. Their past attendance records, lessons and homework stay.",
-    "dialog": {
-      "title": "Assign {name} to a group",
-      "description": "Roles that hold only in assigned groups, such as Servant and Service leader, hold in the groups an account is assigned to."
-    }
+  "daysOff": {
+    "crumb": "Days without sessions {year}",
+    "title": "Days without sessions in {year}",
+    "description": "The days this service doesn’t meet. When a year is planned, sessions on these days are suggested as canceled.",
+    "modeLabel": "How the days are chosen",
+    "automatic": "Chosen by the system",
+    "automaticHint": "The major feasts of the Lord and Holy Week from the checked church calendar, and the church’s events.",
+    "custom": "Marked by hand",
+    "customHint": "Start from the system’s days and click any day to add or remove it.",
+    "clickHint": "Click a day to mark or unmark it.",
+    "switchHint": "Choose “Marked by hand” to change the days.",
+    "markedByHand": "Marked by hand",
+    "locked": "Church decision",
+    "listTitle": "{count, plural, =0 {No days without sessions} one {# day without sessions} other {# days without sessions}}",
+    "listHint": "The same days as in the calendar, as a list.",
+    "unverified": "The church calendar for {year} hasn’t been checked yet, so the system can’t suggest feast days. Check it in the church calendar first.",
+    "legendMarked": "No sessions",
+    "legendLocked": "Church decision: no sessions anywhere",
+    "legendMeets": "A session is planned",
+    "legendFeast": "Feast or holiday, sessions take place",
+    "meetsThatDay": "session planned"
   }
 }

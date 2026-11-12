@@ -1,317 +1,320 @@
-import "server-only"
-
-import { randomBytes } from "node:crypto"
-
 import { msg } from "@/i18n/message"
-import { permissionsOf } from "@/lib/domain/policy"
-import { PRIVACY_VERSION } from "@/lib/domain/privacy"
-import { epochOf, toInstant } from "@/lib/domain/time"
-import type { AgeCheck, GuardianRelationship, Language, User, Uuid } from "@/lib/domain/types"
-import { ruleViolation } from "@/server/errors"
+import { cleanName, fullName } from "@/lib/domain/names"
+import { isPortalPermission } from "@/lib/domain/policy"
+import type { Account, Person, Scope, Unit, Uuid } from "@/lib/domain/types"
+import { normalizeUsername, PASSWORD_MIN, usernameProblem } from "@/lib/domain/username"
+import { forbidden, ruleViolation } from "@/server/errors"
 
-import { nowMs } from "../clock"
-import { authorize, found, Violations } from "../guard"
+import { authorize, grantsOf, holdsChurchWide } from "../access"
+import { now, nowMs, today } from "../clock"
+import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
-import { hashPassword, MIN_PASSWORD_LENGTH, verifyPassword } from "../passwords"
-import { isArchived, personOf, roleOf, serviceOf, userOf } from "../selectors"
+import { hashPassword, verifyPassword } from "../passwords"
+import { accountOf, personOf } from "../selectors"
 import type { State } from "../state"
-import { addAssignments, type AssignmentInput, checkedGroups } from "./assignments"
 
-/**
- * Accounts: registration, sign-in and the administrator's approval.
- *
- * Anyone can register. The office sees a registration only once the person has
- * opened the link sent to the address (backend #84), and the account can't be
- * used until the office approves it: for a parent by linking their children and
- * giving roles (Parent), for a servant by giving roles, for a member by linking
- * the account to their own member record (under 16 only with a parent's or
- * guardian's agreement).
- * Declined registrations are deleted, with everything the person entered
- * (data minimisation, DSGVO Art. 5(1)(c)).
- */
+import { checkAssignable, ensureAccessManagerRemains } from "./access"
 
-export type RegistrationInput = {
+export type Actor = { state: State; viewer: Account }
+
+export type SignInResult = { ok: true; account: Account } | { ok: false }
+
+export function authenticate(s: State, username: string, password: string): SignInResult {
+  const key = normalizeUsername(username)
+  const account = s.accounts.find((a) => a.username === key)
+  const valid = verifyPassword(password, account?.passwordHash ?? null)
+
+  if (!account || !valid) {
+    return { ok: false }
+  }
+
+  account.lastSignInAt = now()
+
+  return { ok: true, account }
+}
+
+function checkUsername(s: State, v: Violations, value: string, except: Uuid | null): string {
+  const username = normalizeUsername(value)
+  const problem = usernameProblem(username)
+
+  if (problem) {
+    v.add("username", msg(`errors.username.${problem}`))
+  } else if (s.accounts.some((a) => a.username === username && a.id !== except)) {
+    v.add("username", msg("errors.username.taken"))
+  }
+
+  return username
+}
+
+function checkNewPassword(v: Violations, field: string, password: string) {
+  if (password.length < PASSWORD_MIN) {
+    v.add(field, msg("errors.password.tooShort", { min: PASSWORD_MIN }))
+  } else if (password.length > 200) {
+    v.add(field, msg("errors.validation.tooLong", { max: 200 }))
+  }
+}
+
+export function changeOwnPassword(
+  s: State,
+  account: Account,
+  current: string,
+  next: string,
+  confirmation: string
+): void {
+  const v = new Violations()
+
+  if (!verifyPassword(current, account.passwordHash)) {
+    v.add("current", msg("errors.password.currentWrong"))
+  }
+
+  checkNewPassword(v, "next", next)
+
+  if (!v.has("next") && next === current) {
+    v.add("next", msg("errors.password.sameAsBefore"))
+  }
+
+  if (!v.has("next") && next !== confirmation) {
+    v.add("confirmation", msg("errors.password.mismatch"))
+  }
+
+  v.throwIfAny()
+  account.passwordHash = hashPassword(next)
+  account.mustChangePassword = false
+  account.passwordChangedAt = now()
+}
+
+export type NewAccountInput = {
+  personId: Uuid | null
   firstName: string
   lastName: string
-  email: string
-  password: string
-  as: "parent" | "servant" | "member"
-  details: string
-  serviceId?: Uuid | null
-  language: Language
-  acceptPrivacy: boolean
+  username: string
+  temporaryPassword: string
+  roles: { roleId: Uuid; scope: Scope }[]
+  groups: Unit[]
+  childIds: Uuid[]
 }
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-export const normalizeEmail = (email: string) => email.trim().toLowerCase()
-
-export const accountByEmail = (s: State, email: string) =>
-  s.users.find((u) => u.email.toLowerCase() === normalizeEmail(email))
-
-/** A registration whose address nobody has confirmed yet. The office doesn't see it. */
-export const isUnconfirmed = (u: User) => u.approvedAt === null && u.emailConfirmedAt === null
-
-/** How long a confirmation link works. Registering again sends a new one. */
-const CONFIRMATION_LINK_DAYS = 7
-
-/**
- * Makes the link the registration email holds: a token of 32 random bytes in base64url, like the
- * backend's. It replaces the older link, which then no longer works.
- */
-function newConfirmationLink(user: User) {
-  user.emailConfirmation = {
-    token: randomBytes(32).toString("base64url"),
-    expiresAt: toInstant(nowMs() + CONFIRMATION_LINK_DAYS * 86_400_000),
-  }
-}
-
-/**
- * Registers an account with an unconfirmed address and sends the link to confirm it. Registering
- * again with an address that is still unconfirmed changes nothing but the link.
- */
-export function register(s: State, input: RegistrationInput): User {
+export function createAccount({ state: s, viewer }: Actor, input: NewAccountInput) {
+  authorize(s, viewer, "accounts.manage")
   const v = new Violations()
-  const first = v.name("firstName", input.firstName, 80, msg("errors.accounts.firstNameRequired"))
-  const last = v.name("lastName", input.lastName, 80, msg("errors.accounts.lastNameRequired"))
-  const email = normalizeEmail(input.email)
-  const existing = accountByEmail(s, email)
-  if (email === "") v.add("email", msg("errors.accounts.emailRequired"))
-  else if (!EMAIL.test(email) || email.length > 180)
-    v.add("email", msg("errors.accounts.emailInvalid"))
-  else if (existing && !isUnconfirmed(existing)) v.add("email", msg("errors.accounts.emailTaken"))
-  if (input.password.length < MIN_PASSWORD_LENGTH) {
-    v.add("password", msg("errors.accounts.passwordTooShort", { min: MIN_PASSWORD_LENGTH }))
-  } else if (input.password.length > 200) {
-    v.add("password", msg("errors.validation.tooLong", { max: 200 }))
-  }
-  const details = (input.details ?? "").trim()
-  if (details === "") {
-    v.add(
-      "details",
-      input.as === "parent"
-        ? msg("errors.accounts.childrenRequired")
-        : input.as === "servant"
-          ? msg("errors.accounts.serviceDetailsRequired")
-          : msg("errors.accounts.groupsRequired")
-    )
-  } else if (details.length > 1000)
-    v.add("details", msg("errors.validation.tooLong", { max: 1000 }))
-  let serviceId: Uuid | null = null
-  if (input.as === "servant") {
-    const service = serviceOf(s, input.serviceId)
-    if (!service || isArchived(service)) v.add("serviceId", msg("errors.accounts.chooseService"))
-    else serviceId = service.id
-  }
-  if (!input.acceptPrivacy) v.add("acceptPrivacy", msg("errors.accounts.acceptPrivacy"))
-  v.throwIfAny()
+  let person: Person | undefined
 
-  // Hashed either way, so the answer takes as long whether or not the address has an account.
-  const passwordHash = hashPassword(input.password)
-  if (existing) {
-    newConfirmationLink(existing)
-    return existing
-  }
-  const ms = nowMs()
-  const user: User = {
-    id: uuidv7(ms),
-    email,
-    displayName: `${first} ${last}`,
-    personId: null,
-    roleIds: [],
-    permissions: [],
-    passwordHash,
-    language: input.language,
-    registration: { as: input.as, details, serviceId },
-    emailConfirmedAt: null,
-    emailConfirmation: null,
-    privacyAcceptedAt: toInstant(ms),
-    privacyVersion: PRIVACY_VERSION,
-    approvedAt: null,
-    approvedBy: null,
-    ageCheck: null,
-    guardianConsentNote: null,
-    disabledAt: null,
-    createdAt: toInstant(ms),
-  }
-  newConfirmationLink(user)
-  s.users.push(user)
-  return user
-}
+  if (input.personId) {
+    person = found(personOf(s, input.personId), "person")
 
-/**
- * Confirms a registration's address with the token of its link: the office now sees the
- * registration. False for an unknown, used, voided or expired link, which the page can't tell apart.
- */
-export function confirmEmail(s: State, token: string): boolean {
-  const ms = nowMs()
-  const user = s.users.find((u) => u.emailConfirmation?.token === token)
-  if (!user?.emailConfirmation || epochOf(user.emailConfirmation.expiresAt) <= ms) return false
-  user.emailConfirmedAt = toInstant(ms)
-  user.emailConfirmation = null
-  return true
-}
-
-export type SignInResult =
-  | { ok: true; user: User }
-  /** wrong: unknown email or wrong password (never says which); the others only after a correct password. */
-  | { ok: false; reason: "wrong" | "unconfirmed" | "pending" | "disabled" }
-
-export function authenticate(s: State, email: string, password: string): SignInResult {
-  const user = accountByEmail(s, email)
-  if (!verifyPassword(password, user?.passwordHash ?? null) || !user) {
-    return { ok: false, reason: "wrong" }
-  }
-  if (user.disabledAt) return { ok: false, reason: "disabled" }
-  if (isUnconfirmed(user)) return { ok: false, reason: "unconfirmed" }
-  if (!user.approvedAt) return { ok: false, reason: "pending" }
-  return { ok: true, user }
-}
-
-export type ApprovalInput =
-  | {
-      as: "parent"
-      childIds: Uuid[]
-      /** The roles the account gets; the dialog suggests those that open the parent portal. */
-      roleIds: Uuid[]
-    }
-  | {
-      as: "servant"
-      /** The roles the account gets. */
-      roleIds: Uuid[]
-      /**
-       * Where they serve: services or stages, created with the approval. Roles for assigned
-       * groups hold only there.
-       */
-      assignments?: AssignmentInput[]
-    }
-  | {
-      as: "member"
-      /** The member record the account belongs to. */
-      personId: Uuid | null
-      /** 16 or older, or under 16 with a parent's or guardian's agreement. */
-      ageCheck: AgeCheck | null
-      /** Under 16: how the parent or guardian agreed (in person, by letter, …). */
-      guardianConsentNote?: string | null
-    }
-
-/** The account linked to a member record, if any: a record belongs to at most one account. */
-export const accountOfPerson = (s: State, personId: Uuid) =>
-  s.users.find((u) => u.personId === personId)
-
-function pendingAccount(s: State, actor: User, userId: Uuid): User {
-  authorize(actor, "create", "users", msg("errors.accounts.adminOnly"))
-  const user = found(userOf(s, userId), "user")
-  if (user.approvedAt) throw ruleViolation(msg("errors.accounts.alreadyApproved"))
-  return user
-}
-
-/** The roles chosen for an approval: at least one, and each must exist. */
-function chosenRoles(s: State, v: Violations, roleIds: Uuid[]): Uuid[] {
-  const ids = [...new Set(roleIds)]
-  if (ids.length === 0) v.add("roleIds", msg("errors.roles.chooseRole"))
-  else if (ids.some((id) => !roleOf(s, id))) v.add("roleIds", msg("errors.roles.unknown"))
-  return ids
-}
-
-/**
- * Approves a registration: links the children, gives the roles (and, for a servant, the groups
- * they serve in) or links the member record, then the account can be used.
- */
-export function approveAccount(s: State, actor: User, userId: Uuid, input: ApprovalInput): User {
-  const user = pendingAccount(s, actor, userId)
-  const ms = nowMs()
-  const v = new Violations()
-  if (input.as === "member") {
-    const person = input.personId ? personOf(s, input.personId) : undefined
-    if (!input.personId) v.add("personId", msg("errors.accounts.choosePerson"))
-    else if (!person || person.status !== "active") {
-      v.add("personId", msg("errors.accounts.personNotFound"))
-    } else if (accountOfPerson(s, person.id)) {
-      v.add(
-        "personId",
-        msg("errors.accounts.personHasAccount", { name: `${person.firstName} ${person.lastName}` })
-      )
-    }
-    if (!input.ageCheck) v.add("ageCheck", msg("errors.accounts.chooseAge"))
-    const note = (input.guardianConsentNote ?? "").trim()
-    if (input.ageCheck === "guardianConsent" && note.length > 200) {
-      v.add("guardianConsentNote", msg("errors.validation.tooLong", { max: 200 }))
-    }
-    v.throwIfAny()
-    user.roleIds = []
-    user.personId = person!.id
-    user.ageCheck = input.ageCheck
-    user.guardianConsentNote = input.ageCheck === "guardianConsent" && note ? note : null
-  } else if (input.as === "parent") {
-    const children = [...new Set(input.childIds)].map((id) => personOf(s, id))
-    if (children.length === 0) v.add("childIds", msg("errors.accounts.chooseChild"))
-    if (children.some((c) => !c || c.status !== "active")) {
-      v.add("childIds", msg("errors.accounts.childNotFound"))
-    }
-    const roleIds = chosenRoles(s, v, input.roleIds)
-    v.throwIfAny()
-    user.roleIds = roleIds
-    for (const child of children) {
-      const link: GuardianRelationship = {
-        id: uuidv7(ms),
-        userId: user.id,
-        personId: child!.id,
-        relationship: "parent",
-        status: "approved",
-        approvedBy: actor.id,
-        approvedAt: toInstant(ms),
-        createdAt: toInstant(ms),
-      }
-      s.guardians.push(link)
+    if (s.accounts.some((a) => a.personId === person!.id)) {
+      v.add("personId", msg("errors.accounts.personHasAccount"))
     }
   } else {
-    const roleIds = chosenRoles(s, v, input.roleIds)
-    v.throwIfAny()
-    const groups = checkedGroups(s, actor, input.assignments ?? [])
-    user.roleIds = roleIds
-    addAssignments(s, user, groups, ms)
+    v.name("firstName", input.firstName, 80, msg("errors.validation.firstNameRequired"))
+    v.name("lastName", input.lastName, 80, msg("errors.validation.lastNameRequired"))
   }
-  user.permissions = permissionsOf(s.roles, user.roleIds)
-  user.approvedAt = toInstant(ms)
-  user.approvedBy = actor.id
-  // The registration text was only needed for this decision.
-  user.registration = null
-  return user
-}
 
-/**
- * Removes the link between an account and its member record, for example when the office linked
- * the wrong person. Reports the account made stay in the history. An account with roles (a
- * parent) keeps them; an account that only had the link goes back to the account requests, so
- * the office links it to the right record or declines it.
- */
-export function unlinkMember(s: State, actor: User, userId: Uuid): User {
-  authorize(actor, "update", "users", msg("errors.accounts.unlinkNotAllowed"))
-  const user = found(userOf(s, userId), "user")
-  if (!user.personId) throw ruleViolation(msg("errors.accounts.notLinked"))
-  user.personId = null
-  user.ageCheck = null
-  user.guardianConsentNote = null
-  if (user.roleIds.length === 0) {
-    user.approvedAt = null
-    user.approvedBy = null
-    user.registration = { as: "member", details: "", serviceId: null }
+  const username = checkUsername(s, v, input.username, null)
+  checkNewPassword(v, "temporaryPassword", input.temporaryPassword)
+
+  if (input.roles.length === 0) {
+    v.add("roles", msg("errors.accounts.roleRequired"))
   }
-  return user
+
+  v.throwIfAny()
+
+  for (const r of input.roles) {
+    checkAssignable(s, viewer, r.roleId, r.scope, null)
+  }
+
+  if (input.childIds.length > 0) {
+    authorize(s, viewer, "guardians.manage")
+  }
+
+  const time = now()
+
+  if (!person) {
+    person = {
+      id: uuidv7(nowMs()),
+      firstName: cleanName(input.firstName),
+      lastName: cleanName(input.lastName),
+      displayName: null,
+      createdAt: time,
+    }
+    s.persons.push(person)
+  }
+
+  const account: Account = {
+    id: uuidv7(nowMs()),
+    personId: person.id,
+    username,
+    passwordHash: hashPassword(input.temporaryPassword),
+    mustChangePassword: true,
+    passwordChangedAt: null,
+    language: null,
+    lastSignInAt: null,
+    createdAt: time,
+    createdBy: viewer.id,
+  }
+  s.accounts.push(account)
+
+  for (const r of input.roles) {
+    s.assignments.push({
+      id: uuidv7(nowMs()),
+      accountId: account.id,
+      roleId: r.roleId,
+      scope: r.scope,
+      createdAt: time,
+      createdBy: viewer.id,
+    })
+  }
+
+  for (const group of input.groups) {
+    addGroup(s, person.id, group)
+  }
+
+  for (const childId of input.childIds) {
+    found(personOf(s, childId), "person")
+    s.guardianships.push({
+      id: uuidv7(nowMs()),
+      accountId: account.id,
+      childId,
+      createdAt: time,
+      createdBy: viewer.id,
+    })
+  }
+
+  return { id: account.id, username, name: fullName(person) }
 }
 
-/** Declines a registration: the account and everything the person entered are deleted. */
-export function declineAccount(s: State, actor: User, userId: Uuid): User {
-  const user = pendingAccount(s, actor, userId)
-  s.users = s.users.filter((u) => u.id !== user.id)
-  s.guardians = s.guardians.filter((g) => g.userId !== user.id)
-  return user
+export function addGroup(s: State, personId: Uuid, unit: Unit) {
+  const exists = s.memberships.some(
+    (m) =>
+      m.personId === personId &&
+      m.serviceId === unit.serviceId &&
+      m.stageId === unit.stageId &&
+      m.endsOn === null
+  )
+
+  if (!exists) {
+    s.memberships.push({
+      id: uuidv7(nowMs()),
+      personId,
+      serviceId: unit.serviceId,
+      stageId: unit.stageId,
+      startsOn: today(),
+      endsOn: null,
+    })
+  }
 }
 
-/** The language a person reads the app (and its emails) in. */
-export function setLanguage(s: State, actor: User, language: Language): User {
-  const user = found(userOf(s, actor.id), "user")
-  user.language = language
-  return user
+function managedAccount({ state: s, viewer }: Actor, accountId: Uuid): Account {
+  authorize(s, viewer, "accounts.manage")
+  const account = found(accountOf(s, accountId), "account")
+
+  if (account.id === viewer.id) {
+    throw ruleViolation(msg("errors.accounts.notYourOwn"))
+  }
+
+  const stronger = grantsOf(s, account.id)
+    .flatMap((g) => g.permissions)
+    .some((p) => !isPortalPermission(p) && !holdsChurchWide(s, viewer, p))
+
+  if (stronger) {
+    throw forbidden(msg("errors.accounts.morePowerful"))
+  }
+
+  return account
+}
+
+export function resetPassword(actor: Actor, accountId: Uuid, temporaryPassword: string) {
+  const account = managedAccount(actor, accountId)
+  const v = new Violations()
+  checkNewPassword(v, "temporaryPassword", temporaryPassword)
+  v.throwIfAny()
+  account.passwordHash = hashPassword(temporaryPassword)
+  account.mustChangePassword = true
+  account.passwordChangedAt = null
+
+  return { username: account.username }
+}
+
+export function changeUsername(actor: Actor, accountId: Uuid, value: string) {
+  authorize(actor.state, actor.viewer, "accounts.manage")
+  const account = found(accountOf(actor.state, accountId), "account")
+  const v = new Violations()
+  const username = checkUsername(actor.state, v, value, account.id)
+  v.throwIfAny()
+  account.username = username
+
+  return { username }
+}
+
+export function forgetAccount(s: State, accountId: Uuid) {
+  const clear = (id: Uuid | null) => (id === accountId ? null : id)
+  s.assignments = s.assignments.filter((a) => a.accountId !== accountId)
+  s.guardianships = s.guardianships.filter((g) => g.accountId !== accountId)
+  s.accounts = s.accounts.filter((a) => a.id !== accountId)
+  s.attendance.forEach((a) => {
+    a.recordedBy = clear(a.recordedBy)
+    a.removedBy = clear(a.removedBy)
+  })
+  s.sessions.forEach((x) => {
+    x.closedBy = clear(x.closedBy)
+  })
+  s.events.forEach((e) => {
+    e.actorId = clear(e.actorId)
+  })
+  s.lessons.forEach((l) => {
+    l.responsibleId = clear(l.responsibleId)
+  })
+  s.tasks.forEach((t) => {
+    t.createdBy = clear(t.createdBy)
+  })
+  s.completions.forEach((c) => {
+    c.completedBy = clear(c.completedBy)
+  })
+  s.plans.forEach((p) => {
+    p.updatedBy = clear(p.updatedBy)
+    p.confirmedBy = clear(p.confirmedBy)
+  })
+  s.accounts.forEach((a) => {
+    a.createdBy = clear(a.createdBy)
+  })
+  s.assignments.forEach((a) => {
+    a.createdBy = clear(a.createdBy)
+  })
+  s.guardianships.forEach((g) => {
+    g.createdBy = clear(g.createdBy)
+  })
+  s.dataRequests.forEach((r) => {
+    r.closedBy = clear(r.closedBy)
+  })
+  s.occasions.forEach((o) => {
+    o.verifiedBy = clear(o.verifiedBy)
+  })
+}
+
+export function deleteAccount(actor: Actor, accountId: Uuid) {
+  const account = managedAccount(actor, accountId)
+  ensureAccessManagerRemains(actor.state, { removedAccountId: account.id })
+  forgetAccount(actor.state, account.id)
+}
+
+export function addAccountGroup({ state: s, viewer }: Actor, accountId: Uuid, unit: Unit) {
+  authorize(s, viewer, "accounts.manage")
+  const account = found(accountOf(s, accountId), "account")
+  addGroup(s, account.personId, unit)
+}
+
+export function endAccountGroup({ state: s, viewer }: Actor, membershipId: Uuid) {
+  authorize(s, viewer, "accounts.manage")
+  const membership = found(
+    s.memberships.find((m) => m.id === membershipId),
+    "person"
+  )
+
+  if (membership.startsOn === today()) {
+    s.memberships.splice(s.memberships.indexOf(membership), 1)
+
+    return
+  }
+
+  membership.endsOn = today()
 }

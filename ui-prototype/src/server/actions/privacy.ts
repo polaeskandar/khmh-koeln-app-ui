@@ -4,54 +4,49 @@ import { z } from "zod"
 
 import { msg } from "@/i18n/message"
 import {
-  completeCopyRequest,
-  declineDataRequest,
-  eraseData,
-  recordDataRequest,
+  completeCopy,
+  declineRequest,
+  erase,
+  recordRequest,
   requestOwnErasure,
 } from "@/server/mock/commands/privacy"
 
-import { id, optionalId, optionalText, run, text } from "./run"
+import { run } from "./run"
+import { nullableText, shortText, uuid } from "./schemas"
 
 const request = z.object({
-  kind: z.enum(["erasure", "copy"]),
-  personId: optionalId.optional(),
-  userId: optionalId.optional(),
-  requestedBy: text,
-  channel: z.enum(["email", "letter", "in_person"]),
-  receivedOn: z.string().max(10),
-  note: optionalText,
+  kind: z.enum(["copy", "erasure"]),
+  personId: uuid,
+  requestedBy: shortText,
+  channel: z.enum(["letter", "in_person"]),
+  note: nullableText,
 })
 
-/** The office records a request that came by email, letter or in person. */
-export async function recordDataRequestAction(input: z.input<typeof request>) {
-  return run(
-    ({ state, viewer }) => recordDataRequest(state, viewer, request.parse(input)).id,
-    msg("toast.dataRequestRecorded")
-  )
+export async function recordRequestAction(input: z.input<typeof request>) {
+  const data = request.parse(input)
+
+  return run((ctx) => recordRequest(ctx, data).id, msg("toast.requestRecorded"))
 }
 
-export async function eraseDataAction(requestId: string, clearNotes: boolean) {
-  return run(({ state, viewer }) => {
-    eraseData(state, viewer, id.parse(requestId), { clearNotes: z.boolean().parse(clearNotes) })
-  }, msg("toast.dataErased"))
+export async function requestOwnErasureAction() {
+  return run((ctx) => requestOwnErasure(ctx).id, msg("toast.erasureRequested"))
 }
 
-export async function completeCopyRequestAction(requestId: string) {
-  return run(({ state, viewer }) => {
-    completeCopyRequest(state, viewer, id.parse(requestId))
-  }, msg("toast.copySent"))
+export async function completeCopyAction(requestId: string) {
+  const id = uuid.parse(requestId)
+
+  return run((ctx) => completeCopy(ctx, id), msg("toast.copyHandedOver"))
 }
 
-export async function declineDataRequestAction(requestId: string, reason: string) {
-  return run(({ state, viewer }) => {
-    declineDataRequest(state, viewer, id.parse(requestId), text.parse(reason))
-  }, msg("toast.dataRequestDeclined"))
+export async function declineRequestAction(requestId: string, reason: string) {
+  const id = uuid.parse(requestId)
+  const value = shortText.parse(reason)
+
+  return run((ctx) => declineRequest(ctx, id, value), msg("toast.requestDeclined"))
 }
 
-/** Someone asks, from their own account, for the account and their data to be deleted. */
-export async function requestOwnErasureAction(note: string | null) {
-  return run(({ state, viewer }) => {
-    requestOwnErasure(state, viewer, optionalText.parse(note) ?? null)
-  }, msg("toast.erasureRequested"))
+export async function eraseAction(requestId: string) {
+  const id = uuid.parse(requestId)
+
+  return run((ctx) => erase(ctx, id), msg("toast.erased"))
 }

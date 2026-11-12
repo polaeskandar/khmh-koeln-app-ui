@@ -1,255 +1,113 @@
-import { matchesQuery } from "@/lib/domain/names"
-import { localDateOf } from "@/lib/domain/time"
+import { unitName } from "@/lib/domain/names"
 import type {
-  Attendance,
-  HomeworkAssignment,
+  Account,
+  AnnualPlan,
   LocalDate,
-  MeetingSchedule,
-  MeetingSession,
   Membership,
   Person,
-  Role,
+  Schedule,
   Service,
+  Session,
   Stage,
-  User,
+  Unit,
   Uuid,
 } from "@/lib/domain/types"
 
 import type { State } from "./state"
 
-/** Read helpers over the mock state. Pure functions; shared by the seed, commands and queries. */
+export const serviceOf = (s: State, id: Uuid | null | undefined): Service | undefined =>
+  id ? s.services.find((x) => x.id === id) : undefined
 
-export const byId = <T extends { id: Uuid }>(
-  items: T[],
-  id: Uuid | null | undefined
-): T | undefined => (id ? items.find((i) => i.id === id) : undefined)
+export const stageOf = (s: State, id: Uuid | null | undefined): Stage | undefined =>
+  id ? s.stages.find((x) => x.id === id) : undefined
 
-export const serviceOf = (s: State, id: Uuid | null | undefined) => byId(s.services, id)
-export const stageOf = (s: State, id: Uuid | null | undefined) => byId(s.stages, id)
-export const personOf = (s: State, id: Uuid | null | undefined) => byId(s.persons, id)
-export const userOf = (s: State, id: Uuid | null | undefined) => byId(s.users, id)
-export const scheduleOf = (s: State, id: Uuid | null | undefined) => byId(s.schedules, id)
-export const sessionOf = (s: State, id: Uuid | null | undefined) => byId(s.sessions, id)
+export const personOf = (s: State, id: Uuid | null | undefined): Person | undefined =>
+  id ? s.persons.find((x) => x.id === id) : undefined
 
-export const isArchived = (x: Pick<Service | Stage, "archivedAt">) => x.archivedAt !== null
+export const accountOf = (s: State, id: Uuid | null | undefined): Account | undefined =>
+  id ? s.accounts.find((x) => x.id === id) : undefined
 
-/** Stages of a service in display order; archived ones last. */
+export const accountOfPerson = (s: State, personId: Uuid): Account | undefined =>
+  s.accounts.find((a) => a.personId === personId)
+
+export const sessionOf = (s: State, id: Uuid | null | undefined): Session | undefined =>
+  id ? s.sessions.find((x) => x.id === id) : undefined
+
+export const scheduleOf = (s: State, id: Uuid | null | undefined): Schedule | undefined =>
+  id ? s.schedules.find((x) => x.id === id) : undefined
+
+export const scheduleFor = (s: State, unit: Unit): Schedule | undefined =>
+  s.schedules.find((x) => x.serviceId === unit.serviceId && x.stageId === unit.stageId)
+
+export const planOf = (s: State, scheduleId: Uuid, year: number): AnnualPlan | undefined =>
+  s.plans.find((p) => p.scheduleId === scheduleId && p.year === year)
+
 export function stagesOf(s: State, serviceId: Uuid, includeArchived = false): Stage[] {
   return s.stages
-    .filter((st) => st.serviceId === serviceId && (includeArchived || !isArchived(st)))
-    .sort((a, b) => Number(isArchived(a)) - Number(isArchived(b)) || a.position - b.position)
+    .filter((x) => x.serviceId === serviceId && (includeArchived || x.archivedAt === null))
+    .sort((a, b) => a.position - b.position)
+}
+
+export function unitsOf(s: State, service: Service): Unit[] {
+  if (service.structure === "single") {
+    return [{ serviceId: service.id, stageId: null }]
+  }
+
+  return stagesOf(s, service.id).map((stage) => ({ serviceId: service.id, stageId: stage.id }))
+}
+
+export function unitLabel(s: State, unit: Unit): string {
+  return unitName(serviceOf(s, unit.serviceId)?.name ?? "", stageOf(s, unit.stageId)?.name ?? null)
 }
 
 export function isCurrentOn(m: Membership, date: LocalDate): boolean {
   return m.startsOn <= date && (m.endsOn === null || m.endsOn >= date)
 }
 
-export function membershipsOn(
-  s: State,
-  serviceId: Uuid,
-  stageId: Uuid | null | "any",
-  date: LocalDate
-): Membership[] {
-  return s.memberships.filter(
-    (m) =>
-      m.serviceId === serviceId &&
-      (stageId === "any" || m.stageId === stageId) &&
-      isCurrentOn(m, date)
-  )
-}
-
-const byName = (a: Person, b: Person) =>
-  a.lastName.localeCompare(b.lastName, "de") || a.firstName.localeCompare(b.firstName, "de")
-
-/**
- * The roster of a stage, or of the service itself when stageId is null, on a date.
- * Mirrors MembershipRepository::rosterOn: a service-level roster only contains
- * people without a stage, and inactive people are never on a roster.
- */
-export function rosterOn(
-  s: State,
-  serviceId: Uuid,
-  stageId: Uuid | null,
-  date: LocalDate
-): Person[] {
-  const ids = new Set(membershipsOn(s, serviceId, stageId, date).map((m) => m.personId))
-  return s.persons.filter((p) => ids.has(p.id) && p.status === "active").sort(byName)
-}
-
-export function sessionDate(session: MeetingSession): LocalDate {
-  return localDateOf(session.startsAt)
-}
-
-/** The expected roster of a session; empty for open sessions. */
-export function sessionRoster(s: State, session: MeetingSession): Person[] {
-  if (session.rosterMode === "open") return []
-  return rosterOn(s, session.serviceId, session.stageId, sessionDate(session))
-}
-
-export function currentAttendance(s: State, sessionId: Uuid): Attendance[] {
-  return s.attendance
-    .filter((a) => a.sessionId === sessionId && a.removedAt === null)
-    .sort((a, b) => a.recordedAt.localeCompare(b.recordedAt))
-}
-
-export function attendanceHistory(s: State, sessionId: Uuid): Attendance[] {
-  return s.attendance.filter((a) => a.sessionId === sessionId)
-}
-
-export type SessionCounts = {
-  /** Everyone marked present, roster or not. */
-  present: number
-  /** Size of the expected roster; null for open sessions (no roster). */
-  rosterSize: number | null
-  rosterPresent: number
-  /** Roster members without a "present" mark. Only meaningful with an expected roster. */
-  notMarked: number
-  /** Present but not on the roster. */
-  notOnRoster: number
-}
-
-export function sessionCounts(s: State, session: MeetingSession): SessionCounts {
-  const present = currentAttendance(s, session.id)
-  // People whose data was erased still count, as numbers without names.
-  const erased = s.anonymousCounts[session.id] ?? { roster: 0, present: 0, rosterPresent: 0 }
-  if (session.rosterMode === "open") {
-    return {
-      present: present.length + erased.present,
-      rosterSize: null,
-      rosterPresent: 0,
-      notMarked: 0,
-      notOnRoster: present.length + erased.present,
-    }
-  }
-  const roster = new Set(sessionRoster(s, session).map((p) => p.id))
-  const rosterSize = roster.size + erased.roster
-  const rosterPresent = present.filter((a) => roster.has(a.personId)).length + erased.rosterPresent
-  const presentTotal = present.length + erased.present
-  return {
-    present: presentTotal,
-    rosterSize,
-    rosterPresent,
-    notMarked: rosterSize - rosterPresent,
-    notOnRoster: presentTotal - rosterPresent,
-  }
-}
-
-/** Schedules the generator may create sessions for: active, in an active service and stage. */
-export function generatableSchedules(s: State): MeetingSchedule[] {
-  return s.schedules.filter((sch) => {
-    if (!sch.active) return false
-    const service = serviceOf(s, sch.serviceId)
-    if (!service || isArchived(service)) return false
-    if (sch.stageId) {
-      const stage = stageOf(s, sch.stageId)
-      if (!stage || isArchived(stage)) return false
-    }
-    return true
-  })
-}
-
-export function sessionForOccurrence(
-  s: State,
-  scheduleId: Uuid,
-  date: LocalDate
-): MeetingSession | undefined {
-  return s.sessions.find((x) => x.scheduleId === scheduleId && x.occurrenceDate === date)
-}
-
-export function searchPersons(s: State, query: string, includeInactive = false): Person[] {
-  return s.persons
-    .filter((p) => (includeInactive || p.status === "active") && matchesQuery(p, query))
-    .sort(byName)
-}
-
-export function roleOf(s: State, id: string | null | undefined): Role | undefined {
-  return id ? s.roles.find((r) => r.id === id) : undefined
-}
-
-/** The accounts that have the role, disabled ones included. */
-export function holdersOf(s: State, roleId: Uuid): User[] {
-  return s.users.filter((u) => u.roleIds.includes(roleId))
-}
-
-// ---------------------------------------------------------------- learning
-
-export const lessonOf = (s: State, id: Uuid | null | undefined) => byId(s.lessons, id)
-export const homeworkOf = (s: State, id: Uuid | null | undefined) => byId(s.homework, id)
-
-/** The current "completed" report for a child, if any (undone reports are history). */
-export function currentCompletion(s: State, assignmentId: Uuid, personId: Uuid) {
-  return s.completions.find(
-    (c) => c.assignmentId === assignmentId && c.personId === personId && c.undoneAt === null
-  )
-}
-
-/**
- * Who an assignment is for: everyone currently in the target stage, so a child
- * who joins later receives the stage's active homework. Children who left keep
- * their reported completions (history), flagged as no longer in the stage.
- */
-export function homeworkAudience(s: State, assignment: HomeworkAssignment, date: LocalDate) {
-  const current = rosterOn(s, assignment.serviceId, assignment.stageId, date)
-  const currentIds = new Set(current.map((p) => p.id))
-  const former = s.completions
-    .filter(
-      (c) => c.assignmentId === assignment.id && c.undoneAt === null && !currentIds.has(c.personId)
-    )
-    .map((c) => personOf(s, c.personId))
-    .filter((p): p is Person => !!p)
-  return [
-    ...current.map((person) => ({ person, inStage: true })),
-    ...former.map((person) => ({ person, inStage: false })),
-  ]
-}
-
-/** The children a user may act for: approved guardian links only. */
-export function childrenOf(s: State, userId: Uuid): Person[] {
+export function rosterOf(s: State, unit: Unit, date: LocalDate): Person[] {
   const ids = new Set(
-    s.guardians.filter((g) => g.userId === userId && g.status === "approved").map((g) => g.personId)
+    s.memberships
+      .filter(
+        (m) => m.serviceId === unit.serviceId && m.stageId === unit.stageId && isCurrentOn(m, date)
+      )
+      .map((m) => m.personId)
   )
-  return s.persons
-    .filter((p) => ids.has(p.id))
-    .sort((a, b) => a.firstName.localeCompare(b.firstName, "de"))
+
+  return s.persons.filter((p) => ids.has(p.id))
 }
 
-/** Stages a child is in today (for the parent portal: their Sunday School class). */
-export function currentStagesOf(
-  s: State,
-  personId: Uuid,
-  date: LocalDate
-): { serviceId: Uuid; stageId: Uuid }[] {
-  return s.memberships
-    .filter((m) => m.personId === personId && m.stageId !== null && isCurrentOn(m, date))
-    .map((m) => ({ serviceId: m.serviceId, stageId: m.stageId! }))
-}
-
-/**
- * The names of the groups someone is in today: the stage, or the service for its own roster
- * (Youth Meeting), in active services and stages.
- */
-export function currentGroupNames(s: State, personId: Uuid, date: LocalDate): string[] {
+export function currentUnitsOfPerson(s: State, personId: Uuid, date: LocalDate): Unit[] {
   return s.memberships
     .filter((m) => m.personId === personId && isCurrentOn(m, date))
-    .flatMap((m) => {
-      const service = serviceOf(s, m.serviceId)
-      const stage = stageOf(s, m.stageId)
-      if (!service || isArchived(service) || (stage && isArchived(stage))) return []
-      return [stage?.name ?? service.name]
-    })
+    .map((m) => ({ serviceId: m.serviceId, stageId: m.stageId }))
 }
 
-/** The member's own account, if the office linked one to the record and it can be used. */
-export function ownAccountOf(s: State, personId: Uuid): User | undefined {
-  return s.users.find((u) => u.personId === personId && u.approvedAt !== null && !u.disabledAt)
-}
-
-/** Parent accounts linked to a child (approved). */
-export function guardiansOf(s: State, personId: Uuid): User[] {
+export function childrenOf(s: State, accountId: Uuid): Person[] {
   const ids = new Set(
-    s.guardians
-      .filter((g) => g.personId === personId && g.status === "approved")
-      .map((g) => g.userId)
+    s.guardianships.filter((g) => g.accountId === accountId).map((g) => g.childId)
   )
-  return s.users.filter((u) => ids.has(u.id) && !u.disabledAt)
+
+  return s.persons.filter((p) => ids.has(p.id))
+}
+
+export function guardianAccountsOf(s: State, childId: Uuid): Account[] {
+  const ids = new Set(s.guardianships.filter((g) => g.childId === childId).map((g) => g.accountId))
+
+  return s.accounts.filter((a) => ids.has(a.id))
+}
+
+export function presentIds(s: State, sessionId: Uuid): Set<Uuid> {
+  return new Set(
+    s.attendance
+      .filter((a) => a.sessionId === sessionId && a.removedAt === null)
+      .map((a) => a.personId)
+  )
+}
+
+export function hasAttendance(s: State, sessionId: Uuid): boolean {
+  return s.attendance.some((a) => a.sessionId === sessionId)
+}
+
+export function sameUnit(a: Unit, b: Unit): boolean {
+  return a.serviceId === b.serviceId && a.stageId === b.stageId
 }

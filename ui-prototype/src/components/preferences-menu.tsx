@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { LOCALE_NAMES, LOCALES, type Locale } from "@/i18n/config"
-import { setLocaleAction } from "@/server/actions/preferences"
+import { setLanguageAction as setLocaleAction } from "@/server/actions/settings"
 
 const THEMES = [
   { value: "light", icon: Sun },

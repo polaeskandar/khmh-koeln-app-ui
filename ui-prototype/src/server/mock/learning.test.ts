@@ -1,243 +1,149 @@
-/**
- * The rules of the lesson, homework and parent portal brief, checked against
- * the mock backend layer (the same commands and read models the server
- * actions and pages use). The demo clock is frozen at Sunday 8 November 2026.
- */
 import { describe, expect, test } from "vitest"
 
-import { can } from "@/lib/domain/policy"
-import type { User } from "@/lib/domain/types"
 import { ProblemError } from "@/server/errors"
-import {
-  getParentChildren,
-  getParentHomework,
-  getParentHomeworkDetail,
-} from "@/server/queries/parent"
-import { contextFor } from "@/test/context"
+import { getParentLesson, getMemberLesson } from "@/server/queries/portals"
+import { accountNamed, contextFor } from "@/test/context"
 
-import {
-  approveGuardian,
-  archiveHomework,
-  completeHomework,
-  createHomework,
-  createLesson,
-  linkGuardian,
-  publishHomework,
-  setLessonStatus,
-  undoCompletion,
-  unpublishHomework,
-} from "./commands/learning"
-import { syncPermissions } from "./commands/roles"
+import { linkChild } from "./commands/guardians"
+import { createTask, setLessonStatus, setTaskDone } from "./commands/learning"
+import { erase } from "./commands/privacy"
 import { seed } from "./seed"
-import { childrenOf, currentCompletion } from "./selectors"
-import type { State } from "./state"
 
-/** The HTTP status of the problem a command raises: 403, 404, 409 or 422. */
-function statusOf(command: () => unknown): number | null {
+const status = (fn: () => unknown) => {
   try {
-    command()
-    return null
-  } catch (e) {
-    if (e instanceof ProblemError) return e.problem.status
-    throw e
+    fn()
+  } catch (error) {
+    if (error instanceof ProblemError) {
+      return error.problem.status
+    }
+
+    if (error instanceof Error && error.message.includes("NEXT_HTTP_ERROR_FALLBACK;404")) {
+      return 404
+    }
+
+    throw error
   }
+
+  return "ok"
 }
 
-function demo() {
-  const s = seed()
-  const user = (email: string) => {
-    const u = s.users.find((x) => x.email === email)
-    if (!u) throw new Error(`No demo account ${email}`)
-    return u
-  }
-  const person = (first: string, last: string) =>
-    s.persons.find((p) => p.firstName === first && p.lastName === last)!
-  const stage = (name: string) => s.stages.find((st) => st.name === name)!
-  return {
-    s,
-    admin: user("mariam.fahmy@example.org"),
-    leader: user("christine.adel@example.org"), // service leader, Sunday School
-    daniel: user("daniel.michael@example.org"), // servant, Sunday School › 3rd Class
-    hoda: user("hoda.farag@example.org"), // parent of Mina (3rd Class) and Mimi (1st Class)
-    nabil: user("nabil.hanna@example.org"), // the other parent of Mina and Mimi
-    nadia: user("nadia.mansour@example.org"), // asked for access to Sophia; not approved yet
-    mina: person("Mina", "Hanna"),
-    kiro: person("Kirollos", "Iskander"), // 3rd Class, another family
-    c1: stage("1st Class"),
-    c3: stage("3rd Class"),
-  }
-}
-type Demo = ReturnType<typeof demo>
+const lessonNamed = (s: ReturnType<typeof seed>, title: string) =>
+  s.lessons.find((l) => l.title === title)!
+const personNamed = (s: ReturnType<typeof seed>, name: string) =>
+  s.persons.find((p) => `${p.firstName} ${p.lastName}` === name)!
 
-const as = (s: State, viewer: User) => contextFor(s, viewer)
+describe("what parents and members see of a lesson", () => {
+  test("a published lesson shows its shared content, never the preparation notes", () => {
+    const s = seed("church")
+    const hoda = contextFor(s, accountNamed(s, "hoda.farag"))
+    const mimi = personNamed(s, "Mimi Farag")
+    const view = getParentLesson(hoda, lessonNamed(s, "Noah's ark").id, mimi.id)
+    const json = JSON.stringify(view)
 
-/** Daniel prepares “The Good Samaritan” for Sunday 15 November and assigns the memory verse. */
-function goodSamaritan(t: Demo, { publish = true } = {}) {
-  const lesson = createLesson(t.s, t.daniel, t.c3.id, {
-    title: "The Good Samaritan",
-    meeting: "date:2026-11-15",
-    passage: "Luke 10:25–37",
-    memoryVerse: "You shall love the Lord your God … and your neighbour as yourself. (Luke 10:27)",
-    notes: "Kiro likes to act; give him the role of the innkeeper.",
-    responsibleId: t.daniel.id,
+    expect(view.lesson.title).toBe("Noah's ark")
+    expect(json).not.toContain("cardboard ark")
+    expect(json).not.toContain("Ark craft template")
+    expect(json).toContain("Children's Bible, page 18")
   })
-  const homework = createHomework(
-    t.s,
-    t.daniel,
-    lesson.id,
-    {
-      title: "Learn the memory verse",
-      instructions: "Say Luke 10:27 by heart.",
-      dueDate: "2026-11-22",
-    },
-    publish
-  )
-  return { lesson, homework }
-}
 
-describe("roles", () => {
-  test("a servant prepares lessons for their own stage only", () => {
-    const t = demo()
-    expect(can(t.daniel, "create", "lessons")).toBe(true)
-    const lesson = createLesson(t.s, t.daniel, t.c3.id, {
-      title: "Noah’s ark",
-      meeting: "date:2026-11-15",
-      responsibleId: t.daniel.id,
+  test("a lesson that isn't published stays hidden", () => {
+    const s = seed("church")
+    const hoda = contextFor(s, accountNamed(s, "hoda.farag"))
+    const mimi = personNamed(s, "Mimi Farag")
+
+    expect(
+      status(() => getParentLesson(hoda, lessonNamed(s, "The Good Samaritan").id, mimi.id))
+    ).toBe(404)
+    setLessonStatus(
+      contextFor(s, accountNamed(s, "daniel.michael")),
+      lessonNamed(s, "The Good Samaritan").id,
+      "published"
+    )
+    expect(
+      status(() => getParentLesson(hoda, lessonNamed(s, "The Good Samaritan").id, mimi.id))
+    ).toBe("ok")
+  })
+
+  test("parents see only their own children, members only their own groups", () => {
+    const s = seed("church")
+    const nadia = contextFor(s, accountNamed(s, "nadia.mansour"))
+    const nevine = contextFor(s, accountNamed(s, "nevine.boulos"))
+
+    expect(
+      status(() =>
+        getParentLesson(nadia, lessonNamed(s, "Noah's ark").id, personNamed(s, "Mimi Farag").id)
+      )
+    ).toBe(404)
+    expect(status(() => getMemberLesson(nevine, lessonNamed(s, "Noah's ark").id))).toBe(404)
+    expect(
+      JSON.stringify(getMemberLesson(nevine, lessonNamed(s, "The first eight letters").id))
+    ).not.toContain("pronunciation")
+  })
+})
+
+describe("tasks", () => {
+  test("a parent marks a task done for their own child only", () => {
+    const s = seed("church")
+    const daniel = contextFor(s, accountNamed(s, "daniel.michael"))
+    const hoda = contextFor(s, accountNamed(s, "hoda.farag"))
+    const task = createTask(
+      daniel,
+      lessonNamed(s, "Noah's ark").id,
+      {
+        title: "Learn Genesis 9:13",
+        instructions: "Say it at home.",
+        dueDate: null,
+        resources: [],
+      },
+      true
+    )
+    setTaskDone(hoda, task.id, personNamed(s, "Mimi Farag").id, true)
+    const other = s.persons.find(
+      (p) =>
+        s.memberships.some((m) => m.personId === p.id && m.stageId === task.stageId) &&
+        p.lastName !== "Farag"
+    )!
+
+    expect(s.completions.filter((c) => c.taskId === task.id && c.undoneAt === null)).toHaveLength(1)
+    expect(status(() => setTaskDone(hoda, task.id, other.id, true))).toBe(403)
+  })
+
+  test("a parent is linked to members only", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const hoda = accountNamed(s, "hoda.farag")
+
+    expect(status(() => linkChild(mariam, hoda.id, personNamed(s, "Andrew Samir").id))).toBe(409)
+    expect(status(() => linkChild(mariam, hoda.id, personNamed(s, "Sophia Mansour").id))).toBe("ok")
+  })
+})
+
+describe("erasure", () => {
+  test("erasing a person removes the account and every reference to it", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const sara = contextFor(s, accountNamed(s, "sara.wissa"))
+    const theresa = s.dataRequests.find((r) => r.subjectName === "Theresa Wadie")!
+    erase(mariam, theresa.id)
+
+    expect(theresa.subjectName).toBeNull()
+    expect(s.persons.some((p) => p.firstName === "Theresa" && p.lastName === "Wadie")).toBe(false)
+
+    const daniel = accountNamed(s, "daniel.michael")
+    const request = s.dataRequests.length
+    s.dataRequests.push({
+      ...theresa,
+      id: "019a3f00-0000-7000-8000-00000000eeee",
+      personId: daniel.personId,
+      subjectName: "Daniel Michael",
+      status: "open",
+      outcome: null,
+      closedAt: null,
+      closedBy: null,
     })
-    expect(lesson.stageId).toBe(t.c3.id)
-    const elsewhere = () =>
-      createLesson(t.s, t.daniel, t.c1.id, {
-        title: "Noah’s ark",
-        meeting: "date:2026-11-15",
-        responsibleId: t.daniel.id,
-      })
-    expect(statusOf(elsewhere)).toBe(404)
-  })
+    erase(sara, "019a3f00-0000-7000-8000-00000000eeee")
 
-  test("without Lessons: Add, preparing a lesson is refused", () => {
-    const t = demo()
-    const servant = t.s.roles.find((r) => r.name === "Servant")!
-    servant.permissions = servant.permissions.filter((p) => p !== "lessons:create")
-    syncPermissions(t.s)
-    const lesson = () =>
-      createLesson(t.s, t.daniel, t.c3.id, {
-        title: "Zacchaeus",
-        meeting: "date:2026-11-15",
-        responsibleId: t.daniel.id,
-      })
-    expect(statusOf(lesson)).toBe(403)
-    expect(can(t.leader, "create", "homework")).toBe(true)
-  })
-
-  test("parents hold no staff permission", () => {
-    const t = demo()
-    expect(can(t.hoda, "read", "services")).toBe(false)
-    const lesson = () =>
-      createLesson(t.s, t.hoda, t.c3.id, {
-        title: "Zacchaeus",
-        meeting: "date:2026-11-15",
-        responsibleId: t.daniel.id,
-      })
-    expect(statusOf(lesson)).toBe(403)
-  })
-})
-
-describe("homework in the parent portal", () => {
-  test("drafts never reach parents; published homework does, until it is archived", async () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t, { publish: false })
-    const visible = async () =>
-      (await getParentHomework(as(t.s, t.hoda), t.mina.id)).toDo.map((x) => x.id)
-
-    expect(await visible()).not.toContain(homework.id)
-    expect(await getParentHomeworkDetail(as(t.s, t.hoda), homework.id, t.mina.id)).toBeNull()
-
-    publishHomework(t.s, t.daniel, homework.id)
-    expect(await visible()).toContain(homework.id)
-
-    archiveHomework(t.s, t.daniel, homework.id)
-    expect(await visible()).not.toContain(homework.id)
-  })
-
-  test("parents see their own children only, and only once the access is approved", async () => {
-    const t = demo()
-    expect(childrenOf(t.s, t.hoda.id).map((p) => p.firstName)).toEqual(["Mariam", "Mina"])
-
-    const waiting = await getParentChildren(as(t.s, t.nadia))
-    expect(waiting.children).toEqual([])
-    expect(waiting.pendingAccess).toBe(1)
-    const request = t.s.guardians.find((g) => g.userId === t.nadia.id && g.status === "pending")!
-    approveGuardian(t.s, t.admin, request.id)
-    expect((await getParentChildren(as(t.s, t.nadia))).children.map((c) => c.name)).toEqual([
-      "Sophia",
-    ])
-  })
-
-  test("a parent can't open or report homework for another family's child", async () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t)
-    // Kiro is in the same class as Mina, but Hoda is not his guardian.
-    expect(await getParentHomeworkDetail(as(t.s, t.hoda), homework.id, t.kiro.id)).toBeNull()
-    expect(statusOf(() => completeHomework(t.s, t.hoda, homework.id, t.kiro.id))).toBe(403)
-  })
-
-  test("the servants’ notes stay out of what parents receive", async () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t)
-    const detail = await getParentHomeworkDetail(as(t.s, t.hoda), homework.id, t.mina.id)
-    expect(detail?.lesson.passage).toBe("Luke 10:25–37")
-    expect(JSON.stringify(detail)).not.toContain("innkeeper")
-  })
-})
-
-describe("completion", () => {
-  test("reporting twice keeps the first report, so double taps and retries are safe", () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t)
-    const first = completeHomework(t.s, t.hoda, homework.id, t.mina.id)
-    const again = completeHomework(t.s, t.hoda, homework.id, t.mina.id)
-    expect(again.id).toBe(first.id)
-    expect(t.s.completions.filter((c) => c.assignmentId === homework.id)).toHaveLength(1)
-  })
-
-  test("undo keeps the history, and either parent can report it again", () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t)
-    completeHomework(t.s, t.hoda, homework.id, t.mina.id)
-    undoCompletion(t.s, t.hoda, homework.id, t.mina.id)
-    expect(currentCompletion(t.s, homework.id, t.mina.id)).toBeUndefined()
-
-    const again = completeHomework(t.s, t.nabil, homework.id, t.mina.id)
-    expect(again.completedBy).toBe(t.nabil.id)
-    expect(t.s.completions.filter((c) => c.assignmentId === homework.id)).toHaveLength(2)
-  })
-
-  test("a draft can't be reported done", () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t, { publish: false })
-    expect(statusOf(() => completeHomework(t.s, t.hoda, homework.id, t.mina.id))).toBe(404)
-  })
-
-  test("homework parents reported done can't go back to draft", () => {
-    const t = demo()
-    const { homework } = goodSamaritan(t)
-    completeHomework(t.s, t.hoda, homework.id, t.mina.id)
-    expect(statusOf(() => unpublishHomework(t.s, t.daniel, homework.id))).toBe(409)
-  })
-})
-
-describe("lessons and parent access", () => {
-  test("a lesson is marked as taught on or after its date, not before", () => {
-    const t = demo()
-    const { lesson } = goodSamaritan(t)
-    expect(statusOf(() => setLessonStatus(t.s, t.daniel, lesson.id, "completed"))).toBe(409)
-    expect(setLessonStatus(t.s, t.daniel, lesson.id, "ready").status).toBe("ready")
-  })
-
-  test("only administrators give a parent access to a child", () => {
-    const t = demo()
-    expect(statusOf(() => linkGuardian(t.s, t.leader, t.hoda.id, t.kiro.id))).toBe(403)
-    linkGuardian(t.s, t.admin, t.hoda.id, t.kiro.id)
-    expect(childrenOf(t.s, t.hoda.id).map((p) => p.firstName)).toContain("Kirollos")
+    expect(s.dataRequests.length).toBe(request + 1)
+    expect(JSON.stringify(s)).not.toContain(daniel.id)
   })
 })

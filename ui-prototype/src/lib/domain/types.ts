@@ -1,62 +1,33 @@
-/**
- * Resource shapes of the prototype's mock data layer. They are a proposal for the Symfony REST API
- * (see docs/data-model.md in the backend repository), to be settled in tickets. Field names are
- * the JSON names (camelCase). Dates are local calendar dates in the church time zone
- * ("2026-11-08"); instants are RFC 3339 strings with an offset ("2026-11-08T12:00:00+01:00"),
- * like PHP's DATE_ATOM.
- */
-
 export type Uuid = string
-/** Local calendar date, YYYY-MM-DD, in the church time zone. */
 export type LocalDate = string
-/** Local wall-clock time, HH:MM. */
 export type LocalTime = string
-/** RFC 3339 instant with offset. */
 export type Instant = string
 
-export type ServiceStatus = "active" | "archived"
-export type PersonStatus = "active" | "inactive"
 export type Frequency = "weekly" | "monthly"
-/** expected: the stage or service roster is expected to attend; open: anyone may attend, there is no roster. */
-export type RosterMode = "expected" | "open"
-export type SessionStatus = "scheduled" | "active" | "completed" | "canceled"
-export type SessionEventType = "opened" | "closed" | "reopened" | "canceled" | "moved" | "edited"
-/** What a permission lets someone do. */
-export type Action = "create" | "read" | "update" | "delete"
-/** What a permission is about. */
-export type Resource =
-  | "users"
-  | "roles"
-  | "services"
-  | "stages"
-  | "sessions"
-  | "attendance"
-  | "members"
-  | "lessons"
-  | "homework"
-  | "parentPortal"
-/**
- * One action on one resource, written "resource:action" ("sessions:update"). The catalog holds
- * every combination, 40 in all (`PERMISSIONS` in policy.ts); the API writes one as
- * {"action": "update", "resource": "sessions"}.
- */
-export type Permission = `${Resource}:${Action}`
-export type LessonStatus = "draft" | "ready" | "completed"
-export type HomeworkStatus = "draft" | "published" | "archived"
-export type GuardianStatus = "pending" | "approved" | "revoked"
-
 export const ISO_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const
 export type IsoWeekday = (typeof ISO_WEEKDAYS)[number]
-/** 1–4 for the nth weekday of the month, -1 for the last one. */
 export type MonthWeek = 1 | 2 | 3 | 4 | -1
+
+export type Recurrence = {
+  frequency: Frequency
+  interval: number
+  weekdays: IsoWeekday[]
+  monthWeek: MonthWeek | null
+  startsOn: LocalDate
+  endsOn: LocalDate | null
+}
+
+export type Language = "en" | "de" | "ar"
+
+export type ServiceStructure = "stages" | "single"
 
 export type Service = {
   id: Uuid
   name: string
   description: string | null
+  structure: ServiceStructure
   archivedAt: Instant | null
   createdAt: Instant
-  updatedAt: Instant
 }
 
 export type Stage = {
@@ -69,86 +40,168 @@ export type Stage = {
   createdAt: Instant
 }
 
+export type Unit = { serviceId: Uuid; stageId: Uuid | null }
+
 export type Person = {
   id: Uuid
   firstName: string
   lastName: string
   displayName: string | null
-  status: PersonStatus
   createdAt: Instant
 }
 
-/** Places a person on a roster: a stage of a service, or the service itself (stageId null). */
 export type Membership = {
   id: Uuid
   personId: Uuid
   serviceId: Uuid
   stageId: Uuid | null
   startsOn: LocalDate
-  /** Last day (inclusive); null while current. Memberships are ended, never deleted. */
   endsOn: LocalDate | null
 }
 
-export type Recurrence = {
+export type Account = {
+  id: Uuid
+  personId: Uuid
+  username: string
+  passwordHash: string
+  mustChangePassword: boolean
+  passwordChangedAt: Instant | null
+  language: Language | null
+  lastSignInAt: Instant | null
+  createdAt: Instant
+  createdBy: Uuid | null
+}
+
+export type Guardianship = {
+  id: Uuid
+  accountId: Uuid
+  childId: Uuid
+  createdAt: Instant
+  createdBy: Uuid | null
+}
+
+export const CHURCH_PERMISSIONS = [
+  "accounts.manage",
+  "access.manage",
+  "guardians.manage",
+  "data.manage",
+  "services.manage",
+] as const
+
+export const UNIT_PERMISSIONS = [
+  "services.view",
+  "stages.manage",
+  "schedule.manage",
+  "attendance.record",
+  "attendance.correct",
+  "lessons.prepare",
+  "lessons.publish",
+  "tasks.manage",
+] as const
+
+export const PORTAL_PERMISSIONS = ["portal.parent", "portal.member"] as const
+
+export type ChurchPermission = (typeof CHURCH_PERMISSIONS)[number]
+export type UnitPermission = (typeof UNIT_PERMISSIONS)[number]
+export type PortalPermission = (typeof PORTAL_PERMISSIONS)[number]
+export type Permission = ChurchPermission | UnitPermission | PortalPermission
+
+export type Role = {
+  id: Uuid
+  name: string
+  permissions: Permission[]
+  protected: boolean
+  createdAt: Instant
+}
+
+export type Scope =
+  | { type: "church" }
+  | { type: "service"; serviceId: Uuid }
+  | { type: "stage"; serviceId: Uuid; stageId: Uuid }
+
+export type RoleAssignment = {
+  id: Uuid
+  accountId: Uuid
+  roleId: Uuid
+  scope: Scope
+  createdAt: Instant
+  createdBy: Uuid | null
+}
+
+export type Schedule = {
+  id: Uuid
+  serviceId: Uuid
+  stageId: Uuid | null
+  createdAt: Instant
+}
+
+export type PlanStatus = "draft" | "confirmed"
+
+export type PlanRule = {
   frequency: Frequency
   interval: number
-  weekdays: IsoWeekday[]
+  weekday: IsoWeekday
   monthWeek: MonthWeek | null
-  startsOn: LocalDate
-  endsOn: LocalDate | null
-}
-
-export type MeetingSchedule = {
-  id: Uuid
-  serviceId: Uuid
-  stageId: Uuid | null
-  name: string
-  description: string | null
-  location: string | null
-  recurrence: Recurrence
   startTime: LocalTime
   endTime: LocalTime | null
-  rosterMode: RosterMode
-  active: boolean
-  createdAt: Instant
-  updatedAt: Instant
+  startsOn: LocalDate | null
+  endsOn: LocalDate | null
+  location: string | null
 }
 
-export type MeetingSession = {
+export type PlanDecision = "cancel" | "keep"
+
+export type AnnualPlan = {
   id: Uuid
+  scheduleId: Uuid
+  year: number
+  status: PlanStatus
+  rule: PlanRule
+  decisions: Record<LocalDate, PlanDecision>
+  version: number
+  updatedAt: Instant
+  updatedBy: Uuid | null
+  confirmedAt: Instant | null
+  confirmedBy: Uuid | null
+}
+
+export type SessionKind = "recurring" | "oneOff"
+export type SessionStatus = "scheduled" | "open" | "closed" | "canceled"
+
+export type Session = {
+  id: Uuid
+  scheduleId: Uuid
   serviceId: Uuid
   stageId: Uuid | null
-  /** Null for one-off sessions created by hand. */
-  scheduleId: Uuid | null
-  /** The schedule occurrence this session stands for. Never changes, even when the session is moved. */
-  occurrenceDate: LocalDate
-  title: string
+  planId: Uuid | null
+  kind: SessionKind
+  date: LocalDate
+  startTime: LocalTime
+  endTime: LocalTime | null
   location: string | null
-  startsAt: Instant
-  endsAt: Instant | null
   status: SessionStatus
-  rosterMode: RosterMode
-  /** True once someone changed this one session; later schedule edits leave it alone. */
-  overridden: boolean
   cancelReason: string | null
+  occasionId: Uuid | null
+  originalDate: LocalDate | null
+  changedByHand: boolean
   openedAt: Instant | null
   closedAt: Instant | null
   closedBy: Uuid | null
   createdAt: Instant
 }
 
+export type SessionEventType =
+  "created" | "opened" | "closed" | "reopened" | "canceled" | "restored" | "rescheduled"
+
 export type SessionEvent = {
   id: Uuid
   sessionId: Uuid
   type: SessionEventType
   occurredAt: Instant
-  /** Null when the system did it (e.g. session creation). */
   actorId: Uuid | null
-  /** The reason someone gave (cancel, reopen); for a move, the previous start instant. */
   note: string | null
 }
 
-/** One "present" mark. Corrections never delete: they set removedAt, so history stays. */
 export type Attendance = {
   id: Uuid
   sessionId: Uuid
@@ -160,250 +213,105 @@ export type Attendance = {
   removalReason: string | null
 }
 
-/**
- * Where a role's permissions hold: everywhere in the church, or only in the groups the account
- * is assigned to (polaeskandar/khmh-koeln-app-backend#318).
- */
-export type RoleScope = "church" | "assignedGroups"
+export type OccasionCategory =
+  | "lordsMajorFeast"
+  | "lordsMinorFeast"
+  | "holyWeek"
+  | "otherFeast"
+  | "publicHoliday"
+  | "churchEvent"
 
-/**
- * A role: a name, the permissions it allows and where they hold. The church starts with
- * Administrator and Parent (everywhere) and Service leader and Servant (in the account's assigned
- * groups); they are ordinary roles, renamed, changed and deleted like the ones the office adds
- * (such as "Church office").
- */
-export type Role = {
+export type OccasionMode = "suggested" | "mandatory"
+
+export type CalendarOccasion = {
   id: Uuid
-  /** At most 80 characters; unique, ignoring case and extra spaces. */
-  name: string
-  permissions: Permission[]
-  scope: RoleScope
+  date: LocalDate
+  key: string | null
+  name: string | null
+  category: OccasionCategory
+  source: "computed" | "church"
+  mode: OccasionMode
+  serviceIds: Uuid[]
+  verifiedAt: Instant | null
+  verifiedBy: Uuid | null
+}
+
+export type DaysOffMode = "automatic" | "custom"
+
+export type ServiceDaysOff = { serviceId: Uuid; year: number; mode: DaysOffMode; days: LocalDate[] }
+
+export type LessonStatus = "draft" | "ready" | "published"
+
+export type Material = { label: string; url: string | null; shared: boolean }
+
+export type Lesson = {
+  id: Uuid
+  serviceId: Uuid
+  stageId: Uuid | null
+  sessionId: Uuid | null
+  date: LocalDate
+  title: string
+  summary: string | null
+  objectives: string | null
+  teachingPoints: string | null
+  materials: Material[]
+  notes: string | null
+  status: LessonStatus
+  responsibleId: Uuid | null
+  publishedAt: Instant | null
   createdAt: Instant
   updatedAt: Instant
 }
 
-/** A roster: a stage of a service, or the service's own roster (stageId null). */
-export type Group = { serviceId: Uuid; stageId: Uuid | null }
+export type TaskStatus = "draft" | "published" | "archived"
 
-/**
- * Where a staff account serves: a whole service (stageId null), which covers the service's own
- * roster and all its stages, or one stage. Roles with the `assignedGroups` scope hold only in the
- * groups an account's assignments cover. One per account and group.
- */
-export type StaffAssignment = {
+export type Resource = { label: string; url: string | null }
+
+export type Task = {
   id: Uuid
-  userId: Uuid
+  lessonId: Uuid
   serviceId: Uuid
   stageId: Uuid | null
+  title: string
+  instructions: string
+  dueDate: LocalDate | null
+  resources: Resource[]
+  status: TaskStatus
+  publishedAt: Instant | null
+  createdBy: Uuid | null
   createdAt: Instant
+  updatedAt: Instant
 }
 
-/** The languages of the app. Stored with an account so emails go out in the person's language. */
-export type Language = "en" | "de" | "ar"
-
-/** What someone wrote when registering, for the administrator who approves the account. */
-export type Registration = {
-  /**
-   * Who they say they are; the administrator decides the actual roles and links. Members take
-   * part in a service themselves (a youth, an adult in the Coptic course) and see their own groups.
-   */
-  as: "parent" | "servant" | "member"
-  /**
-   * Parents: their children's names and classes. Servants: where and since when they serve.
-   * Members: the groups they take part in.
-   */
-  details: string
-  /** Servants: the service they say they serve in. */
-  serviceId: Uuid | null
-}
-
-/**
- * Prototype only: the link that confirms a registration's email address, valid 7 days. The
- * backend keeps a hash of the token in a table of its own and emails the link.
- */
-export type EmailConfirmation = {
-  token: string
-  expiresAt: Instant
-}
-
-/**
- * A sign-in account. Accounts people register themselves wait for an
- * administrator (approvedAt null) and can't be used until then; accounts the
- * office creates are approved at once. Declined registrations are deleted.
- */
-/**
- * How an administrator checked a member's age when linking a member account to the member's
- * record: 16 or older, or under 16 with the agreement of a parent or guardian (DSGVO Art. 8).
- */
-export type AgeCheck = "sixteenOrOlder" | "guardianConsent"
-
-export type User = {
+export type TaskCompletion = {
   id: Uuid
-  email: string
-  displayName: string
-  /**
-   * The member record this account belongs to. It opens the member portal (the person's own
-   * groups and homework), so only an administrator sets it, when approving a member account.
-   */
-  personId: Uuid | null
-  /** The account's roles. */
-  roleIds: Uuid[]
-  /**
-   * What its roles allow together. Prototype only: kept in sync whenever roles or the roles an
-   * account has change, so permission checks need nothing but the account; the API resolves
-   * them on every request.
-   */
-  permissions: Permission[]
-  /** Prototype only: a salted scrypt hash. Null until the person chooses a password (invitation). */
-  passwordHash: string | null
-  language: Language | null
-  /** Kept until the account is approved or declined, then deleted (only needed for the decision). */
-  registration: Registration | null
-  /**
-   * When the person opened the link sent to the address. Until then a registration doesn't reach
-   * the office. Accounts the office creates count as confirmed.
-   */
-  emailConfirmedAt: Instant | null
-  /** The newest confirmation link while the address is unconfirmed; a new one voids the older. */
-  emailConfirmation: EmailConfirmation | null
-  /** When they accepted the privacy notice, and which version. */
-  privacyAcceptedAt: Instant | null
-  privacyVersion: string | null
-  approvedAt: Instant | null
-  approvedBy: Uuid | null
-  /** Member accounts: the age check of the approval. Null for every other account. */
-  ageCheck: AgeCheck | null
-  /** Under 16: how the parent or guardian agreed, as the administrator noted it. */
-  guardianConsentNote: string | null
-  disabledAt: Instant | null
-  createdAt: Instant
+  taskId: Uuid
+  personId: Uuid
+  completedAt: Instant
+  completedBy: Uuid | null
+  undoneAt: Instant | null
 }
 
-/**
- * A data protection request (DSGVO Art. 15, 17, 20): someone asks for a copy
- * of their data or for it to be erased. The church must answer within one
- * month of receiving it (Art. 12(3)). The request is the record that it did:
- * once erased, the subject's name is replaced with a neutral description, so
- * the log itself keeps no personal data.
- */
+export type DataRequestKind = "copy" | "erasure"
+export type DataRequestStatus = "open" | "done" | "declined"
+export type DataRequestChannel = "app" | "letter" | "in_person"
+
 export type DataRequest = {
   id: Uuid
-  kind: "erasure" | "copy"
-  /** Whose data: a member's record, an account, or both (a servant has both). */
+  kind: DataRequestKind
   personId: Uuid | null
-  userId: Uuid | null
-  /** The subject's name while their data exists; null once it is erased. */
   subjectName: string | null
-  /** After an erasure: what the subject was, for the log ("a member of 3rd Class"). */
-  erasedSubject: { kind: "member" | "account"; group: string | null } | null
-  /** Who asked and how: the person themselves in the app, a parent by email… */
+  erasedSubject: string | null
   requestedBy: string
-  channel: "app" | "email" | "letter" | "in_person"
+  channel: DataRequestChannel
   receivedAt: Instant
-  /** One month after receipt. */
   dueOn: LocalDate
   note: string | null
-  status: "open" | "done" | "declined"
-  /** What was done, without the data itself: number of records per kind. */
+  status: DataRequestStatus
   outcome: Record<string, number> | null
   declineReason: string | null
   closedAt: Instant | null
   closedBy: Uuid | null
 }
 
-/**
- * Attendance of erased people, kept as numbers per session so past totals stay
- * right ("12 present") without saying who.
- */
-export type AnonymousCounts = {
-  /** Were on the roster of the session. */
-  roster: number
-  /** Were marked present. */
-  present: number
-  /** Were on the roster and marked present. */
-  rosterPresent: number
-}
-
-/** A link or a physical item ("Children's Bible, page 112"). */
-export type Material = { label: string; url: string | null }
-
-/**
- * The educational content prepared for a meeting. Separate from the meeting
- * session: lessons are prepared weeks ahead, when no session exists yet. The
- * link to the meeting is (scheduleId, teachingDate), the same natural key as a
- * session's (scheduleId, occurrenceDate), so it survives the session being
- * created, moved or canceled. One-off sessions are linked by sessionId.
- */
-export type Lesson = {
-  id: Uuid
-  serviceId: Uuid
-  stageId: Uuid | null
-  scheduleId: Uuid | null
-  sessionId: Uuid | null
-  teachingDate: LocalDate
-  title: string
-  summary: string | null
-  passage: string | null
-  objectives: string | null
-  teachingPoints: string | null
-  memoryVerse: string | null
-  activities: string | null
-  materials: Material[]
-  /** Internal notes for the servants; never shown to parents. */
-  notes: string | null
-  status: LessonStatus
-  responsibleId: Uuid
-  collaboratorIds: Uuid[]
-  completedAt: Instant | null
-  archivedAt: Instant | null
-  createdAt: Instant
-  updatedAt: Instant
-}
-
-/** Something a child is asked to learn or practise at home, for a whole stage. */
-export type HomeworkAssignment = {
-  id: Uuid
-  lessonId: Uuid
-  serviceId: Uuid
-  /** The stage whose children receive it. */
-  stageId: Uuid
-  title: string
-  /** What parents read: plain language, no internal notes. */
-  instructions: string
-  dueDate: LocalDate | null
-  resources: Material[]
-  status: HomeworkStatus
-  publishedAt: Instant | null
-  archivedAt: Instant | null
-  createdBy: Uuid
-  createdAt: Instant
-  updatedAt: Instant
-}
-
-/**
- * A report that a child or member completed an assignment, made by an approved
- * parent or by the member's own account. "Not completed" is the absence of a
- * current row. Undo keeps the row and sets undoneAt, so the history stays; at
- * most one current row per person and assignment, whoever reported it.
- */
-export type HomeworkCompletion = {
-  id: Uuid
-  assignmentId: Uuid
-  personId: Uuid
-  completedAt: Instant
-  completedBy: Uuid
-  undoneAt: Instant | null
-  undoneBy: Uuid | null
-}
-
-/** An approved link between a parent's account and a child (a person without an account). */
-export type GuardianRelationship = {
-  id: Uuid
-  userId: Uuid
-  personId: Uuid
-  relationship: "parent" | "guardian"
-  status: GuardianStatus
-  approvedBy: Uuid | null
-  approvedAt: Instant | null
-  createdAt: Instant
-}
+export type AnonymousCounts = { present: number }

@@ -5,38 +5,37 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { z } from "zod"
 
-import { isActiveAccount } from "@/lib/domain/policy"
 import { resetClock } from "@/server/mock/clock"
-import { openState } from "@/server/mock/runtime"
-import { resetState } from "@/server/mock/state"
-import { OUTCOME_COOKIE } from "@/server/outcome"
+import { getState, resetState } from "@/server/mock/state"
 import { homeOf } from "@/server/request"
-import { PERSONA_COOKIE } from "@/server/viewer"
+import { SESSION_COOKIE } from "@/server/viewer"
 
-/** Prototype only: act as another demo user. Replaced by real sign-in with the Symfony API. */
-export async function switchPersonaAction(userId: string) {
-  const id = z.uuid().parse(userId)
-  if (!openState().users.some((u) => u.id === id && isActiveAccount(u))) return
-  const store = await cookies()
-  store.set(PERSONA_COOKIE, id, { httpOnly: true, sameSite: "lax", path: "/" })
-  revalidatePath("/", "layout")
+const SESSION = { httpOnly: true, sameSite: "lax", path: "/" } as const
+
+function activeAccount(id: string) {
+  return getState().accounts.find((a) => a.id === id)
 }
 
-/** Prototype only: the demo "sign-in". Opens the staff app, the parent portal or the member portal. */
-export async function signInAsAction(userId: string) {
-  const id = z.uuid().parse(userId)
-  const user = openState().users.find((u) => u.id === id && isActiveAccount(u))
-  if (!user) redirect("/sign-in/demo")
-  const store = await cookies()
-  store.set(PERSONA_COOKIE, user.id, { httpOnly: true, sameSite: "lax", path: "/" })
-  store.delete(OUTCOME_COOKIE)
+export async function switchPersonaAction(accountId: string) {
+  const account = activeAccount(z.uuid().parse(accountId))
+
+  if (!account) {
+    return null
+  }
+
+  ;(await cookies()).set(SESSION_COOKIE, account.id, SESSION)
   revalidatePath("/", "layout")
-  redirect(homeOf(user))
+
+  return account.mustChangePassword ? "/change-password" : homeOf(getState(), account)
 }
 
-/** Prototype only: rebuild the demo data from the seed and restart the demo clock. */
-export async function resetDemoDataAction() {
-  resetState()
+export async function signInAsAction(accountId: string) {
+  const target = await switchPersonaAction(accountId)
+  redirect(target ?? "/sign-in/demo")
+}
+
+export async function resetDemoDataAction(data: "church" | "empty" = "church") {
+  resetState(z.enum(["church", "empty"]).parse(data))
   resetClock()
   revalidatePath("/", "layout")
 }

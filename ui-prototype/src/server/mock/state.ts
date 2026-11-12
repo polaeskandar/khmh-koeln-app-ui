@@ -1,84 +1,69 @@
 import "server-only"
 
 import type {
+  Account,
+  AnnualPlan,
   AnonymousCounts,
   Attendance,
+  CalendarOccasion,
   DataRequest,
-  GuardianRelationship,
-  HomeworkAssignment,
-  HomeworkCompletion,
-  Lesson,
+  Guardianship,
   Instant,
-  LocalDate,
-  MeetingSchedule,
-  MeetingSession,
+  Lesson,
   Membership,
   Person,
   Role,
+  RoleAssignment,
+  Schedule,
   Service,
+  ServiceDaysOff,
+  Session,
   SessionEvent,
   Stage,
-  StaffAssignment,
-  User,
+  Task,
+  TaskCompletion,
   Uuid,
 } from "@/lib/domain/types"
 
 import { seed } from "./seed"
 
-/**
- * The prototype's in-memory database. It lives in the Next.js server process
- * (on globalThis, so it survives hot reloads in development) and is rebuilt
- * from the deterministic seed when the server restarts or someone resets the
- * demo data. Nothing here is persisted; the Symfony API replaces it.
- */
-export type GeneratorRun = {
-  ranAt: Instant
-  today: LocalDate
-  tomorrow: LocalDate
-  created: number
-  existing: number
-}
-
 export type State = {
   services: Service[]
-  /**
-   * Each service's identity colour slot (1–8), fixed when the service is
-   * created, so deleting one never repaints the others. A display detail of
-   * the prototype: the API may store a colour or leave it to the client.
-   */
   serviceTones: Record<Uuid, number>
   stages: Stage[]
   persons: Person[]
   memberships: Membership[]
-  schedules: MeetingSchedule[]
-  sessions: MeetingSession[]
+  accounts: Account[]
+  guardianships: Guardianship[]
+  roles: Role[]
+  assignments: RoleAssignment[]
+  schedules: Schedule[]
+  plans: AnnualPlan[]
+  sessions: Session[]
   events: SessionEvent[]
   attendance: Attendance[]
-  users: User[]
-  /** The church's roles. Each account keeps what its roles allow in `permissions`. */
-  roles: Role[]
-  /** Where staff accounts serve; roles with the `assignedGroups` scope hold only there. */
-  assignments: StaffAssignment[]
-  guardians: GuardianRelationship[]
+  occasions: CalendarOccasion[]
+  daysOff: ServiceDaysOff[]
   lessons: Lesson[]
-  homework: HomeworkAssignment[]
-  completions: HomeworkCompletion[]
-  /** Data protection requests (copy or erasure), with their outcome. */
+  tasks: Task[]
+  completions: TaskCompletion[]
   dataRequests: DataRequest[]
-  /** Per session: attendance of people whose data was erased, as numbers only. */
   anonymousCounts: Record<Uuid, AnonymousCounts>
-  generatorRuns: GeneratorRun[]
   seededAt: Instant
 }
 
-const holder = globalThis as typeof globalThis & { __khmkMockState?: State }
+export type DemoData = "church" | "empty"
+
+const holder = globalThis as typeof globalThis & { __khmkState?: State }
 
 export function getState(): State {
-  holder.__khmkMockState ??= seed()
-  return holder.__khmkMockState
+  holder.__khmkState ??= seed("church")
+
+  return holder.__khmkState
 }
 
-export function resetState(): State {
-  holder.__khmkMockState = seed()
-  return holder.__khmkMockState
+export function resetState(data: DemoData = "church"): State {
+  holder.__khmkState = seed(data)
+
+  return holder.__khmkState
 }

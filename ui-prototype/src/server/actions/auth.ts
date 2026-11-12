@@ -3,104 +3,68 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { getLocale, getTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 import { z } from "zod"
 
 import { isLocale, LOCALE_COOKIE, LOCALE_COOKIE_OPTIONS } from "@/i18n/config"
 import { msg } from "@/i18n/message"
-import { authenticate, confirmEmail, register } from "@/server/mock/commands/accounts"
-import { openState } from "@/server/mock/runtime"
-import { OUTCOME_COOKIE, rememberOutcome } from "@/server/outcome"
+import { authenticate, changeOwnPassword } from "@/server/mock/commands/accounts"
+import { getState } from "@/server/mock/state"
 import { homeOf } from "@/server/request"
-import { PERSONA_COOKIE } from "@/server/viewer"
+import { SESSION_COOKIE } from "@/server/viewer"
 
-import { runPublic, text } from "./run"
+import { runDuringPasswordChange } from "./run"
 
-/**
- * Signing in, registering and signing out. The prototype's session is a
- * cookie with the account id; the Symfony API will issue the real session
- * (see the backend architecture: tokens or cookies).
- */
-
-const SESSION_COOKIE = { httpOnly: true, sameSite: "lax", path: "/" } as const
+const SESSION = { httpOnly: true, sameSite: "lax", path: "/" } as const
 
 export type SignInState = { error: string | null }
 
 export async function signInAction(input: {
-  email: string
+  username: string
   password: string
 }): Promise<SignInState> {
-  const { email, password } = z
-    .object({ email: z.string().max(200), password: z.string().max(200) })
+  const { username, password } = z
+    .object({ username: z.string().max(200), password: z.string().max(200) })
     .parse(input)
   const t = await getTranslations("auth.signIn")
-  const result = authenticate(openState(), email, password)
+  const s = getState()
+  const result = authenticate(s, username, password)
+
   if (!result.ok) {
-    if (result.reason === "unconfirmed" || result.reason === "pending") {
-      await rememberOutcome(result.reason)
-      redirect(`/sign-in/${result.reason}`)
-    }
-    return { error: result.reason === "disabled" ? t("disabled") : t("wrong") }
+    return { error: t("wrong") }
   }
+
   const store = await cookies()
-  store.set(PERSONA_COOKIE, result.user.id, SESSION_COOKIE)
-  store.delete(OUTCOME_COOKIE)
-  // The language chosen on another device comes along.
-  if (result.user.language && isLocale(result.user.language)) {
-    store.set(LOCALE_COOKIE, result.user.language, LOCALE_COOKIE_OPTIONS)
+  store.set(SESSION_COOKIE, result.account.id, SESSION)
+
+  if (result.account.language && isLocale(result.account.language)) {
+    store.set(LOCALE_COOKIE, result.account.language, LOCALE_COOKIE_OPTIONS)
   }
+
   revalidatePath("/", "layout")
-  redirect(homeOf(result.user))
+  redirect(result.account.mustChangePassword ? "/change-password" : homeOf(s, result.account))
 }
 
-const registration = z.object({
-  firstName: text,
-  lastName: text,
-  email: z.string().max(300),
-  password: z.string().max(300),
-  as: z.enum(["parent", "servant", "member"]),
-  details: text,
-  serviceId: z.uuid().nullable().optional(),
-  acceptPrivacy: z.boolean(),
+const passwords = z.object({
+  current: z.string().max(300),
+  next: z.string().max(300),
+  confirmation: z.string().max(300),
 })
 
-/**
- * Creates an account that waits for its email address to be confirmed, then for an administrator.
- * Nothing is signed in. Prototype only: the answer carries the token of the confirmation link,
- * which the thank-you page shows because no email is sent.
- */
-export async function registerAction(input: z.input<typeof registration>) {
-  const data = registration.parse(input)
-  const locale = await getLocale()
-  const result = await runPublic((s) => {
-    const user = register(s, { ...data, language: isLocale(locale) ? locale : "en" })
-    return { email: user.email, token: user.emailConfirmation?.token ?? null }
-  }, msg("toast.registered"))
-  if (result.ok) await rememberOutcome("registered")
-  return result
-}
+export async function changePasswordAction(input: z.input<typeof passwords>) {
+  const data = passwords.parse(input)
 
-/** Confirms a registration's email address with the token from its link. */
-export async function confirmEmailAction(token: string): Promise<{ confirmed: boolean }> {
-  const parsed = z.string().max(200).safeParse(token)
-  const confirmed = parsed.success && confirmEmail(openState(), parsed.data)
-  if (confirmed) revalidatePath("/", "layout")
-  return { confirmed }
-}
+  return runDuringPasswordChange((ctx) => {
+    const required = ctx.viewer.mustChangePassword
+    changeOwnPassword(ctx.state, ctx.viewer, data.current, data.next, data.confirmation)
 
-/**
- * Asks for a link to choose a new password. The answer is the same whether
- * or not an account exists, so the form can't be used to find out who has one.
- * The prototype sends no email.
- */
-export async function forgotPasswordAction(email: string) {
-  z.string().max(300).parse(email)
-  return { ok: true as const }
+    return { home: required ? homeOf(ctx.state, ctx.viewer) : null }
+  }, msg("toast.passwordChanged"))
 }
 
 export async function signOutAction() {
   const store = await cookies()
-  store.delete(PERSONA_COOKIE)
+  store.delete(SESSION_COOKIE)
   revalidatePath("/", "layout")
   redirect("/sign-in")
 }

@@ -1,7 +1,5 @@
 import { cn } from "cn"
 
-import type { ServiceRef } from "@/lib/view-models"
-
 /** Identity colour of a service (slot 1–8). Only ever a small square next to the name. */
 export function ServiceSwatch({ tone, className }: { tone: number; className?: string }) {
   return (
@@ -19,7 +17,7 @@ export function ServiceTag({
   label,
   className,
 }: {
-  service: Pick<ServiceRef, "name" | "tone">
+  service: { name: string; tone: number }
   label?: React.ReactNode
   className?: string
 }) {

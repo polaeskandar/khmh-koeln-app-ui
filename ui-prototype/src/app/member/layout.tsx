@@ -1,12 +1,30 @@
 import { getTranslations } from "next-intl/server"
 
-import { MemberShell } from "@/features/member/member-shell"
+import { PortalShell } from "@/components/portal/portal-shell"
+import { getMemberContext, getShellData } from "@/server/request"
 
 export async function generateMetadata() {
-  const t = await getTranslations("member.meta")
-  return { title: { default: t("title"), template: "%s · KHMK Köln" } }
+  return {
+    title: {
+      default: (await getTranslations("portal"))("memberTitle"),
+      template: "%s · KHMK Köln",
+    },
+  }
 }
 
-export default function MemberLayout({ children }: LayoutProps<"/member">) {
-  return <MemberShell>{children}</MemberShell>
+export default async function MemberLayout({ children }: LayoutProps<"/member">) {
+  await getMemberContext()
+  const shell = await getShellData()
+  const t = await getTranslations("portal")
+
+  return (
+    <PortalShell
+      base="/member"
+      viewer={shell.viewer}
+      personas={shell.personas}
+      title={t("memberTitle")}
+    >
+      {children}
+    </PortalShell>
+  )
 }

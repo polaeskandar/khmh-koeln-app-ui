@@ -1,5 +1,14 @@
 import type { LucideIcon } from "lucide-react"
-import { Ban, CalendarClock, CheckCheck, CircleDashed, MoveRight, Sparkle } from "lucide-react"
+import {
+  Archive,
+  Ban,
+  CalendarClock,
+  CheckCheck,
+  CircleDashed,
+  Megaphone,
+  MoveRight,
+  Sparkle,
+} from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
@@ -81,18 +90,19 @@ export function SessionStatusBadge({
   className,
   title,
 }: {
-  status: SessionStatus | "planned"
+  status: SessionStatus
   soft?: boolean
   className?: string
   title?: string
 }) {
   const t = useTranslations("status")
   const props = { soft, className, title }
+
   switch (status) {
-    case "active":
+    case "open":
       return (
         <StatusBadge tone="success" live {...props}>
-          {t("active")}
+          {t("open")}
         </StatusBadge>
       )
     case "scheduled":
@@ -101,10 +111,10 @@ export function SessionStatusBadge({
           {t("scheduled")}
         </StatusBadge>
       )
-    case "completed":
+    case "closed":
       return (
         <StatusBadge tone="neutral" icon={CheckCheck} {...props}>
-          {t("completed")}
+          {t("closed")}
         </StatusBadge>
       )
     case "canceled":
@@ -113,29 +123,79 @@ export function SessionStatusBadge({
           {t("canceled")}
         </StatusBadge>
       )
-    case "planned":
-      return (
-        <StatusBadge tone="muted" icon={CircleDashed} dashed {...props}>
-          {t("planned")}
-        </StatusBadge>
-      )
   }
 }
 
-export function MovedBadge({ className }: { className?: string }) {
+export function RescheduledBadge({ className }: { className?: string }) {
   const t = useTranslations("status")
+
   return (
     <StatusBadge tone="info" icon={MoveRight} className={className}>
-      {t("moved")}
+      {t("rescheduled")}
     </StatusBadge>
   )
 }
 
 export function OneOffBadge({ className }: { className?: string }) {
   const t = useTranslations("status")
+
   return (
     <StatusBadge tone="muted" icon={Sparkle} className={className}>
       {t("oneOff")}
+    </StatusBadge>
+  )
+}
+
+export function DraftBadge({ className, label }: { className?: string; label?: string }) {
+  const t = useTranslations("status")
+
+  return (
+    <StatusBadge tone="warning" icon={CircleDashed} dashed className={className}>
+      {label ?? t("draft")}
+    </StatusBadge>
+  )
+}
+
+export function LessonStatusBadge({ status }: { status: "draft" | "ready" | "published" }) {
+  const t = useTranslations("status.lesson")
+
+  if (status === "published") {
+    return (
+      <StatusBadge tone="success" icon={Megaphone}>
+        {t("published")}
+      </StatusBadge>
+    )
+  }
+
+  return status === "ready" ? (
+    <StatusBadge tone="info" icon={CheckCheck}>
+      {t("ready")}
+    </StatusBadge>
+  ) : (
+    <StatusBadge tone="warning" icon={CircleDashed} dashed>
+      {t("draft")}
+    </StatusBadge>
+  )
+}
+
+export function TaskStatusBadge({ status }: { status: "draft" | "published" | "archived" }) {
+  const t = useTranslations("status.task")
+
+  if (status === "published") {
+    return (
+      <StatusBadge tone="success" icon={Megaphone}>
+        {t("published")}
+      </StatusBadge>
+    )
+  }
+
+  return status === "archived" ? (
+    <StatusBadge tone="muted" icon={Archive}>
+      {t("archived")}
+    </StatusBadge>
+  ) : (
+    <StatusBadge tone="warning" icon={CircleDashed} dashed>
+      {t("draft")}
     </StatusBadge>
   )
 }

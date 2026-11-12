@@ -1,252 +1,244 @@
-/**
- * Registration, sign-in and approval: a new registration reaches the office once its email
- * address is confirmed, the account can't be used until an administrator approves it, and
- * declined registrations leave nothing behind.
- */
-import { describe, expect, test, vi } from "vitest"
+import { describe, expect, test } from "vitest"
 
-import { DEFAULT_ROLES, isActiveAccount } from "@/lib/domain/policy"
-import type { User } from "@/lib/domain/types"
+import { DEFAULT_ROLES, ROLE_IDS } from "@/lib/domain/policy"
 import { ProblemError } from "@/server/errors"
-import { getAccountRequests } from "@/server/queries/accounts"
-import { contextFor } from "@/test/context"
+import { accountNamed, contextFor } from "@/test/context"
 
-import { DEMO_START, resetClock } from "./clock"
+import { assignRole, createRole, removeAssignment, updateRole } from "./commands/access"
 import {
-  approveAccount,
   authenticate,
-  confirmEmail,
-  declineAccount,
-  register,
-  type RegistrationInput,
+  changeOwnPassword,
+  createAccount,
+  deleteAccount,
+  resetPassword,
 } from "./commands/accounts"
 import { DEMO_PASSWORD } from "./passwords"
 import { seed } from "./seed"
-import { childrenOf } from "./selectors"
 
-function problemOf(command: () => unknown) {
+const statusOf = (fn: () => unknown) => {
   try {
-    command()
-    return null
-  } catch (e) {
-    if (e instanceof ProblemError) return e.problem
-    throw e
-  }
-}
-
-function demo() {
-  const s = seed()
-  const user = (email: string) => s.users.find((x) => x.email === email)!
-  return {
-    s,
-    admin: user("mariam.fahmy@example.org"),
-    leader: user("christine.adel@example.org"),
-    mina: s.persons.find((p) => p.firstName === "Mina" && p.lastName === "Hanna")!,
-    youth: s.services.find((x) => x.name === "Youth Meeting")!,
-    servant: s.roles.find((r) => r.name === "Servant")!,
-    parentRole: s.roles.find((r) => r.name === "Parent")!,
-  }
-}
-
-const parent: RegistrationInput = {
-  firstName: "Sara",
-  lastName: "Hanna",
-  email: "Sara.Hanna@Example.org ",
-  password: "a long enough password",
-  as: "parent",
-  details: "Mina Hanna, 3rd Class",
-  language: "de",
-  acceptPrivacy: true,
-}
-
-const tokenOf = (user: User) => user.emailConfirmation!.token
-
-async function requestedNames(t: ReturnType<typeof demo>) {
-  const requests = await getAccountRequests(contextFor(t.s, t.admin))
-  return requests!.requests.map((r) => r.name)
-}
-
-describe("registration", () => {
-  test("a new account confirms its email address, then waits for approval", async () => {
-    const t = demo()
-    const user = register(t.s, parent)
-    expect(user.email).toBe("sara.hanna@example.org")
-    expect(user.roleIds).toEqual([])
-    expect(user.permissions).toEqual([])
-    expect(isActiveAccount(user)).toBe(false)
-    expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password")).toEqual({
-      ok: false,
-      reason: "unconfirmed",
-    })
-    expect(await requestedNames(t)).not.toContain("Sara Hanna")
-
-    expect(confirmEmail(t.s, tokenOf(user))).toBe(true)
-    expect(user.emailConfirmation).toBeNull()
-    expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password")).toEqual({
-      ok: false,
-      reason: "pending",
-    })
-    expect(await requestedNames(t)).toContain("Sara Hanna")
-  })
-
-  test("a link works once and for 7 days", () => {
-    vi.useFakeTimers()
-    vi.stubEnv("KHMK_DEMO_CLOCK", "running")
-    try {
-      vi.setSystemTime(DEMO_START)
-      resetClock()
-      const t = demo()
-      const late = register(t.s, parent)
-      const onTime = register(t.s, { ...parent, email: "hanna.family@example.org" })
-      const lateToken = tokenOf(late)
-      const onTimeToken = tokenOf(onTime)
-
-      vi.setSystemTime(DEMO_START + 7 * 86_400_000 - 60_000)
-      expect(confirmEmail(t.s, onTimeToken)).toBe(true)
-      expect(confirmEmail(t.s, onTimeToken)).toBe(false)
-      vi.setSystemTime(DEMO_START + 7 * 86_400_000)
-      expect(confirmEmail(t.s, lateToken)).toBe(false)
-      expect(confirmEmail(t.s, "")).toBe(false)
-      expect(late.emailConfirmedAt).toBeNull()
-    } finally {
-      vi.useRealTimers()
-      vi.unstubAllEnvs()
+    fn()
+  } catch (error) {
+    if (error instanceof ProblemError) {
+      return error.problem.status
     }
+
+    throw error
+  }
+
+  return "ok"
+}
+
+const problemOf = (fn: () => unknown) => {
+  try {
+    fn()
+  } catch (error) {
+    if (error instanceof ProblemError) {
+      return error.problem.detail?.key
+    }
+
+    throw error
+  }
+
+  return "ok"
+}
+
+const andrew = (s: ReturnType<typeof seed>) => s.persons.find((p) => p.firstName === "Andrew")!
+
+const servantFor = (s: ReturnType<typeof seed>) => {
+  const second = s.stages.find((x) => x.name === "2nd Class")!
+
+  return [
+    {
+      roleId: ROLE_IDS.servant,
+      scope: { type: "stage" as const, serviceId: second.serviceId, stageId: second.id },
+    },
+  ]
+}
+
+describe("signing in with a username", () => {
+  test("usernames are compared without case and spaces", () => {
+    const s = seed("church")
+
+    expect(authenticate(s, "  Daniel.Michael ", DEMO_PASSWORD).ok).toBe(true)
   })
 
-  test("registering again sends a new link that voids the older one", async () => {
-    const t = demo()
-    const user = register(t.s, parent)
-    const first = tokenOf(user)
-    const count = t.s.users.length
-    const again = register(t.s, { ...parent, firstName: "Sarah", password: "another password" })
-    expect(again).toBe(user)
-    expect(t.s.users.length).toBe(count)
-    expect(user.displayName).toBe("Sara Hanna")
-    expect(tokenOf(user)).not.toBe(first)
+  test("an unknown username and a wrong password get the same answer", () => {
+    const s = seed("church")
 
-    expect(confirmEmail(t.s, first)).toBe(false)
-    expect(confirmEmail(t.s, tokenOf(user))).toBe(true)
-    expect(authenticate(t.s, user.email, "a long enough password")).toEqual({
-      ok: false,
-      reason: "pending",
-    })
-    const problem = problemOf(() => register(t.s, parent))
-    expect(Object.keys(problem?.fieldErrors ?? {})).toEqual(["email"])
-  })
-
-  test("a wrong password and an unknown email get the same answer", () => {
-    const t = demo()
-    register(t.s, parent)
-    expect(authenticate(t.s, "sara.hanna@example.org", "wrong password")).toEqual({
-      ok: false,
-      reason: "wrong",
-    })
-    expect(authenticate(t.s, "nobody@example.org", "wrong password")).toEqual({
-      ok: false,
-      reason: "wrong",
-    })
-  })
-
-  test("checks every field at once", () => {
-    const t = demo()
-    const problem = problemOf(() =>
-      register(t.s, {
-        ...parent,
-        email: "christine.adel@example.org",
-        password: "short",
-        details: " ",
-        acceptPrivacy: false,
-      })
-    )
-    expect(problem?.status).toBe(422)
-    expect(Object.keys(problem?.fieldErrors ?? {}).sort()).toEqual([
-      "acceptPrivacy",
-      "details",
-      "email",
-      "password",
-    ])
-  })
-
-  test("servants say which service they serve in", () => {
-    const t = demo()
-    const problem = problemOf(() =>
-      register(t.s, { ...parent, as: "servant", details: "Youth", serviceId: null })
-    )
-    expect(Object.keys(problem?.fieldErrors ?? {})).toEqual(["serviceId"])
+    expect(authenticate(s, "nobody.here", DEMO_PASSWORD)).toEqual({ ok: false })
+    expect(authenticate(s, "daniel.michael", "wrong-password")).toEqual({ ok: false })
   })
 })
 
-describe("approval", () => {
-  test("approving a parent links the children and gives the roles; then they can sign in", () => {
-    const t = demo()
-    const user = register(t.s, parent)
-    approveAccount(t.s, t.admin, user.id, {
-      as: "parent",
-      childIds: [t.mina.id],
-      roleIds: [t.parentRole.id],
+describe("accounts created by the office", () => {
+  test("an administrator links a new account to an existing person and it must change its password", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const persons = s.persons.length
+    const created = createAccount(mariam, {
+      personId: andrew(s).id,
+      firstName: "",
+      lastName: "",
+      username: "Andrew.Samir",
+      temporaryPassword: "olive-cedar-lamp-27",
+      roles: servantFor(s),
+      groups: [],
+      childIds: [],
     })
-    expect(childrenOf(t.s, user.id).map((p) => p.id)).toEqual([t.mina.id])
-    expect(user.roleIds).toEqual([t.parentRole.id])
-    expect(user.permissions).toEqual(["parentPortal:read"])
-    expect(user.registration).toBeNull()
-    const result = authenticate(t.s, "sara.hanna@example.org", "a long enough password")
-    expect(result.ok).toBe(true)
+    const account = accountNamed(s, "andrew.samir")
+
+    expect(created.username).toBe("andrew.samir")
+    expect(s.persons.length).toBe(persons)
+    expect(account.mustChangePassword).toBe(true)
+    expect(JSON.stringify(s)).not.toContain("olive-cedar-lamp-27")
   })
 
-  test("approving a servant gives the chosen roles", () => {
-    const t = demo()
-    const user = register(t.s, { ...parent, as: "servant", serviceId: t.youth.id })
-    const none = problemOf(() =>
-      approveAccount(t.s, t.admin, user.id, { as: "servant", roleIds: [] })
-    )
-    expect(none?.fieldErrors).toHaveProperty("roleIds")
-    const unknown = problemOf(() =>
-      approveAccount(t.s, t.admin, user.id, {
-        as: "servant",
-        roleIds: ["019a3f00-0000-7000-8000-0000000000ff"],
-      })
-    )
-    expect(unknown?.fieldErrors).toHaveProperty("roleIds")
-    approveAccount(t.s, t.admin, user.id, { as: "servant", roleIds: [t.servant.id] })
-    expect(user.roleIds).toEqual([t.servant.id])
-    expect(user.permissions).toEqual(DEFAULT_ROLES[2].permissions)
-  })
+  test("a username can only be used once", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
 
-  test("approving needs Accounts: Add, and a parent needs a child and a role", () => {
-    const t = demo()
-    const user = register(t.s, parent)
     expect(
-      problemOf(() =>
-        approveAccount(t.s, t.leader, user.id, {
-          as: "parent",
-          childIds: [t.mina.id],
-          roleIds: [t.parentRole.id],
+      statusOf(() =>
+        createAccount(mariam, {
+          personId: null,
+          firstName: "Daniel",
+          lastName: "Other",
+          username: "DANIEL.MICHAEL",
+          temporaryPassword: "olive-cedar-lamp-27",
+          roles: servantFor(s),
+          groups: [],
+          childIds: [],
         })
-      )?.status
-    ).toBe(403)
-    const problem = problemOf(() =>
-      approveAccount(t.s, t.admin, user.id, { as: "parent", childIds: [], roleIds: [] })
-    )
-    expect(problem?.status).toBe(422)
-    expect(Object.keys(problem?.fieldErrors ?? {})).toEqual(["childIds", "roleIds"])
+      )
+    ).toBe(422)
   })
 
-  test("declining deletes the account and what the person entered", () => {
-    const t = demo()
-    const user = register(t.s, parent)
-    declineAccount(t.s, t.admin, user.id)
-    expect(t.s.users.find((u) => u.id === user.id)).toBeUndefined()
-    expect(authenticate(t.s, "sara.hanna@example.org", "a long enough password").ok).toBe(false)
-  })
-
-  test("the demo accounts sign in with the demo password; waiting ones don't", () => {
-    const t = demo()
-    expect(authenticate(t.s, "daniel.michael@example.org", DEMO_PASSWORD).ok).toBe(true)
-    const waiting = t.s.users.filter((u) => u.approvedAt === null)
-    expect(waiting.map((u) => u.registration?.as).sort()).toEqual(["parent", "servant"])
-    for (const u of waiting) {
-      expect(authenticate(t.s, u.email, DEMO_PASSWORD)).toEqual({ ok: false, reason: "pending" })
+  test("the church office creates parent and member accounts but can't give servant roles", () => {
+    const s = seed("church")
+    const sara = contextFor(s, accountNamed(s, "sara.wissa"))
+    const input = {
+      personId: andrew(s).id,
+      firstName: "",
+      lastName: "",
+      username: "andrew.samir",
+      temporaryPassword: "olive-cedar-lamp-27",
+      groups: [],
+      childIds: [],
     }
+
+    expect(statusOf(() => createAccount(sara, { ...input, roles: servantFor(s) }))).toBe(403)
+    expect(
+      statusOf(() =>
+        createAccount(sara, {
+          ...input,
+          roles: [{ roleId: ROLE_IDS.member, scope: { type: "church" } }],
+        })
+      )
+    ).toBe("ok")
+  })
+
+  test("the first password change is required and must differ from the temporary one", () => {
+    const s = seed("church")
+    const rebecca = accountNamed(s, "rebecca.habib")
+
+    expect(rebecca.mustChangePassword).toBe(true)
+    expect(
+      statusOf(() => changeOwnPassword(s, rebecca, DEMO_PASSWORD, DEMO_PASSWORD, DEMO_PASSWORD))
+    ).toBe(422)
+    changeOwnPassword(
+      s,
+      rebecca,
+      DEMO_PASSWORD,
+      "Psalm 23 is my favourite",
+      "Psalm 23 is my favourite"
+    )
+    expect(rebecca.mustChangePassword).toBe(false)
+    expect(authenticate(s, "rebecca.habib", "Psalm 23 is my favourite").ok).toBe(true)
+  })
+
+  test("a reset gives a new temporary password that must be changed again", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    resetPassword(mariam, accountNamed(s, "daniel.michael").id, "new-temporary-1")
+
+    expect(accountNamed(s, "daniel.michael").mustChangePassword).toBe(true)
+    expect(authenticate(s, "daniel.michael", DEMO_PASSWORD).ok).toBe(false)
+  })
+
+  test("the office can't reset or delete an account that may do more than the office", () => {
+    const s = seed("church")
+    const sara = contextFor(s, accountNamed(s, "sara.wissa"))
+
+    expect(
+      statusOf(() => resetPassword(sara, accountNamed(s, "mariam.fahmy").id, "new-temporary-1"))
+    ).toBe(403)
+    expect(statusOf(() => deleteAccount(sara, accountNamed(s, "christine.adel").id))).toBe(403)
+    expect(statusOf(() => deleteAccount(sara, accountNamed(s, "hoda.farag").id))).toBe("ok")
+  })
+
+  test("deleting an account keeps the person and what the account did", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const daniel = accountNamed(s, "daniel.michael")
+    const lessons = s.lessons.filter((l) => l.responsibleId === daniel.id).length
+    deleteAccount(mariam, daniel.id)
+
+    expect(s.accounts.some((a) => a.id === daniel.id)).toBe(false)
+    expect(s.persons.some((p) => p.id === daniel.personId)).toBe(true)
+    expect(s.assignments.some((a) => a.accountId === daniel.id)).toBe(false)
+    expect(lessons).toBeGreaterThan(0)
+    expect(JSON.stringify(s)).not.toContain(daniel.id)
+  })
+})
+
+describe("roles and where they apply", () => {
+  test("nobody changes their own roles and nobody gives more than they have", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const sara = contextFor(s, accountNamed(s, "sara.wissa"))
+
+    expect(
+      statusOf(() => assignRole(mariam, mariam.viewer.id, ROLE_IDS.parent, { type: "church" }))
+    ).toBe(403)
+    expect(
+      statusOf(() =>
+        assignRole(sara, accountNamed(s, "hoda.farag").id, ROLE_IDS.administrator, {
+          type: "church",
+        })
+      )
+    ).toBe(403)
+  })
+
+  test("a role with administration permissions is given only for the whole church", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const youth = s.services.find((x) => x.name === "Youth Gathering")!
+
+    expect(
+      statusOf(() =>
+        assignRole(mariam, accountNamed(s, "mark.shenouda").id, ROLE_IDS.administrator, {
+          type: "service",
+          serviceId: youth.id,
+        })
+      )
+    ).toBe(422)
+  })
+
+  test("the last person who manages access keeps that permission", () => {
+    const s = seed("church")
+    const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
+    const christine = contextFor(s, accountNamed(s, "christine.adel"))
+    const everything = DEFAULT_ROLES.find((r) => r.id === ROLE_IDS.administrator)!.permissions
+    const team = createRole(mariam, "Office lead", everything)
+    assignRole(mariam, christine.viewer.id, team.id, { type: "church" })
+    const administrator = s.assignments.find(
+      (a) => a.accountId === mariam.viewer.id && a.roleId === ROLE_IDS.administrator
+    )!
+    removeAssignment(christine, administrator.id)
+
+    expect(
+      problemOf(() => updateRole(christine, team.id, "Office lead", ["accounts.manage"]))
+    ).toBe("errors.access.lastAccessManager")
   })
 })

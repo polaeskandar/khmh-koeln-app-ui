@@ -1,189 +1,57 @@
 import type {
-  Instant,
   LocalDate,
   LocalTime,
-  Permission,
-  PersonStatus,
-  Recurrence,
-  RosterMode,
-  SessionEventType,
+  OccasionCategory,
+  SessionKind,
   SessionStatus,
   Uuid,
 } from "@/lib/domain/types"
 
-/**
- * Read models the pages render. They are what a "backend for frontend" call
- * would return: plain, serializable, with permissions already resolved for
- * the signed-in person.
- */
-
-export type ServiceRef = { id: Uuid; name: string; tone: number; archived: boolean }
-export type StageRef = { id: Uuid; name: string; archived: boolean }
-export type UserRef = { id: Uuid; name: string; initials: string }
-export type PersonRef = {
-  id: Uuid
-  firstName: string
-  lastName: string
-  displayName: string | null
-  /** Display name and last name if a display name is set, otherwise the full name. */
+export type UnitRef = {
+  serviceId: Uuid
+  stageId: Uuid | null
+  serviceName: string
+  stageName: string | null
   name: string
-  fullName: string
-  initials: string
-  status: PersonStatus
+  tone: number
 }
 
-export type Counts = {
-  present: number
-  rosterSize: number | null
-  rosterPresent: number
-  notMarked: number
-  notOnRoster: number
+export type PersonRef = { id: Uuid; name: string; initials: string; lastName: string }
+
+export type AccountRef = { id: Uuid; name: string; username: string }
+
+export type OccasionRef = {
+  id: Uuid
+  key: string | null
+  name: string | null
+  category: OccasionCategory
 }
 
 export type SessionCard = {
-  kind: "session"
   id: Uuid
-  title: string
-  /** The stage name, or the service name for service-wide sessions. */
-  group: string
-  /** Sort key within a service: the stage's display position, -1 for service-wide sessions. */
-  order: number
-  service: ServiceRef
-  stage: StageRef | null
-  scheduleId: Uuid | null
+  unit: UnitRef
   date: LocalDate
-  occurrenceDate: LocalDate
   startTime: LocalTime
   endTime: LocalTime | null
-  startsAt: Instant
   location: string | null
   status: SessionStatus
-  rosterMode: RosterMode
-  moved: boolean
-  oneOff: boolean
+  kind: SessionKind
   cancelReason: string | null
-  counts: Counts
-  openedAt: Instant | null
-  closedAt: Instant | null
-  closedBy: UserRef | null
-  can: { record: boolean; manage: boolean; reopen: boolean }
-}
-
-/** A future date of a schedule that has no session yet; it is created the day before. */
-export type PlannedOccurrence = {
-  kind: "planned"
-  key: string
-  scheduleId: Uuid
-  title: string
-  group: string
-  order: number
-  service: ServiceRef
-  stage: StageRef | null
-  date: LocalDate
-  startTime: LocalTime
-  endTime: LocalTime | null
-  location: string | null
-  rosterMode: RosterMode
-  rosterSize: number | null
-  createdOn: LocalDate
-  can: { manage: boolean }
-}
-
-export type AgendaItem = SessionCard | PlannedOccurrence
-
-export type ScheduleSummary = {
-  id: Uuid
-  name: string
-  description: string | null
-  service: ServiceRef
-  stage: StageRef | null
-  group: string
-  recurrence: Recurrence
-  startTime: LocalTime
-  endTime: LocalTime | null
-  location: string | null
-  rosterMode: RosterMode
-  rosterSize: number | null
-  active: boolean
-  next: {
-    date: LocalDate
-    startTime: LocalTime
-    status: SessionStatus | "planned"
-    moved: boolean
-  } | null
-  sessionCount: number
-  can: { manage: boolean }
-}
-
-export type HistoryEntry = {
-  id: string
-  type: SessionEventType | "created"
-  at: Instant
-  actor: UserRef | null
-  /** A reason someone wrote (cancel, reopen). */
-  note: string | null
-  /** What the system knows: how the session was created, or where a moved session was before. */
-  detail: { kind: "fromSchedule" } | { kind: "byHand" } | { kind: "movedFrom"; at: Instant } | null
-}
-
-export type AttendanceEntry = {
-  id: Uuid
-  person: PersonRef
-  recordedAt: Instant
-  recordedBy: UserRef | null
-  removedAt: Instant | null
-  removedBy: UserRef | null
-  removalReason: string | null
-  onRoster: boolean
-}
-
-export type Membership = {
-  id: Uuid
-  service: ServiceRef
-  stage: StageRef | null
-  startsOn: LocalDate
-  endsOn: LocalDate | null
+  occasion: OccasionRef | null
+  changedByHand: boolean
+  originalDate: LocalDate | null
+  present: number
+  roster: number
+  canRecord: boolean
+  canManage: boolean
 }
 
 export type ViewerInfo = {
   id: Uuid
   name: string
+  firstName: string
   initials: string
-  email: string
+  username: string
   roleSummary: string
-  /** The account's roles, the ones that allow the most first. */
-  roles: { id: Uuid; name: string }[]
-  /** What its roles allow together; the UI hides what the account can't do. */
-  permissions: Permission[]
-  /** Its roles let it see the services, which opens the church app. */
-  isStaff: boolean
-  /** Its roles open the parent portal (which children it shows depends on parent access). */
-  isParent: boolean
-  /** The account is linked to the person's own member record: the member portal shows their groups. */
-  isMember: boolean
-  /**
-   * The groups the linked record is in today. Staff and parents get a link to the member portal
-   * only when there is at least one: a servant's own record is often in no group.
-   */
-  memberGroups: number
-}
-
-/** Does the account have the member portal? Its start page for members, a link for others in a group. */
-export function hasMemberPortal(
-  v: Pick<ViewerInfo, "isMember" | "memberGroups" | "isStaff" | "isParent">
-) {
-  return v.isMember && (v.memberGroups > 0 || (!v.isStaff && !v.isParent))
-}
-
-/** Chronological, then by service, then in the stages' display order. */
-export function compareAgenda(
-  a: { date: LocalDate; startTime: LocalTime; service: ServiceRef; order: number; group: string },
-  b: { date: LocalDate; startTime: LocalTime; service: ServiceRef; order: number; group: string }
-): number {
-  return (
-    `${a.date}T${a.startTime}`.localeCompare(`${b.date}T${b.startTime}`) ||
-    a.service.name.localeCompare(b.service.name, "de") ||
-    a.order - b.order ||
-    a.group.localeCompare(b.group, "de")
-  )
+  areas: { staff: boolean; parent: boolean; member: boolean }
 }

@@ -1,14 +1,7 @@
 import { type Message, msg } from "@/i18n/message"
 import { cleanName } from "@/lib/domain/names"
-import { type Action, can, type Resource } from "@/lib/domain/policy"
 import { isValidLocalDate, isValidLocalTime } from "@/lib/domain/time"
-import type { User } from "@/lib/domain/types"
-import { forbidden, invalid, notFound, type Thing } from "@/server/errors"
-
-/** Throws 403 unless one of the user's roles allows the action on the resource. */
-export function authorize(user: User, action: Action, resource: Resource, detail?: Message): void {
-  if (!can(user, action, resource)) throw forbidden(detail)
-}
+import { invalid, notFound, type Thing } from "@/server/errors"
 
 export function found<T>(value: T | undefined, what: Thing): T {
   if (value === undefined) throw notFound(what)

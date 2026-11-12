@@ -5,10 +5,6 @@ import { cn } from "cn"
 import { KhmkMark } from "@/components/brand/logo"
 import { PreferencesBar } from "@/components/preferences-menu"
 
-/**
- * The frame of the pages before sign-in: the church's mark, language and
- * appearance, the page, and a quieter side column on wide screens.
- */
 export function AuthFrame({
   children,
   aside,
@@ -58,7 +54,6 @@ export function AuthFrame({
   )
 }
 
-/** The heading block of an auth page. */
 export function AuthHeading({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">

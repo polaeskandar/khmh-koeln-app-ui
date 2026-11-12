@@ -3,73 +3,81 @@
 import { z } from "zod"
 
 import { msg } from "@/i18n/message"
-import { approveAccount, declineAccount, unlinkMember } from "@/server/mock/commands/accounts"
-import { assignGroup, assignmentNames, removeAssignment } from "@/server/mock/commands/assignments"
+import {
+  addAccountGroup,
+  changeUsername,
+  createAccount,
+  endAccountGroup,
+  resetPassword,
+  deleteAccount,
+} from "@/server/mock/commands/accounts"
+import { linkChild, unlinkChild } from "@/server/mock/commands/guardians"
 
-import { id, optionalId, run } from "./run"
+import { run } from "./run"
+import { scope, shortText, unit, uuid } from "./schemas"
 
-const assignment = z.object({ serviceId: optionalId, stageId: optionalId })
+const newAccount = z.object({
+  personId: uuid.nullable(),
+  firstName: shortText,
+  lastName: shortText,
+  username: shortText,
+  temporaryPassword: shortText,
+  roles: z.array(z.object({ roleId: uuid, scope })).max(20),
+  groups: z.array(unit).max(20),
+  childIds: z.array(uuid).max(20),
+})
 
-const approval = z.discriminatedUnion("as", [
-  z.object({
-    as: z.literal("parent"),
-    childIds: z.array(id).max(20),
-    roleIds: z.array(id).max(20),
-  }),
-  z.object({
-    as: z.literal("servant"),
-    roleIds: z.array(id).max(20),
-    assignments: z.array(assignment).max(20).optional(),
-  }),
-  z.object({
-    as: z.literal("member"),
-    personId: optionalId,
-    ageCheck: z.enum(["sixteenOrOlder", "guardianConsent"]).nullable(),
-    guardianConsentNote: z.string().max(1000).nullable().optional(),
-  }),
-])
+export async function createAccountAction(input: z.input<typeof newAccount>) {
+  const data = newAccount.parse(input)
 
-/** Approves a registration: links the children, gives the roles or links the member record. */
-export async function approveAccountAction(userId: string, input: z.input<typeof approval>) {
   return run(
-    ({ state, viewer }) =>
-      approveAccount(state, viewer, id.parse(userId), approval.parse(input)).displayName,
-    (name) => msg("toast.accountApproved", { name })
+    (ctx) => createAccount(ctx, data),
+    (r) => msg("toast.accountCreated", { name: r.name })
   )
 }
 
-/** Declines a registration; the account and what the person entered are deleted. */
-export async function declineAccountAction(userId: string) {
-  return run(
-    ({ state, viewer }) => declineAccount(state, viewer, id.parse(userId)).displayName,
-    (name) => msg("toast.accountDeclined", { name })
-  )
+export async function resetPasswordAction(accountId: string, temporaryPassword: string) {
+  const id = uuid.parse(accountId)
+  const password = shortText.parse(temporaryPassword)
+
+  return run((ctx) => resetPassword(ctx, id, password), msg("toast.passwordReset"))
 }
 
-/** Removes the link between a member account and its member record (administrators). */
-export async function unlinkMemberAction(userId: string) {
-  return run(
-    ({ state, viewer }) => unlinkMember(state, viewer, id.parse(userId)).displayName,
-    (name) => msg("toast.memberUnlinked", { name })
-  )
+export async function changeUsernameAction(accountId: string, username: string) {
+  const id = uuid.parse(accountId)
+  const value = shortText.parse(username)
+
+  return run((ctx) => changeUsername(ctx, id, value), msg("toast.usernameChanged"))
 }
 
-/** Assigns an account to a service (and all its stages) or to one stage. */
-export async function assignGroupAction(userId: string, input: z.input<typeof assignment>) {
-  return run(
-    ({ state, viewer }) => {
-      const created = assignGroup(state, viewer, id.parse(userId), assignment.parse(input))
-      return { id: created.id, ...assignmentNames(state, created) }
-    },
-    ({ name, where }) => msg("toast.groupAssigned", { name, where })
-  )
+export async function deleteAccountAction(accountId: string) {
+  const id = uuid.parse(accountId)
+
+  return run((ctx) => deleteAccount(ctx, id), msg("toast.accountDeleted"))
 }
 
-/** Takes an account out of a service or stage. */
-export async function removeAssignmentAction(assignmentId: string) {
-  return run(
-    ({ state, viewer }) =>
-      assignmentNames(state, removeAssignment(state, viewer, id.parse(assignmentId))),
-    ({ name, where }) => msg("toast.groupRemoved", { name, where })
-  )
+export async function addAccountGroupAction(accountId: string, group: z.input<typeof unit>) {
+  const id = uuid.parse(accountId)
+  const value = unit.parse(group)
+
+  return run((ctx) => addAccountGroup(ctx, id, value), msg("toast.groupAdded"))
+}
+
+export async function endAccountGroupAction(membershipId: string) {
+  const id = uuid.parse(membershipId)
+
+  return run((ctx) => endAccountGroup(ctx, id), msg("toast.groupRemoved"))
+}
+
+export async function linkChildAction(accountId: string, memberId: string) {
+  const id = uuid.parse(accountId)
+  const member = uuid.parse(memberId)
+
+  return run((ctx) => linkChild(ctx, id, member), msg("toast.childLinked"))
+}
+
+export async function unlinkChildAction(guardianshipId: string) {
+  const id = uuid.parse(guardianshipId)
+
+  return run((ctx) => unlinkChild(ctx, id), msg("toast.childUnlinked"))
 }

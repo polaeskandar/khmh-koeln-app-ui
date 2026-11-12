@@ -1,84 +1,109 @@
 import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
+import { Clock, MapPin } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
-import { PageHeader } from "@/components/page-header"
-import { SessionBadges, SessionWhen } from "@/components/session-bits"
-import { ServiceTag } from "@/components/service-tag"
-import { Button } from "@/components/ui/button"
+import { PageHeader, Section } from "@/components/page-header"
+import { ServiceSwatch } from "@/components/service-tag"
+import { useOccasionName } from "@/components/session-card"
+import { OneOffBadge, RescheduledBadge, SessionStatusBadge } from "@/components/status"
 import { AttendanceBoard } from "@/features/attendance/attendance-board"
-import { OpenAttendanceButton } from "@/features/attendance/take-attendance"
+import { SessionMenu } from "@/features/schedule/session-dialogs"
 import { getFormat } from "@/i18n/server"
-import { getAttendanceBoard } from "@/server/queries/attendance"
+import type { OccasionRef } from "@/lib/view-models"
+import { getSessionPage } from "@/server/queries/attendance"
 import { getStaffContext } from "@/server/request"
-import { isolate } from "@/lib/bidi"
 
-export async function generateMetadata() {
-  const t = await getTranslations("nav")
-  return { title: t("takeAttendance") }
+function OccasionText({
+  occasion,
+  label,
+}: {
+  occasion: OccasionRef
+  label: (name: string) => string
+}) {
+  const name = useOccasionName()
+
+  return <>{label(name(occasion))}</>
 }
 
-export default async function AttendanceSessionPage({
-  params,
-}: PageProps<"/attendance/[sessionId]">) {
+export default async function SessionPage({ params }: PageProps<"/attendance/[sessionId]">) {
   const { sessionId } = await params
-  const board = await getAttendanceBoard(await getStaffContext(), sessionId)
-  if (!board) notFound()
-  const s = board.session
-  if (s.status === "completed") redirect(`/attendance/${s.id}/summary`)
-  const [t, tn, f] = await Promise.all([
-    getTranslations("attendance"),
-    getTranslations("nav"),
-    getFormat(),
-  ])
+  const page = getSessionPage(await getStaffContext(), sessionId)
+  const { session } = page
+  const t = await getTranslations("attendance")
+  const f = await getFormat()
+  const unitHref = session.unit.stageId
+    ? `/services/${session.unit.serviceId}/stages/${session.unit.stageId}?year=${session.date.slice(0, 4)}`
+    : `/services/${session.unit.serviceId}?tab=schedule&year=${session.date.slice(0, 4)}`
 
   return (
     <>
-      <Topbar crumbs={[{ label: tn("attendance"), href: "/attendance" }, { label: s.group }]} />
-      <PageBody className="gap-4 md:gap-6">
+      <Topbar crumbs={[{ label: t("title"), href: "/attendance" }, { label: session.unit.name }]} />
+      <PageBody>
         <PageHeader
+          title={session.unit.name}
+          description={f.longDate(session.date)}
           meta={
             <>
-              <ServiceTag service={s.service} />
-              <SessionBadges item={s} />
+              <Link
+                href={unitHref}
+                className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline"
+              >
+                <ServiceSwatch tone={session.unit.tone} />
+                {t("schedule")}
+              </Link>
+              <SessionStatusBadge status={session.status} />
+              {session.kind === "oneOff" ? <OneOffBadge /> : null}
+              {session.originalDate && session.kind === "recurring" ? <RescheduledBadge /> : null}
             </>
           }
-          title={s.group}
-          description={`${s.title} · ${f.longDate(s.date)}`}
-          actions={
-            <Button variant="ghost" asChild>
-              <Link href={`/meetings/sessions/${s.id}`}>{t("sessionDetails")}</Link>
-            </Button>
-          }
-          actionsClassName="hidden md:flex"
+          actions={<SessionMenu session={session} today={page.today} />}
         >
-          <SessionWhen item={s} today={board.today} className="mt-1" />
-        </PageHeader>
-
-        {s.status === "active" ? (
-          <AttendanceBoard board={board} />
-        ) : s.status === "canceled" ? (
-          <p className="border border-destructive/30 bg-destructive/5 p-4 text-sm">
-            <span className="font-medium text-destructive">{t("session.canceled")}</span>{" "}
-            {s.cancelReason ? `${isolate(s.cancelReason)} ` : ""}
-            {t("session.noAttendance")}
-          </p>
-        ) : (
-          <div className="flex flex-col items-start gap-3 border border-dashed p-6">
-            <h2 className="font-heading text-lg font-semibold">{t("session.notOpen")}</h2>
-            <p className="max-w-prose text-sm text-muted-foreground">
-              {s.date > board.today
-                ? t("session.opensOn", { date: f.longDate(s.date) })
-                : board.can.record
-                  ? t("session.openWhenStarts")
-                  : t("session.servantsOpen")}
-            </p>
-            {s.date <= board.today && board.can.record ? (
-              <OpenAttendanceButton session={s} size="default" />
+          <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 tabular-nums">
+              <Clock className="size-4" aria-hidden="true" />
+              {f.timeRange(session.startTime, session.endTime)}
+            </span>
+            {session.location ? (
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="size-4" aria-hidden="true" />
+                {session.location}
+              </span>
             ) : null}
-          </div>
-        )}
+          </p>
+        </PageHeader>
+        {session.status === "canceled" ? (
+          <p className="border border-destructive/30 bg-danger-soft/40 p-4 text-sm">
+            {session.cancelReason ? (
+              t("canceledBecause", { reason: session.cancelReason })
+            ) : session.occasion ? (
+              <OccasionText
+                occasion={session.occasion}
+                label={(name) => t("canceledFor", { occasion: name })}
+              />
+            ) : (
+              t("canceledInPlan")
+            )}
+          </p>
+        ) : null}
+        <AttendanceBoard page={page} />
+        {page.history.length > 0 ? (
+          <Section title={t("history.title")}>
+            <ol className="flex flex-col gap-2 border-s ps-4">
+              {page.history.map((e) => (
+                <li key={e.id} className="text-sm">
+                  <span className="font-medium">{t(`history.${e.type}`)}</span>
+                  <span className="text-muted-foreground">
+                    {" · "}
+                    {f.instantLabel(e.occurredAt, page.today)}
+                    {e.actor ? ` · ${e.actor.name}` : ""}
+                    {e.note && e.type !== "rescheduled" ? ` · ${e.note}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Section>
+        ) : null}
       </PageBody>
     </>
   )

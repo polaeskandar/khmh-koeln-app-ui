@@ -19,9 +19,8 @@ const SECTIONS = [
       "data.items.members",
       "data.items.memberAccounts",
       "data.items.attendance",
-      "data.items.homework",
+      "data.items.tasks",
       "data.items.links",
-      "data.items.registration",
     ],
   },
   { key: "why", items: [] },
@@ -37,15 +36,11 @@ const SECTIONS = [
   },
   {
     key: "howLong",
-    items: ["howLong.items.accounts", "howLong.items.declined", "howLong.items.members"],
+    items: ["howLong.items.accounts", "howLong.items.members"],
   },
   { key: "rights", items: [] },
 ] as const
 
-/**
- * The privacy notice people accept when they register (DSGVO Art. 13). A
- * draft: the church's data protection adviser completes the bracketed parts.
- */
 export default async function PrivacyNoticePage() {
   const t = await getTranslations("privacyNotice")
   return (

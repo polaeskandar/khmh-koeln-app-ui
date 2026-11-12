@@ -1,12 +1,30 @@
 import { getTranslations } from "next-intl/server"
 
-import { ParentShell } from "@/features/parent/parent-shell"
+import { PortalShell } from "@/components/portal/portal-shell"
+import { getParentContext, getShellData } from "@/server/request"
 
 export async function generateMetadata() {
-  const t = await getTranslations("parent.meta")
-  return { title: { default: t("title"), template: "%s · KHMK Köln" } }
+  return {
+    title: {
+      default: (await getTranslations("portal"))("parentTitle"),
+      template: "%s · KHMK Köln",
+    },
+  }
 }
 
-export default function ParentLayout({ children }: LayoutProps<"/parent">) {
-  return <ParentShell>{children}</ParentShell>
+export default async function ParentLayout({ children }: LayoutProps<"/parent">) {
+  await getParentContext()
+  const shell = await getShellData()
+  const t = await getTranslations("portal")
+
+  return (
+    <PortalShell
+      base="/parent"
+      viewer={shell.viewer}
+      personas={shell.personas}
+      title={t("parentTitle")}
+    >
+      {children}
+    </PortalShell>
+  )
 }

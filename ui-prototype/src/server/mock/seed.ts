@@ -1,70 +1,49 @@
-import { addDays, epochOf, localDateOf, localInstant, toInstant } from "@/lib/domain/time"
-import { DEFAULT_ROLES, inCatalogOrder, permissionsOf } from "@/lib/domain/policy"
-import { oneMonthAfter, PRIVACY_VERSION } from "@/lib/domain/privacy"
+import { computeOccasions } from "@/lib/domain/calendar"
+import { DEFAULT_ROLES, ROLE_IDS } from "@/lib/domain/policy"
+import { addDays, epochOf, localInstant, toInstant } from "@/lib/domain/time"
 import type {
-  Attendance,
-  DataRequest,
-  GuardianRelationship,
-  HomeworkAssignment,
-  IsoWeekday,
+  Account,
+  AnnualPlan,
+  CalendarOccasion,
   Lesson,
   LocalDate,
   LocalTime,
-  MeetingSchedule,
-  MeetingSession,
-  Membership,
-  MonthWeek,
-  Permission,
+  Material,
   Person,
-  Recurrence,
+  PlanDecision,
+  PlanRule,
   Role,
-  RosterMode,
+  Schedule,
+  Scope,
   Service,
+  ServiceStructure,
+  Session,
   SessionEventType,
   Stage,
-  User,
+  Task,
+  Unit,
   Uuid,
 } from "@/lib/domain/types"
+import { suggestUsername } from "@/lib/domain/username"
 
-import { generate, occurrenceOn, sessionFromOccurrence } from "./generator"
 import { uuidv7 } from "./ids"
 import { demoPasswordHash } from "./passwords"
 import { createRandom } from "./random"
-import { isCurrentOn, sessionRoster } from "./selectors"
-import type { State } from "./state"
+import { automaticDays, materialize, newSession, recurringSessionOn } from "./scheduling"
+import { rosterOf } from "./selectors"
+import type { DemoData, State } from "./state"
 
-/**
- * The fictional KHMK Köln dataset. Deterministic: the same seed always produces
- * the same people, sessions and attendance, so screenshots and demos match.
- *
- * Story on the demo day (Sunday 8 November 2026, 12:08):
- *  - Sunday School classes started at 12:00. Kindergarten, 1st, 3rd and
- *    5th & 6th Class are taking attendance; 4th Class has not opened yet;
- *    2nd Class was canceled yesterday and joins 1st Class today.
- *  - Monday's Coptic classes were created today at 00:05, the day before.
- *  - Wednesday's Bible Study is canceled in advance; Friday's Youth Meeting
- *    was moved to 19:30.
- *  - Last Sunday, 3rd Class was reopened to fix a mix-up between two
- *    people called Mina Hanna.
- */
-
-const DEMO_DAY: LocalDate = "2026-11-08"
-const HISTORY_FROM: LocalDate = "2026-09-01"
+export const DEMO_DAY: LocalDate = "2026-11-08"
 
 const BOYS = [
-  "Mina",
   "Mark",
   "Bishoy",
-  "Kirollos",
   "Abanoub",
   "Philopateer",
   "Youssef",
-  "Andrew",
   "Peter",
-  "George",
   "Fady",
   "Ramy",
-  "Michael",
   "Shenouda",
   "Antonios",
   "Karas",
@@ -79,19 +58,18 @@ const BOYS = [
   "Noah",
   "Luka",
   "Jonas",
-  "Samuel",
   "Raphael",
   "Simon",
   "Philip",
   "Marco",
+  "Michael",
+  "George",
+  "Kyrillos",
 ]
 const GIRLS = [
   "Marina",
-  "Mariam",
   "Demiana",
-  "Irene",
   "Nardeen",
-  "Christine",
   "Martina",
   "Sarah",
   "Rebecca",
@@ -103,40 +81,34 @@ const GIRLS = [
   "Joyce",
   "Maria",
   "Lydia",
-  "Sophia",
   "Emilia",
   "Lea",
   "Mia",
   "Clara",
   "Anna",
-  "Sandra",
   "Veronica",
   "Catherine",
   "Hannah",
   "Julia",
   "Natalie",
   "Rita",
+  "Irene",
+  "Christina",
 ]
 const LAST = [
   "Hanna",
-  "Samuel",
   "Habib",
   "Wadie",
   "Botros",
-  "Tawfik",
   "Girgis",
-  "Ibrahim",
   "Mikhail",
   "Iskander",
   "Rizk",
   "Bishay",
-  "Wahba",
   "Gerges",
   "Saad",
-  "Farag",
   "Kamal",
   "Youssef",
-  "Mansour",
   "Zaki",
   "Labib",
   "Morcos",
@@ -144,12 +116,10 @@ const LAST = [
   "Assaad",
   "Salib",
   "Naguib",
-  "Tadros",
   "Fawzy",
   "Halim",
   "Sedky",
   "Aziz",
-  "Boulos",
   "Henein",
   "Abdelmalek",
   "Khalil",
@@ -159,1743 +129,1124 @@ const LAST = [
   "Nasr",
   "Gayed",
 ]
-const NICKNAMES: Record<string, string> = {
-  Kirollos: "Kiro",
-  Philopateer: "Philo",
-  Youstina: "Tina",
-  Antonios: "Tony",
-  Demiana: "Demi",
-  Veronica: "Vero",
-}
-
-type ServiceKey =
-  | "summer-club"
-  | "sunday-school"
-  | "youth"
-  | "deacons"
-  | "bible-study"
-  | "servants"
-  | "coptic"
-  | "choir"
-
-type UserKey =
-  | "mariam"
-  | "christine"
-  | "daniel"
-  | "rebecca"
-  | "youssef"
-  | "marina"
-  | "george"
-  | "mark"
-  | "bishoy"
-  | "maged"
-  | "peter"
-  | "irene"
-  | "samuel"
-  | "nabil"
-  | "hoda"
-  | "samir"
-  | "nadia"
+const PARENT_FIRST = [
+  "Rania",
+  "Mona",
+  "Nermin",
+  "Hany",
+  "Sherif",
+  "Mervat",
+  "Ehab",
+  "Magda",
+  "Ashraf",
+  "Nagwa",
+  "Emad",
+  "Samia",
+  "Wael",
+  "Hala",
+  "Amir",
+  "Dalia",
+  "Tamer",
+  "Lamia",
+  "Osama",
+  "Reham",
+  "Karim",
+  "Nevin",
+  "Medhat",
+  "Sanaa",
+  "Atef",
+  "Hanan",
+  "Raafat",
+  "Inas",
+  "Maher",
+  "Soad",
+]
 
 const at = (date: LocalDate, time: LocalTime) => epochOf(localInstant(date, time))
 const MIN = 60_000
 
-export function seed(): State {
+export function seed(data: DemoData): State {
   const rnd = createRandom(20_261_108)
-  const id = (epochMs: number) => uuidv7(epochMs, rnd.next)
+  let clock = at("2026-08-24", "09:00")
+  const newId = (ms?: number) => uuidv7(ms ?? (clock += 1000), rnd.next)
+  const setupAt = toInstant(at("2026-08-24", "10:00"))
 
-  const state: State = {
+  const s: State = {
     services: [],
     serviceTones: {},
     stages: [],
     persons: [],
     memberships: [],
+    accounts: [],
+    guardianships: [],
+    roles: [],
+    assignments: [],
     schedules: [],
+    plans: [],
     sessions: [],
     events: [],
     attendance: [],
-    users: [],
-    roles: [],
-    assignments: [],
-    guardians: [],
+    occasions: [],
+    daysOff: [],
     lessons: [],
-    homework: [],
+    tasks: [],
     completions: [],
     dataRequests: [],
     anonymousCounts: {},
-    generatorRuns: [],
     seededAt: toInstant(at(DEMO_DAY, "12:08")),
   }
 
-  // ---------------------------------------------------------------- services
-  const service = {} as Record<ServiceKey, Service>
-  const addService = (
-    key: ServiceKey,
-    name: string,
-    description: string | null,
-    created: [LocalDate, LocalTime],
-    archived?: [LocalDate, LocalTime]
-  ) => {
-    const createdMs = at(...created)
-    const s: Service = {
-      id: id(createdMs),
-      name,
-      description,
-      archivedAt: archived ? toInstant(at(...archived)) : null,
-      createdAt: toInstant(createdMs),
-      updatedAt: toInstant(archived ? at(...archived) : createdMs),
-    }
-    service[key] = s
-    state.services.push(s)
+  for (const role of DEFAULT_ROLES) {
+    s.roles.push({ ...role, createdAt: setupAt } satisfies Role)
   }
-  addService(
-    "summer-club",
-    "Summer Club 2026",
-    "Wednesday programme during the summer holidays.",
-    ["2026-06-15", "09:00"],
-    ["2026-09-01", "09:30"]
-  )
-  addService(
-    "sunday-school",
-    "Sunday School",
-    "Weekly classes for children from kindergarten to 6th class, after the Divine Liturgy.",
-    ["2026-08-24", "10:12"]
-  )
-  addService(
-    "youth",
-    "Youth Meeting",
-    "Friday evening meeting for secondary school students and young adults.",
-    ["2026-08-24", "10:20"]
-  )
-  addService(
-    "deacons",
-    "Deacons' School",
-    "Hymns, Coptic responses and altar service for boys and young men.",
-    ["2026-08-25", "19:02"]
-  )
-  addService(
-    "bible-study",
-    "Bible Study",
-    "Open Wednesday evening study for adults. Everyone is welcome, so there is no roster.",
-    ["2026-08-26", "08:40"]
-  )
-  addService("servants", "Servants' Preparation", "Monthly preparation meeting for all servants.", [
-    "2026-08-26",
-    "08:45",
-  ])
-  addService(
-    "coptic",
-    "Coptic Language Course",
-    "Reading and pronunciation of Bohairic Coptic, in two levels.",
-    ["2026-09-01", "17:30"]
-  )
-  addService("choir", "Choir", "Planned for 2027. No meetings yet.", ["2026-10-20", "20:15"])
-  // Colours in the order the services were created.
-  const byCreation = [...state.services].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
-  byCreation.forEach((x, i) => (state.serviceTones[x.id] = (i % 8) + 1))
 
-  // ------------------------------------------------------------------ stages
-  const stage: Record<string, Stage> = {}
-  const addStage = (
-    key: string,
-    serviceKey: ServiceKey,
-    name: string,
-    position: number,
-    description: string | null = null,
-    archived?: [LocalDate, LocalTime]
-  ) => {
-    const createdMs = epochOf(service[serviceKey].createdAt) + (position + 1) * 7 * MIN
-    const st: Stage = {
-      id: id(createdMs),
-      serviceId: service[serviceKey].id,
-      name,
-      description,
-      position,
-      archivedAt: archived ? toInstant(at(...archived)) : null,
-      createdAt: toInstant(createdMs),
-    }
-    stage[key] = st
-    state.stages.push(st)
-  }
-  addStage("kg", "sunday-school", "Kindergarten", 0, "Ages 4 to 6.")
-  addStage("c1", "sunday-school", "1st Class", 1)
-  addStage("c2", "sunday-school", "2nd Class", 2)
-  addStage("c3", "sunday-school", "3rd Class", 3)
-  addStage("c4", "sunday-school", "4th Class", 4)
-  addStage("c56", "sunday-school", "5th & 6th Class", 5, "Combined class for the two oldest years.")
-  addStage("toddlers", "sunday-school", "Toddlers", 6, "Merged into Kindergarten in September.", [
-    "2026-09-06",
-    "14:10",
-  ])
-  addStage("beginners", "deacons", "Beginners", 0, "First and second year.")
-  addStage(
-    "advanced",
-    "deacons",
-    "Advanced",
-    1,
-    "Hymns of the Divine Liturgy and the Midnight Praises."
-  )
-  addStage("level1", "coptic", "Level 1", 0, "Alphabet and reading.")
-  addStage("level2", "coptic", "Level 2", 1, "Reading the responses of the liturgy.")
+  const person = (firstName: string, lastName: string, displayName: string | null = null) => {
+    const p: Person = { id: newId(), firstName, lastName, displayName, createdAt: setupAt }
+    s.persons.push(p)
 
-  // ------------------------------------------------------------------ people
-  const usedNames = new Set<string>()
-  const addPerson = (
-    firstName: string,
-    lastName: string,
-    opts: { displayName?: string | null; inactive?: boolean; created?: LocalDate } = {}
-  ): Person => {
-    const createdMs = at(opts.created ?? "2026-08-28", "18:00") + state.persons.length * MIN
-    const p: Person = {
-      id: id(createdMs),
-      firstName,
-      lastName,
-      displayName: opts.displayName ?? null,
-      status: opts.inactive ? "inactive" : "active",
-      createdAt: toInstant(createdMs),
-    }
-    usedNames.add(`${firstName} ${lastName}`)
-    state.persons.push(p)
     return p
   }
-  const randomPerson = (gender: "boy" | "girl" | "any" = "any", created?: LocalDate): Person => {
-    for (;;) {
-      const g = gender === "any" ? (rnd.chance(0.5) ? "boy" : "girl") : gender
-      const first = rnd.pick(g === "boy" ? BOYS : GIRLS)
-      const last = rnd.pick(LAST)
-      if (usedNames.has(`${first} ${last}`)) continue
-      const nickname = NICKNAMES[first] && rnd.chance(0.6) ? NICKNAMES[first] : null
-      return addPerson(first, last, { displayName: nickname, created })
-    }
-  }
 
-  const member = (
-    person: Person,
-    serviceKey: ServiceKey,
-    stageKey: string | null,
-    startsOn: LocalDate,
-    endsOn: LocalDate | null = null
-  ) => {
-    const m: Membership = {
-      id: id(at(startsOn, "09:00")),
-      personId: person.id,
-      serviceId: service[serviceKey].id,
-      stageId: stageKey ? stage[stageKey].id : null,
-      startsOn,
-      endsOn,
-    }
-    state.memberships.push(m)
-    return m
-  }
-
-  // Servants and the church office (the people behind the user accounts).
-  const servantPerson = {} as Record<UserKey, Person>
-  const servantNames: [UserKey, string, string][] = [
-    ["mariam", "Mariam", "Fahmy"],
-    ["christine", "Christine", "Adel"],
-    ["daniel", "Daniel", "Michael"],
-    ["rebecca", "Rebecca", "Shokry"],
-    ["youssef", "Youssef", "Nashed"],
-    ["marina", "Marina", "Saad"],
-    ["george", "George", "Labib"],
-    ["mark", "Mark", "Shenouda"],
-    ["bishoy", "Bishoy", "Tawfik"],
-    ["maged", "Maged", "Botros"],
-    ["peter", "Peter", "Girgis"],
-    ["irene", "Irene", "Wahba"],
-  ]
-  for (const [key, first, last] of servantNames)
-    servantPerson[key] = addPerson(first, last, { created: "2026-08-24" })
-  servantPerson.samuel = addPerson("Samuel", "Rizk", { inactive: true, created: "2026-08-24" })
-  const otherServants = [
-    addPerson("Monica", "Farag"),
-    addPerson("Sarah", "Kamal"),
-    addPerson("Andrew", "Halim"),
-  ]
-
-  // Two different people called Mina Hanna: one in 3rd Class, one in the Youth Meeting.
-  const minaChild = addPerson("Mina", "Hanna")
-  const minaYouth = addPerson("Mina", "Hanna")
-
-  // Children whose parents use the parent portal (see the guardian links further down).
-  const mariamChild = addPerson("Mariam", "Hanna", { displayName: "Mimi" })
-  const kirollosChild = addPerson("Kirollos", "Iskander", { displayName: "Kiro" })
-  const sophiaChild = addPerson("Sophia", "Mansour")
-
-  // Sunday School classes. Everyone joined at the start of the school year.
-  const SCHOOL_YEAR: LocalDate = "2026-09-01"
-  const classSizes: [string, number][] = [
-    ["kg", 10],
-    ["c1", 11],
-    ["c2", 10],
-    ["c3", 11],
-    ["c4", 13],
-    ["c56", 13],
-  ]
-  const kids: Record<string, Person[]> = {}
-  for (const [key, size] of classSizes) {
-    kids[key] = []
-    for (let i = 0; i < size; i++) {
-      const p = randomPerson()
-      kids[key].push(p)
-      member(p, "sunday-school", key, SCHOOL_YEAR)
-    }
-  }
-  kids.c3.push(minaChild)
-  member(minaChild, "sunday-school", "c3", SCHOOL_YEAR)
-  kids.c3.push(kirollosChild)
-  member(kirollosChild, "sunday-school", "c3", SCHOOL_YEAR)
-  kids.c1.push(mariamChild)
-  member(mariamChild, "sunday-school", "c1", SCHOOL_YEAR)
-  kids.kg.push(sophiaChild)
-  member(sophiaChild, "sunday-school", "kg", SCHOOL_YEAR)
-
-  // Lydia moved up from 2nd to 3rd Class on 1 October; her 2nd Class membership is kept as history.
-  const lydia = addPerson("Lydia", "Morcos")
-  member(lydia, "sunday-school", "c2", SCHOOL_YEAR, "2026-09-30")
-  member(lydia, "sunday-school", "c3", "2026-10-01")
-  kids.c3.push(lydia)
-
-  // A family that moved away in October: inactive, membership ended.
-  const movedAway = kids.c4[kids.c4.length - 1]
-  movedAway.status = "inactive"
-  state.memberships.find((m) => m.personId === movedAway.id)!.endsOn = "2026-10-14"
-
-  // Youth Meeting.
-  const youth: Person[] = [minaYouth]
-  member(minaYouth, "youth", null, SCHOOL_YEAR)
-  for (let i = 0; i < 23; i++) {
-    const p = randomPerson()
-    youth.push(p)
-    member(p, "youth", null, SCHOOL_YEAR)
-  }
-
-  // Deacons' School: boys from the older classes and young men from the youth.
-  const boysFrom = (people: Person[]) => people.filter((p) => BOYS.includes(p.firstName))
-  const beginners = [...boysFrom(kids.c4).slice(0, 4), ...boysFrom(kids.c56).slice(0, 5)]
-  const advanced = boysFrom(youth).slice(0, 7)
-  for (const p of beginners) member(p, "deacons", "beginners", "2026-09-05")
-  for (const p of advanced) member(p, "deacons", "advanced", "2026-09-05")
-
-  // Bible Study regulars (open roster: members are listed but nobody is "expected").
-  const adults = [
-    addPerson("Nabil", "Hanna"),
-    addPerson("Hoda", "Farag"),
-    addPerson("Samir", "Iskander"),
-    addPerson("Nadia", "Mansour"),
-    addPerson("Emad", "Guirguis"),
-    addPerson("Mervat", "Labib"),
-    addPerson("Ashraf", "Tadros"),
-    addPerson("Hanan", "Rizk"),
-    addPerson("Magdy", "Soliman"),
-    addPerson("Nevine", "Boulos"),
-  ]
-  const bibleRegulars = [
-    ...adults,
-    servantPerson.mariam,
-    servantPerson.maged,
-    servantPerson.christine,
-    servantPerson.peter,
-  ]
-  for (const p of bibleRegulars) member(p, "bible-study", null, "2026-09-09")
-
-  // Servants' Preparation: every servant.
-  const servantsRoster = [
-    ...(
-      [
-        "christine",
-        "daniel",
-        "rebecca",
-        "youssef",
-        "marina",
-        "george",
-        "mark",
-        "bishoy",
-        "maged",
-        "peter",
-        "irene",
-      ] as const
-    ).map((k) => servantPerson[k]),
-    ...otherServants,
-  ]
-  for (const p of servantsRoster) member(p, "servants", null, "2026-09-05")
-  member(servantPerson.samuel, "servants", null, "2026-09-05", "2026-09-30")
-  member(servantPerson.samuel, "youth", null, SCHOOL_YEAR, "2026-09-30")
-
-  // Coptic Language Course.
-  const level1 = [...kids.c4.slice(0, 3), ...kids.c56.slice(5, 8), adults[1], adults[3], adults[9]]
-  const level2 = [...youth.slice(8, 12), adults[0], servantPerson.marina]
-  for (const p of level1) member(p, "coptic", "level1", "2026-09-14")
-  for (const p of level2) member(p, "coptic", "level2", "2026-09-14")
-
-  // Summer Club (archived): children from Sunday School, July to August.
-  const summerKids = [
-    ...kids.c1.slice(0, 5),
-    ...kids.c2.slice(0, 5),
-    ...kids.c3.slice(0, 6),
-    ...kids.c4.slice(0, 5),
-    ...kids.c56.slice(0, 5),
-  ]
-  for (const p of summerKids) member(p, "summer-club", null, "2026-07-20", "2026-08-31")
-
-  // ------------------------------------------------------------------- users
-  const user = {} as Record<UserKey, User>
-  // The roles the church started with: the backend's defaults, with its ids. A servant's role says
-  // what they may do; their assignments (at the end of the seed) say where.
-  const churchStart = toInstant(at("2026-08-28", "20:00"))
-  for (const r of DEFAULT_ROLES) {
-    state.roles.push({
-      ...r,
-      permissions: [...r.permissions],
-      createdAt: churchStart,
-      updatedAt: churchStart,
-    })
-  }
-  const [administrator, serviceLeader, servant, parent] = DEFAULT_ROLES.map((r) => r.id)
-  const access = (roleIds: Uuid[]) => ({
-    roleIds,
-    permissions: permissionsOf(state.roles, roleIds),
-  })
-  // The office created these accounts, so they were approved at once (by Mariam, the administrator).
-  const officeAccount = (createdMs: number) => ({
-    passwordHash: demoPasswordHash(),
-    language: null,
-    registration: null,
-    emailConfirmedAt: toInstant(createdMs),
-    emailConfirmation: null,
-    privacyAcceptedAt: toInstant(createdMs),
-    privacyVersion: PRIVACY_VERSION,
-    approvedAt: toInstant(createdMs),
-    approvedBy: user.mariam?.id ?? null,
-    ageCheck: null,
-    guardianConsentNote: null,
-    createdAt: toInstant(createdMs),
-  })
-  const addUser = (key: UserKey, roleIds: Uuid[], disabled?: LocalDate) => {
-    const p = servantPerson[key]
-    const createdMs = epochOf(p.createdAt) + 30 * MIN
-    const u: User = {
-      id: id(createdMs),
-      email: `${p.firstName}.${p.lastName}@example.org`.toLowerCase(),
-      displayName: `${p.firstName} ${p.lastName}`,
+  const account = (
+    p: Person,
+    roles: { roleId: Uuid; scope: Scope }[],
+    options: Partial<Account> = {}
+  ): Account => {
+    const a: Account = {
+      id: newId(),
       personId: p.id,
-      ...access(roleIds),
-      ...officeAccount(createdMs),
-      disabledAt: disabled ? toInstant(at(disabled, "10:00")) : null,
+      username: uniqueUsername(suggestUsername(p.firstName, p.lastName)),
+      passwordHash: demoPasswordHash(),
+      mustChangePassword: false,
+      passwordChangedAt: setupAt,
+      language: null,
+      lastSignInAt: toInstant(at("2026-11-07", "18:30")),
+      createdAt: setupAt,
+      createdBy: s.accounts[0]?.id ?? null,
+      ...options,
     }
-    user[key] = u
-    state.users.push(u)
-  }
-  addUser("mariam", [administrator])
-  // Christine leads Sunday School and the summer club, Mark the Youth Meeting, Maged the Bible
-  // Study and the servants' meeting, Peter the Deacons' School, Irene the Coptic course; the
-  // others serve in a class or a service. Their assignments say where, at the end of the seed.
-  addUser("christine", [serviceLeader])
-  addUser("daniel", [servant])
-  addUser("rebecca", [servant])
-  addUser("youssef", [servant])
-  addUser("marina", [servant])
-  addUser("george", [servant])
-  addUser("mark", [serviceLeader])
-  addUser("bishoy", [servant])
-  addUser("maged", [serviceLeader])
-  addUser("peter", [serviceLeader])
-  addUser("irene", [serviceLeader])
-  addUser("samuel", [servant], "2026-09-30")
-  // Parents with accounts. Their accounts exist because the office created them; children have none.
-  servantPerson.nabil = adults[0]
-  servantPerson.hoda = adults[1]
-  servantPerson.samir = adults[2]
-  servantPerson.nadia = adults[3]
-  addUser("nabil", [parent])
-  addUser("hoda", [parent])
-  addUser("samir", [parent])
-  addUser("nadia", [parent])
+    s.accounts.push(a)
 
-  // Guardian links, created or approved by the church office. Mina and Mariam have two guardians.
-  const guardian = (
-    who: UserKey | User,
-    child: Person,
-    status: GuardianRelationship["status"],
-    on: LocalDate
+    for (const r of roles) {
+      s.assignments.push({
+        id: newId(),
+        accountId: a.id,
+        roleId: r.roleId,
+        scope: r.scope,
+        createdAt: a.createdAt,
+        createdBy: a.createdBy,
+      })
+    }
+
+    return a
+  }
+
+  const church: Scope = { type: "church" }
+
+  const uniqueUsername = (base: string) => {
+    let candidate = base
+    let n = 2
+
+    while (s.accounts.some((a) => a.username === candidate)) {
+      candidate = `${base}${n++}`
+    }
+
+    return candidate
+  }
+
+  for (const year of [2026, 2027, 2028]) {
+    for (const o of computeOccasions(year)) {
+      s.occasions.push({
+        id: newId(),
+        date: o.date,
+        key: o.key,
+        name: null,
+        category: o.category,
+        source: "computed",
+        mode: "suggested",
+        serviceIds: [],
+        verifiedAt: null,
+        verifiedBy: null,
+      } satisfies CalendarOccasion)
+    }
+  }
+
+  const mariamP = person("Mariam", "Fahmy")
+  const mariam = account(mariamP, [{ roleId: ROLE_IDS.administrator, scope: church }], {
+    createdBy: null,
+    language: "en",
+  })
+
+  const verifiedAt = toInstant(at("2026-10-20", "19:40"))
+
+  for (const o of s.occasions) {
+    if (o.date < "2028-01-01") {
+      o.verifiedAt = verifiedAt
+      o.verifiedBy = mariam.id
+    }
+  }
+
+  s.occasions.push({
+    id: newId(),
+    date: "2027-06-27",
+    key: null,
+    name: "Parish festival (sample)",
+    category: "churchEvent",
+    source: "church",
+    mode: "mandatory",
+    serviceIds: [],
+    verifiedAt,
+    verifiedBy: mariam.id,
+  })
+
+  if (data === "empty") {
+    return s
+  }
+
+  const tones = new Map<Uuid, number>()
+
+  const service = (name: string, description: string, structure: ServiceStructure): Service => {
+    const x: Service = {
+      id: newId(),
+      name,
+      description,
+      structure,
+      archivedAt: null,
+      createdAt: setupAt,
+    }
+    s.services.push(x)
+    tones.set(x.id, tones.size + 1)
+    s.serviceTones[x.id] = tones.size
+
+    if (structure === "single") {
+      s.schedules.push({ id: newId(), serviceId: x.id, stageId: null, createdAt: setupAt })
+    }
+
+    return x
+  }
+
+  const stage = (svc: Service, name: string, description: string | null = null): Stage => {
+    const x: Stage = {
+      id: newId(),
+      serviceId: svc.id,
+      name,
+      description,
+      position: s.stages.filter((st) => st.serviceId === svc.id).length + 1,
+      archivedAt: null,
+      createdAt: setupAt,
+    }
+    s.stages.push(x)
+    s.schedules.push({ id: newId(), serviceId: svc.id, stageId: x.id, createdAt: setupAt })
+
+    return x
+  }
+
+  const scheduleOf = (unit: Unit): Schedule =>
+    s.schedules.find((x) => x.serviceId === unit.serviceId && x.stageId === unit.stageId)!
+
+  const join = (
+    p: Person,
+    unit: Unit,
+    startsOn: LocalDate = "2026-09-01",
+    endsOn: LocalDate | null = null
   ) => {
-    const u = typeof who === "string" ? user[who] : who
-    const ms = at(on, "11:30")
-    state.guardians.push({
-      id: id(ms),
-      userId: u.id,
-      personId: child.id,
-      relationship: "parent",
-      status,
-      approvedBy: status === "approved" ? user.mariam.id : null,
-      approvedAt: status === "approved" ? toInstant(ms) : null,
-      createdAt: toInstant(ms - 2 * 86_400_000),
+    s.memberships.push({ id: newId(), personId: p.id, ...unit, startsOn, endsOn })
+  }
+
+  const sundaySchool = service(
+    "Sunday School",
+    "Classes for children from kindergarten to 4th class, after the Divine Liturgy.",
+    "stages"
+  )
+  const kg = stage(sundaySchool, "Kindergarten", "Ages 4 to 6")
+  const first = stage(sundaySchool, "1st Class")
+  const second = stage(sundaySchool, "2nd Class")
+  const third = stage(sundaySchool, "3rd Class")
+  const fourth = stage(sundaySchool, "4th Class")
+  const youth = service(
+    "Youth Gathering",
+    "Friday evenings for young people from 14 to 18: a talk, prayer and time together.",
+    "single"
+  )
+  const university = service(
+    "University Students",
+    "Every other Wednesday for students: Bible study and questions of faith.",
+    "single"
+  )
+  const coptic = service(
+    "Coptic Language Course",
+    "Reading and writing Coptic for children and adults, in two levels.",
+    "stages"
+  )
+  const level1 = stage(coptic, "Level 1", "The alphabet and first words")
+  const level2 = stage(coptic, "Level 2", "Reading the hymns")
+  const servantsMeeting = service(
+    "Servants' Meeting",
+    "Once a month for everyone who serves: preparation, prayer and planning.",
+    "single"
+  )
+
+  s.daysOff.push({
+    serviceId: sundaySchool.id,
+    year: 2027,
+    mode: "custom",
+    days: [...automaticDays(s, sundaySchool.id, 2027), "2027-12-26"].sort(),
+  })
+
+  const u = (svc: Service, st: Stage | null = null): Unit => ({
+    serviceId: svc.id,
+    stageId: st?.id ?? null,
+  })
+  const scope = (svc: Service, st: Stage | null = null): Scope =>
+    st
+      ? { type: "stage", serviceId: svc.id, stageId: st.id }
+      : { type: "service", serviceId: svc.id }
+
+  const churchOffice: Role = {
+    id: newId(),
+    name: "Church office",
+    permissions: ["services.view", "accounts.manage", "guardians.manage", "data.manage"],
+    protected: false,
+    createdAt: toInstant(at("2026-09-02", "11:00")),
+  }
+  s.roles.push(churchOffice)
+
+  const staff = (
+    first: string,
+    last: string,
+    roles: { roleId: Uuid; scope: Scope }[],
+    options: Partial<Account> = {}
+  ) => {
+    const p = person(first, last)
+
+    return { person: p, account: account(p, roles, options) }
+  }
+
+  const sara = staff("Sara", "Wissa", [{ roleId: churchOffice.id, scope: church }])
+  const christine = staff("Christine", "Adel", [
+    { roleId: ROLE_IDS.serviceLeader, scope: scope(sundaySchool) },
+  ])
+  const daniel = staff("Daniel", "Michael", [
+    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, first) },
+    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, third) },
+    { roleId: ROLE_IDS.servant, scope: scope(youth) },
+  ])
+  const george = staff("George", "Nashed", [
+    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, kg) },
+  ])
+  const marina = staff("Marina", "Samuel", [
+    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, second) },
+  ])
+  const bishoy = staff("Bishoy", "Tawfik", [
+    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, fourth) },
+  ])
+  const mark = staff("Mark", "Shenouda", [{ roleId: ROLE_IDS.serviceLeader, scope: scope(youth) }])
+  const peter = staff("Peter", "Girgis", [
+    { roleId: ROLE_IDS.serviceLeader, scope: scope(university) },
+  ])
+  const irene = staff("Irene", "Wahba", [{ roleId: ROLE_IDS.serviceLeader, scope: scope(coptic) }])
+  const maged = staff("Maged", "Botros", [
+    { roleId: ROLE_IDS.serviceLeader, scope: scope(servantsMeeting) },
+  ])
+  const rebecca = staff(
+    "Rebecca",
+    "Habib",
+    [{ roleId: ROLE_IDS.servant, scope: scope(sundaySchool, kg) }],
+    {
+      mustChangePassword: true,
+      passwordChangedAt: null,
+      lastSignInAt: null,
+      createdAt: toInstant(at("2026-11-07", "11:20")),
+      createdBy: sara.account.id,
+    }
+  )
+  const andrew = person("Andrew", "Samir")
+
+  for (const servant of [
+    sara,
+    christine,
+    daniel,
+    george,
+    marina,
+    bishoy,
+    mark,
+    peter,
+    irene,
+    maged,
+    rebecca,
+  ]) {
+    join(servant.person, u(servantsMeeting))
+  }
+
+  join(andrew, u(servantsMeeting), "2026-10-03")
+  join(mariamP, u(servantsMeeting))
+
+  const unitServant = new Map<Uuid | null, Uuid>([
+    [kg.id, george.account.id],
+    [first.id, daniel.account.id],
+    [second.id, marina.account.id],
+    [third.id, daniel.account.id],
+    [fourth.id, bishoy.account.id],
+    [level1.id, irene.account.id],
+    [level2.id, irene.account.id],
+  ])
+  const unitStaff = (unit: Unit) =>
+    unitServant.get(unit.stageId) ??
+    (unit.serviceId === youth.id
+      ? mark.account.id
+      : unit.serviceId === university.id
+        ? peter.account.id
+        : maged.account.id)
+
+  let boy = 0
+  let girl = 0
+  let lastName = 0
+  const childName = (gender: "b" | "g") =>
+    gender === "b" ? BOYS[boy++ % BOYS.length] : GIRLS[girl++ % GIRLS.length]
+
+  const parentAccount = (p: Person, createdAt = setupAt) =>
+    account(p, [{ roleId: ROLE_IDS.parent, scope: church }], {
+      createdAt,
+      createdBy: sara.account.id,
+      lastSignInAt: rnd.chance(0.7) ? toInstant(at("2026-11-0" + rnd.int(1, 7), "20:00")) : null,
+    })
+
+  const childAccount = (child: Person, signedIn: boolean) =>
+    account(child, [{ roleId: ROLE_IDS.member, scope: church }], {
+      createdBy: sara.account.id,
+      mustChangePassword: !signedIn,
+      passwordChangedAt: signedIn ? setupAt : null,
+      lastSignInAt: signedIn ? toInstant(at("2026-11-06", "17:45")) : null,
+    })
+
+  const link = (parent: Account, child: Person) => {
+    s.guardianships.push({
+      id: newId(),
+      accountId: parent.id,
+      childId: child.id,
+      createdAt: parent.createdAt,
+      createdBy: sara.account.id,
     })
   }
-  guardian("nabil", minaChild, "approved", "2026-09-14")
-  guardian("nabil", mariamChild, "approved", "2026-09-14")
-  guardian("hoda", minaChild, "approved", "2026-09-14")
-  guardian("hoda", mariamChild, "approved", "2026-09-14")
-  guardian("samir", kirollosChild, "approved", "2026-09-21")
-  guardian("nadia", sophiaChild, "pending", "2026-11-06")
 
-  // Most other families of 3rd and 1st Class have a parent account too (no person record needed).
-  const FATHERS = ["Ashraf", "Emad", "Magdy", "Hany", "Sherif", "Wael", "Amir", "Raafat"]
-  const MOTHERS = ["Mervat", "Hanan", "Nevine", "Mona", "Rania", "Marian", "Dalia", "Sally"]
-  const usedEmails = new Set(state.users.map((u) => u.email))
-  for (const child of [...kids.c3, ...kids.c1]) {
-    if (state.guardians.some((g) => g.personId === child.id) || !rnd.chance(0.8)) continue
-    const first = rnd.pick([...FATHERS, ...MOTHERS])
-    const ownName = rnd.chance(0.6) ? null : rnd.pick(LAST)
-    // A father carries the child's family name; a mother may have kept her own.
-    const last = ownName && MOTHERS.includes(first) ? ownName : child.lastName
-    let email = `${first}.${last}@example.org`.toLowerCase()
-    for (let n = 2; usedEmails.has(email); n++)
-      email = `${first}.${last}${n}@example.org`.toLowerCase()
-    usedEmails.add(email)
-    const ms = at("2026-09-20", "10:00") + state.users.length * MIN
-    const u: User = {
-      id: id(ms),
-      email,
-      displayName: `${first} ${last}`,
-      personId: null,
-      ...access([parent]),
-      ...officeAccount(ms),
-      disabledAt: null,
+  const hodaP = person("Hoda", "Farag")
+  const hoda = parentAccount(hodaP)
+  const mina = person("Mina", "Farag")
+  const mimi = person("Mimi", "Farag")
+  join(mina, u(sundaySchool, third))
+  join(mimi, u(sundaySchool, first))
+  childAccount(mina, true)
+  childAccount(mimi, false)
+  link(hoda, mina)
+  link(hoda, mimi)
+  const nadiaP = person("Nadia", "Mansour")
+  const nadia = parentAccount(nadiaP)
+  const sophia = person("Sophia", "Mansour")
+  join(sophia, u(sundaySchool, third))
+  childAccount(sophia, false)
+  link(nadia, sophia)
+
+  const families: { parent: Account; last: string }[] = []
+  const sizes: [Stage, number][] = [
+    [kg, 8],
+    [first, 8],
+    [second, 8],
+    [third, 7],
+    [fourth, 8],
+  ]
+
+  for (const [st, size] of sizes) {
+    for (let i = 0; i < size; i++) {
+      const sibling = families.length > 2 && i % 4 === 3 ? families[families.length - 3] : null
+      const last = sibling?.last ?? LAST[lastName++ % LAST.length]
+      const child = person(childName(rnd.chance(0.5) ? "b" : "g"), last)
+      join(child, u(sundaySchool, st))
+      childAccount(child, st === fourth && i % 2 === 0)
+
+      if (sibling) {
+        link(sibling.parent, child)
+        continue
+      }
+
+      const parentP = person(PARENT_FIRST[families.length % PARENT_FIRST.length], last)
+      const parent = parentAccount(parentP)
+      link(parent, child)
+      families.push({ parent, last })
     }
-    state.users.push(u)
-    guardian(u, child, "approved", "2026-09-27")
   }
 
-  // --------------------------------------------------------------- schedules
-  const schedule: Record<string, MeetingSchedule> = {}
-  const addSchedule = (
-    key: string,
-    serviceKey: ServiceKey,
-    stageKey: string | null,
-    name: string,
-    recurrence: Omit<Recurrence, "monthWeek" | "endsOn" | "interval"> &
-      Partial<Pick<Recurrence, "monthWeek" | "endsOn" | "interval">>,
-    times: [LocalTime, LocalTime | null],
-    location: string | null,
-    rosterMode: RosterMode,
-    opts: { active?: boolean; description?: string; created?: [LocalDate, LocalTime] } = {}
+  const theresa = person("Theresa", "Wadie")
+  join(theresa, u(sundaySchool, second), "2026-09-01", "2026-10-15")
+
+  const memberAccount = (
+    first: string,
+    last: string,
+    units: Unit[],
+    options: Partial<Account> = {}
   ) => {
-    const createdMs = opts.created
-      ? at(...opts.created)
-      : epochOf(service[serviceKey].createdAt) + 40 * MIN
-    const sch: MeetingSchedule = {
-      id: id(createdMs),
-      serviceId: service[serviceKey].id,
-      stageId: stageKey ? stage[stageKey].id : null,
-      name,
-      description: opts.description ?? null,
-      location,
-      recurrence: {
-        frequency: recurrence.frequency,
-        interval: recurrence.interval ?? 1,
-        weekdays: recurrence.weekdays,
-        monthWeek: recurrence.monthWeek ?? null,
-        startsOn: recurrence.startsOn,
-        endsOn: recurrence.endsOn ?? null,
-      },
-      startTime: times[0],
-      endTime: times[1],
-      rosterMode,
-      active: opts.active ?? true,
-      createdAt: toInstant(createdMs),
-      updatedAt: toInstant(createdMs),
+    const p = person(first, last)
+    const a = account(p, [{ roleId: ROLE_IDS.member, scope: church }], {
+      createdBy: sara.account.id,
+      ...options,
+    })
+
+    for (const unit of units) {
+      join(p, unit)
     }
-    schedule[key] = sch
-    state.schedules.push(sch)
+
+    return { person: p, account: a }
   }
-  const weekly = (
-    weekdays: IsoWeekday[],
-    startsOn: LocalDate,
-    interval = 1,
-    endsOn: LocalDate | null = null
-  ) => ({
-    frequency: "weekly" as const,
-    weekdays,
-    startsOn,
-    interval,
-    endsOn,
-  })
-  const monthly = (weekday: IsoWeekday, monthWeek: MonthWeek, startsOn: LocalDate) => ({
-    frequency: "monthly" as const,
-    weekdays: [weekday],
-    monthWeek,
-    startsOn,
+
+  const nevine = memberAccount("Nevine", "Boulos", [u(coptic, level1)], { language: "en" })
+  memberAccount("Kirollos", "Ibrahim", [u(youth), u(coptic, level2)])
+
+  for (let i = 0; i < 11; i++) {
+    memberAccount(childName(i % 2 === 0 ? "b" : "g"), LAST[lastName++ % LAST.length], [u(youth)])
+  }
+
+  for (let i = 0; i < 8; i++) {
+    memberAccount(childName(i % 2 === 0 ? "g" : "b"), LAST[lastName++ % LAST.length], [
+      u(university),
+    ])
+  }
+
+  for (let i = 0; i < 5; i++) {
+    memberAccount(childName(i % 2 === 0 ? "b" : "g"), LAST[lastName++ % LAST.length], [
+      u(coptic, level1),
+    ])
+  }
+
+  for (let i = 0; i < 4; i++) {
+    memberAccount(childName(i % 2 === 0 ? "g" : "b"), LAST[lastName++ % LAST.length], [
+      u(coptic, level2),
+    ])
+  }
+
+  const rule = (fields: Partial<PlanRule> & Pick<PlanRule, "weekday" | "startTime">): PlanRule => ({
+    frequency: "weekly",
+    interval: 1,
+    monthWeek: null,
+    endTime: null,
+    startsOn: null,
+    endsOn: null,
+    location: null,
+    ...fields,
   })
 
-  const ssRooms: Record<string, string> = {
-    kg: "Room 1",
-    c1: "Room 2",
-    c2: "Room 3",
-    c3: "Room 4",
-    c4: "Room 5",
-    c56: "Upper hall",
+  const plan = (
+    unit: Unit,
+    year: number,
+    r: PlanRule,
+    status: AnnualPlan["status"],
+    by: Uuid,
+    when: LocalDate,
+    decisions: Record<LocalDate, PlanDecision> = {}
+  ) => {
+    const schedule = scheduleOf(unit)
+    const time = toInstant(at(when, "20:00"))
+    const p: AnnualPlan = {
+      id: newId(),
+      scheduleId: schedule.id,
+      year,
+      status,
+      rule: r,
+      decisions,
+      version: 1,
+      updatedAt: time,
+      updatedBy: by,
+      confirmedAt: status === "confirmed" ? time : null,
+      confirmedBy: status === "confirmed" ? by : null,
+    }
+    s.plans.push(p)
+
+    if (status === "confirmed") {
+      materialize(s, schedule, p, () => newId(epochOf(time)), time)
+    }
+
+    return p
   }
-  for (const key of Object.keys(ssRooms)) {
-    addSchedule(
-      `ss-${key}`,
-      "sunday-school",
-      key,
-      "Sunday class",
-      weekly([7], "2026-09-06"),
-      ["12:00", "13:15"],
-      ssRooms[key],
-      "expected"
+
+  const rooms: [Stage, string][] = [
+    [kg, "Room 1"],
+    [first, "Room 2"],
+    [second, "Room 3"],
+    [third, "Room 4"],
+    [fourth, "Room 5"],
+  ]
+
+  for (const [st, room] of rooms) {
+    plan(
+      u(sundaySchool, st),
+      2026,
+      rule({
+        weekday: 7,
+        startTime: "12:00",
+        endTime: "13:15",
+        startsOn: "2026-09-06",
+        location: room,
+      }),
+      "confirmed",
+      christine.account.id,
+      "2026-08-30"
     )
   }
-  addSchedule(
-    "ss-toddlers",
-    "sunday-school",
-    "toddlers",
-    "Sunday class",
-    weekly([7], "2026-09-06"),
-    ["12:00", "12:45"],
-    "Room 1",
-    "expected",
-    {
-      active: false,
-      description: "Stopped when Toddlers merged into Kindergarten.",
-    }
-  )
-  addSchedule(
-    "youth",
-    "youth",
-    null,
-    "Friday youth meeting",
-    weekly([5], "2026-09-04"),
-    ["19:00", "21:00"],
-    "Youth room",
-    "expected"
-  )
-  addSchedule(
-    "football",
-    "youth",
-    null,
-    "Saturday football",
-    weekly([6], "2026-09-05"),
-    ["10:00", "12:00"],
-    "Sports hall, Merheim",
-    "open",
-    {
-      active: false,
-      description: "Paused for the winter. Resumes in March.",
-    }
-  )
-  addSchedule(
-    "hymns-beginners",
-    "deacons",
-    "beginners",
-    "Hymns class",
-    weekly([6], "2026-09-05"),
-    ["16:00", "17:15"],
-    "Deacons' room",
-    "expected"
-  )
-  addSchedule(
-    "hymns-advanced",
-    "deacons",
-    "advanced",
-    "Hymns class",
-    weekly([6], "2026-09-05"),
-    ["17:30", "19:00"],
-    "Deacons' room",
-    "expected"
-  )
-  addSchedule(
-    "bible",
-    "bible-study",
-    null,
-    "Wednesday Bible study",
-    weekly([3], "2026-09-09"),
-    ["19:30", "21:00"],
-    "Church hall",
-    "open"
-  )
-  addSchedule(
-    "servants",
-    "servants",
-    null,
-    "Servants' preparation",
-    monthly(6, 1, "2026-09-05"),
-    ["19:15", "20:45"],
-    "Church hall",
-    "expected"
-  )
-  addSchedule(
-    "coptic-1",
-    "coptic",
-    "level1",
-    "Level 1 class",
-    weekly([1], "2026-09-14"),
-    ["18:00", "19:00"],
-    "Room 2",
-    "expected"
-  )
-  addSchedule(
-    "coptic-2",
-    "coptic",
-    "level2",
-    "Level 2 class",
-    weekly([1], "2026-09-14", 2),
-    ["19:15", "20:15"],
-    "Room 2",
-    "expected"
-  )
-  addSchedule(
-    "summer",
-    "summer-club",
-    null,
-    "Club day",
-    weekly([3], "2026-07-22", 1, "2026-08-26"),
-    ["10:00", "15:00"],
-    "Church hall and garden",
-    "expected",
-    {
-      active: false,
-      created: ["2026-06-15", "09:30"],
-    }
-  )
-  schedule.football.updatedAt = toInstant(at("2026-10-12", "21:40"))
-  schedule.summer.updatedAt = toInstant(at("2026-09-01", "09:30"))
-  schedule["ss-toddlers"].updatedAt = toInstant(at("2026-09-06", "14:10"))
 
-  // ---------------------------------------------------------------- sessions
-  const takers: Record<string, UserKey[]> = {
-    "ss-kg": ["rebecca"],
-    "ss-c1": ["youssef"],
-    "ss-c2": ["marina"],
-    "ss-c3": ["daniel"],
-    "ss-c4": ["george"],
-    "ss-c56": ["christine"],
-    youth: ["mark", "mark", "bishoy"],
-    football: ["mark"],
-    "hymns-beginners": ["peter", "bishoy"],
-    "hymns-advanced": ["peter"],
-    bible: ["maged"],
-    servants: ["maged"],
-    "coptic-1": ["irene", "youssef"],
-    "coptic-2": ["irene"],
-    summer: ["christine"],
-  }
-  const rate = new Map<Uuid, number>()
-  const rateOf = (p: Person) => {
-    if (!rate.has(p.id))
-      rate.set(p.id, rnd.chance(0.12) ? 0.35 + rnd.next() * 0.2 : 0.7 + rnd.next() * 0.28)
-    return rate.get(p.id)!
+  plan(
+    u(youth),
+    2026,
+    rule({ weekday: 5, startTime: "19:30", startsOn: "2026-09-04", location: "Upper hall" }),
+    "confirmed",
+    mark.account.id,
+    "2026-08-28"
+  )
+  plan(
+    u(youth),
+    2027,
+    rule({ weekday: 5, startTime: "19:30", location: "Upper hall" }),
+    "draft",
+    mark.account.id,
+    "2026-11-05",
+    { "2027-01-01": "cancel" }
+  )
+  plan(
+    u(university),
+    2026,
+    rule({
+      weekday: 3,
+      interval: 2,
+      startTime: "19:00",
+      endTime: "21:00",
+      startsOn: "2026-09-09",
+      location: "Room 5",
+    }),
+    "confirmed",
+    peter.account.id,
+    "2026-08-29"
+  )
+
+  for (const [st, start, end] of [
+    [level1, "18:00", "19:00"],
+    [level2, "19:15", "20:15"],
+  ] as const) {
+    const r = { weekday: 1 as const, startTime: start, endTime: end, location: "Room 2" }
+    plan(
+      u(coptic, st),
+      2026,
+      rule({ ...r, startsOn: "2026-09-14" }),
+      "confirmed",
+      irene.account.id,
+      "2026-09-01"
+    )
+    plan(u(coptic, st), 2027, rule(r), "confirmed", irene.account.id, "2026-11-02")
   }
 
-  const addEvent = (
-    session: MeetingSession,
+  plan(
+    u(servantsMeeting),
+    2026,
+    rule({
+      frequency: "monthly",
+      weekday: 6,
+      monthWeek: 1,
+      startTime: "18:00",
+      endTime: "19:30",
+      startsOn: "2026-09-05",
+      location: "Church hall",
+    }),
+    "confirmed",
+    maged.account.id,
+    "2026-08-30"
+  )
+
+  const event = (
+    session: Session,
     type: SessionEventType,
-    atMs: number,
-    actor: UserKey | null,
+    ms: number,
+    actorId: Uuid | null,
     note: string | null = null
   ) => {
-    state.events.push({
-      id: id(atMs),
+    s.events.push({
+      id: newId(ms),
       sessionId: session.id,
       type,
-      occurredAt: toInstant(atMs),
-      actorId: actor ? user[actor].id : null,
+      occurredAt: toInstant(ms),
+      actorId,
       note,
     })
   }
-  const mark = (session: MeetingSession, person: Person, atMs: number, by: UserKey): Attendance => {
-    const a: Attendance = {
-      id: id(atMs),
-      sessionId: session.id,
-      personId: person.id,
-      recordedAt: toInstant(atMs),
-      recordedBy: user[by].id,
+
+  const session = (unit: Unit, date: LocalDate) => recurringSessionOn(s, scheduleOf(unit).id, date)!
+
+  const cancel = (x: Session, reason: string, by: Uuid, when: number) => {
+    x.status = "canceled"
+    x.cancelReason = reason
+    x.changedByHand = true
+    event(x, "canceled", when, by, reason)
+  }
+
+  cancel(
+    session(u(sundaySchool, fourth), DEMO_DAY),
+    "Bishoy is ill. 4th Class joins 3rd Class today.",
+    christine.account.id,
+    at("2026-11-07", "21:12")
+  )
+  cancel(
+    session(u(university), "2026-11-18"),
+    "Exam week at the university.",
+    peter.account.id,
+    at("2026-11-04", "21:30")
+  )
+
+  for (const st of [kg, first, second, third, fourth]) {
+    cancel(
+      session(u(sundaySchool, st), "2026-12-27"),
+      "Christmas holidays: many families are away.",
+      christine.account.id,
+      at("2026-11-02", "19:00")
+    )
+  }
+
+  const moved = session(u(youth), "2026-11-13")
+  moved.startTime = "20:00"
+  moved.changedByHand = true
+  moved.originalDate = moved.date
+  event(moved, "rescheduled", at("2026-11-06", "22:40"), mark.account.id, "19:30")
+
+  const oneOff = newSession(
+    scheduleOf(u(youth)),
+    {
+      kind: "oneOff",
+      date: "2026-11-21",
+      startTime: "15:00",
+      endTime: "18:00",
+      location: "Church hall",
+      changedByHand: true,
+    },
+    newId(at("2026-11-03", "20:15")),
+    toInstant(at("2026-11-03", "20:15"))
+  )
+  s.sessions.push(oneOff)
+  event(oneOff, "created", at("2026-11-03", "20:15"), mark.account.id)
+
+  const mark_ = (x: Session, p: Person, ms: number, by: Uuid) => {
+    s.attendance.push({
+      id: newId(ms),
+      sessionId: x.id,
+      personId: p.id,
+      recordedAt: toInstant(ms),
+      recordedBy: by,
       removedAt: null,
       removedBy: null,
       removalReason: null,
-    }
-    state.attendance.push(a)
-    return a
-  }
-  const removeMark = (a: Attendance, atMs: number, by: UserKey, reason: string) => {
-    a.removedAt = toInstant(atMs)
-    a.removedBy = user[by].id
-    a.removalReason = reason
-  }
-  const open = (session: MeetingSession, atMs: number, by: UserKey) => {
-    session.status = "active"
-    session.openedAt = toInstant(atMs)
-    addEvent(session, "opened", atMs, by)
-  }
-  const close = (session: MeetingSession, atMs: number, by: UserKey) => {
-    session.status = "completed"
-    session.closedAt = toInstant(atMs)
-    session.closedBy = user[by].id
-    addEvent(session, "closed", atMs, by)
-  }
-  /** Everyone with a membership in the service on the date: the people who come to an open session. */
-  const openPool = (session: MeetingSession) => {
-    const ids = new Set(
-      state.memberships
-        .filter((m) => m.serviceId === session.serviceId && isCurrentOn(m, session.occurrenceDate))
-        .map((m) => m.personId)
-    )
-    return state.persons.filter((p) => ids.has(p.id) && p.status === "active")
-  }
-  /** Marks a realistic share of the roster present, spread around the start time but never before opening. */
-  const takeAttendance = (session: MeetingSession, by: UserKey, untilMs?: number, factor = 1) => {
-    const start = epochOf(session.startsAt)
-    const openedMs = session.openedAt ? epochOf(session.openedAt) : start
-    const pool = session.rosterMode === "open" ? openPool(session) : sessionRoster(state, session)
-    const marks: [Person, number][] = []
-    for (const p of pool) {
-      const p0 = session.rosterMode === "open" ? 0.55 : rateOf(p)
-      if (!rnd.chance(Math.min(0.98, p0 * factor))) continue
-      const offset = Math.round(rnd.next() ** 1.6 * 26 - 6)
-      const t = start + offset * MIN + rnd.int(0, 59) * 1000
-      marks.push([p, Math.max(t, openedMs + rnd.int(20, 90) * 1000)])
-    }
-    marks.sort((a, b) => a[1] - b[1])
-    const out: Attendance[] = []
-    for (const [p, t] of marks)
-      if (untilMs === undefined || t <= untilMs) out.push(mark(session, p, t, by))
-    return out
-  }
-  const materialize = (sch: MeetingSchedule, date: LocalDate, createdMs?: number) => {
-    const occ = occurrenceOn(sch, date)
-    if (!occ) throw new Error(`No occurrence of ${sch.name} on ${date}`)
-    const s = sessionFromOccurrence(sch, occ, createdMs ?? at(addDays(date, -1), "00:05"), rnd.next)
-    state.sessions.push(s)
-    return s
-  }
-
-  // Past occurrences up to yesterday: created the day before, held and closed.
-  type Special = "skip" | "canceled" | "not-taken"
-  const specials: Record<string, Record<LocalDate, Special>> = {
-    youth: { "2026-10-23": "canceled" },
-    bible: { "2026-10-21": "canceled" },
-    "hymns-beginners": { "2026-10-31": "not-taken" },
-  }
-  const pastSchedules = [
-    "ss-kg",
-    "ss-c1",
-    "ss-c2",
-    "ss-c3",
-    "ss-c4",
-    "ss-c56",
-    "youth",
-    "football",
-    "hymns-beginners",
-    "hymns-advanced",
-    "bible",
-    "servants",
-    "coptic-1",
-    "coptic-2",
-    "summer",
-  ]
-  const yesterday = addDays(DEMO_DAY, -1)
-  const pastSessions: Record<string, MeetingSession> = {}
-  for (const key of pastSchedules) {
-    const sch = schedule[key]
-    const lastDay = key === "football" ? "2026-10-10" : yesterday
-    const from = key === "summer" ? sch.recurrence.startsOn : HISTORY_FROM
-    for (let date = from; date <= lastDay; date = addDays(date, 1)) {
-      const occ = occurrenceOn(sch, date)
-      if (!occ) continue
-      const special = specials[key]?.[date]
-      // A session canceled in advance was created early, at the moment it was canceled.
-      const canceledAt = at(addDays(date, -5), "20:30")
-      const s = materialize(sch, date, special === "canceled" ? canceledAt : undefined)
-      pastSessions[`${key}@${date}`] = s
-      if (special === "canceled") {
-        s.status = "canceled"
-        s.overridden = true
-        s.cancelReason =
-          key === "youth"
-            ? "Autumn holidays. We meet again on 30 October."
-            : "No speaker this week."
-        addEvent(s, "canceled", canceledAt, takers[key][0], s.cancelReason)
-        continue
-      }
-      if (special === "not-taken") continue
-      const by = rnd.pick(takers[key])
-      const start = epochOf(s.startsAt)
-      open(s, start - rnd.int(2, 7) * MIN, by)
-      const marks = takeAttendance(s, by)
-      if (marks.length > 3 && rnd.chance(0.05)) {
-        const wrong = rnd.pick(marks)
-        removeMark(
-          wrong,
-          epochOf(wrong.recordedAt) + rnd.int(1, 4) * MIN,
-          by,
-          "Marked the wrong person."
-        )
-      }
-      close(s, (s.endsAt ? epochOf(s.endsAt) : start + 90 * MIN) + rnd.int(0, 12) * MIN, by)
-    }
-  }
-
-  // Last Sunday, Daniel marked the wrong Mina Hanna in 3rd Class. Christine reopened the session to fix it.
-  {
-    const s = pastSessions["ss-c3@2026-11-01"]
-    // Daniel tapped the wrong Mina Hanna: the young man from the Youth Meeting instead of the child.
-    state.attendance = state.attendance.filter(
-      (a) => !(a.sessionId === s.id && a.personId === minaChild.id)
-    )
-    const wrong = mark(s, minaYouth, at("2026-11-01", "12:04") + 12_000, "daniel")
-    const reopenAt = epochOf(s.closedAt!) + 25 * MIN
-    addEvent(
-      s,
-      "reopened",
-      reopenAt,
-      "christine",
-      "Mina Hanna from the Youth Meeting was marked instead of Mina Hanna from 3rd Class."
-    )
-    removeMark(
-      wrong,
-      reopenAt + 2 * MIN,
-      "christine",
-      "Wrong Mina Hanna: marked the one from the Youth Meeting."
-    )
-    mark(s, minaChild, reopenAt + 3 * MIN, "christine")
-    s.status = "completed"
-    s.closedAt = toInstant(reopenAt + 4 * MIN)
-    s.closedBy = user.christine.id
-    addEvent(s, "closed", reopenAt + 4 * MIN, "christine")
-  }
-
-  // A one-off session: the youth retreat planning evening.
-  {
-    const startsAt = localInstant("2026-10-27", "19:00")
-    const s: MeetingSession = {
-      id: id(at("2026-10-22", "21:15")),
-      serviceId: service.youth.id,
-      stageId: null,
-      scheduleId: null,
-      occurrenceDate: "2026-10-27",
-      title: "Retreat planning",
-      location: "Youth room",
-      startsAt,
-      endsAt: localInstant("2026-10-27", "20:30"),
-      status: "scheduled",
-      rosterMode: "open",
-      overridden: false,
-      cancelReason: null,
-      openedAt: null,
-      closedAt: null,
-      closedBy: null,
-      createdAt: toInstant(at("2026-10-22", "21:15")),
-    }
-    state.sessions.push(s)
-    open(s, at("2026-10-27", "18:58"), "mark")
-    for (const [i, p] of youth.slice(0, 6).entries())
-      mark(s, p, at("2026-10-27", "19:02") + i * 3 * MIN, "mark")
-    close(s, at("2026-10-27", "20:41"), "mark")
-  }
-
-  // ------------------------------------------------------------ today & tomorrow
-  // The hourly generator created today's sessions yesterday and tomorrow's today, at 00:05.
-  for (const day of [addDays(DEMO_DAY, -1), DEMO_DAY]) {
-    const runMs = at(day, "00:05")
-    const run = generate(state, day, runMs, rnd.next)
-    state.generatorRuns.push(run)
-  }
-
-  const todays = (key: string) => {
-    const s = state.sessions.find(
-      (x) => x.scheduleId === schedule[key].id && x.occurrenceDate === DEMO_DAY
-    )
-    if (!s) throw new Error(`Missing today's session for ${key}`)
-    return s
-  }
-  const NOW_MS = at(DEMO_DAY, "12:08")
-
-  // 2nd Class was canceled yesterday evening; the children join 1st Class.
-  {
-    const s = todays("ss-c2")
-    s.status = "canceled"
-    s.overridden = true
-    s.cancelReason = "Marina is away. 2nd Class joins 1st Class today."
-    addEvent(s, "canceled", at("2026-11-07", "18:20"), "christine", s.cancelReason)
-  }
-  // Classes in progress.
-  const live: [string, UserKey, LocalTime][] = [
-    ["ss-kg", "rebecca", "11:57"],
-    ["ss-c1", "youssef", "11:59"],
-    ["ss-c3", "daniel", "12:01"],
-    ["ss-c56", "christine", "11:55"],
-  ]
-  for (const [key, by, openedAt] of live) {
-    const s = todays(key)
-    open(s, at(DEMO_DAY, openedAt), by)
-    takeAttendance(s, by, NOW_MS - 30_000, key === "ss-c3" ? 0.8 : 0.95)
-  }
-  // 2nd Class children joining 1st Class: present, but not on the 1st Class roster.
-  {
-    const s = todays("ss-c1")
-    kids.c2.slice(0, 3).forEach((p, i) => mark(s, p, at(DEMO_DAY, "12:03") + i * 50_000, "youssef"))
-  }
-
-  // ------------------------------------------------- changes made in advance
-  // Next Wednesday's Bible Study is canceled; Friday's Youth Meeting starts later.
-  {
-    const s = materialize(schedule.bible, "2026-11-11", at("2026-11-05", "09:12"))
-    s.status = "canceled"
-    s.overridden = true
-    s.cancelReason = "The church hall is booked for the autumn bazaar."
-    addEvent(s, "canceled", at("2026-11-05", "09:12"), "maged", s.cancelReason)
-  }
-  {
-    const s = materialize(schedule.youth, "2026-11-13", at("2026-11-06", "22:04"))
-    const from = s.startsAt
-    s.startsAt = localInstant("2026-11-13", "19:30")
-    s.endsAt = localInstant("2026-11-13", "21:30")
-    s.overridden = true
-    addEvent(s, "moved", at("2026-11-06", "22:04"), "mark", from)
-  }
-  // A one-off rehearsal for the whole of Sunday School in December.
-  {
-    const createdMs = at("2026-11-02", "20:45")
-    state.sessions.push({
-      id: id(createdMs),
-      serviceId: service["sunday-school"].id,
-      stageId: null,
-      scheduleId: null,
-      occurrenceDate: "2026-12-12",
-      title: "Christmas play rehearsal",
-      location: "Church hall",
-      startsAt: localInstant("2026-12-12", "10:00"),
-      endsAt: localInstant("2026-12-12", "12:00"),
-      status: "scheduled",
-      rosterMode: "open",
-      overridden: false,
-      cancelReason: null,
-      openedAt: null,
-      closedAt: null,
-      closedBy: null,
-      createdAt: toInstant(createdMs),
     })
   }
 
-  // ------------------------------------------------------------- lessons & homework
-  // Lessons are prepared per stage for a date of the stage's schedule. Sessions
-  // only exist from the day before, so the link is (schedule, teaching date).
-  type LessonSpec = Partial<
-    Omit<
-      Lesson,
-      | "id"
-      | "serviceId"
-      | "stageId"
-      | "scheduleId"
-      | "teachingDate"
-      | "title"
-      | "status"
-      | "responsibleId"
-    >
-  > & {
-    collaborators?: UserKey[]
+  for (const x of s.sessions) {
+    if (x.status !== "scheduled" || x.date >= DEMO_DAY) {
+      continue
+    }
+
+    const unit = { serviceId: x.serviceId, stageId: x.stageId }
+    const by = unitStaff(unit)
+    const opened = at(x.date, x.startTime) + 2 * MIN
+    x.status = "closed"
+    x.openedAt = toInstant(opened)
+    x.closedAt = toInstant(opened + 70 * MIN)
+    x.closedBy = by
+    event(x, "opened", opened, by)
+
+    for (const p of rosterOf(s, unit, x.date)) {
+      if (rnd.chance(0.86)) {
+        mark_(x, p, opened + rnd.int(1, 20) * MIN, by)
+      }
+    }
+
+    event(x, "closed", opened + 70 * MIN, by)
   }
-  const addLesson = (
-    stageKey: string,
-    teachingDate: LocalDate,
-    title: string,
-    status: Lesson["status"],
-    responsible: UserKey,
-    spec: LessonSpec,
-    created: [LocalDate, LocalTime]
+
+  const openToday = (st: Stage, present: number) => {
+    const x = session(u(sundaySchool, st), DEMO_DAY)
+    const by = unitStaff(u(sundaySchool, st))
+    const opened = at(DEMO_DAY, "12:02")
+    x.status = "open"
+    x.openedAt = toInstant(opened)
+    event(x, "opened", opened, by)
+    rosterOf(s, u(sundaySchool, st), DEMO_DAY)
+      .slice(0, present)
+      .forEach((p, i) => mark_(x, p, opened + (i + 1) * MIN, by))
+
+    return x
+  }
+
+  openToday(kg, 5)
+  openToday(second, 6)
+  const thirdToday = openToday(third, 5)
+
+  for (const p of rosterOf(s, u(sundaySchool, fourth), DEMO_DAY).slice(0, 2)) {
+    mark_(thirdToday, p, at(DEMO_DAY, "12:07"), daniel.account.id)
+  }
+
+  const lessonAt = (unit: Unit, date: LocalDate) => recurringSessionOn(s, scheduleOf(unit).id, date)
+
+  const material = (label: string, url: string | null, shared: boolean): Material => ({
+    label,
+    url,
+    shared,
+  })
+
+  const lesson = (
+    unit: Unit,
+    date: LocalDate,
+    fields: Pick<Lesson, "title" | "status"> & Partial<Lesson>,
+    by: Uuid
   ): Lesson => {
-    const createdMs = at(...created)
-    const sch = schedule[`ss-${stageKey}`]
-    const lesson: Lesson = {
-      id: id(createdMs),
-      serviceId: service["sunday-school"].id,
-      stageId: stage[stageKey].id,
-      scheduleId: sch.id,
-      sessionId: null,
-      teachingDate,
-      title,
-      summary: spec.summary ?? null,
-      passage: spec.passage ?? null,
-      objectives: spec.objectives ?? null,
-      teachingPoints: spec.teachingPoints ?? null,
-      memoryVerse: spec.memoryVerse ?? null,
-      activities: spec.activities ?? null,
-      materials: spec.materials ?? [],
-      notes: spec.notes ?? null,
-      status,
-      responsibleId: user[responsible].id,
-      collaboratorIds: (spec.collaborators ?? []).map((k) => user[k].id),
-      completedAt: status === "completed" ? toInstant(at(teachingDate, "13:30")) : null,
-      archivedAt: null,
-      createdAt: toInstant(createdMs),
-      updatedAt: toInstant(createdMs + 2 * 86_400_000),
+    const time = toInstant(at(addDays(date, -5), "20:30"))
+    const x: Lesson = {
+      id: newId(epochOf(time)),
+      ...unit,
+      sessionId: lessonAt(unit, date)?.id ?? null,
+      date,
+      summary: null,
+      objectives: null,
+      teachingPoints: null,
+      materials: [],
+      notes: null,
+      responsibleId: by,
+      publishedAt: fields.status === "published" ? toInstant(at(addDays(date, -1), "19:00")) : null,
+      createdAt: time,
+      updatedAt: time,
+      ...fields,
     }
-    state.lessons.push(lesson)
-    return lesson
+    s.lessons.push(x)
+
+    return x
   }
-  const addHomework = (
-    lesson: Lesson,
-    title: string,
-    instructions: string,
-    dueDate: LocalDate | null,
-    by: UserKey,
-    published: [LocalDate, LocalTime] | null,
-    resources: HomeworkAssignment["resources"] = []
-  ): HomeworkAssignment => {
-    const createdMs = epochOf(lesson.createdAt) + 60 * MIN
-    const hw: HomeworkAssignment = {
-      id: id(createdMs),
-      lessonId: lesson.id,
-      serviceId: lesson.serviceId,
-      stageId: lesson.stageId!,
-      title,
-      instructions,
-      dueDate,
-      resources,
-      status: published ? "published" : "draft",
-      publishedAt: published ? toInstant(at(...published)) : null,
-      archivedAt: null,
-      createdBy: user[by].id,
-      createdAt: toInstant(createdMs),
-      updatedAt: toInstant(published ? at(...published) : createdMs),
+
+  const task = (
+    l: Lesson,
+    fields: Pick<Task, "title" | "instructions" | "status"> & Partial<Task>,
+    by: Uuid
+  ): Task => {
+    const x: Task = {
+      id: newId(epochOf(l.updatedAt) + 1000),
+      lessonId: l.id,
+      serviceId: l.serviceId,
+      stageId: l.stageId,
+      dueDate: addDays(l.date, 7),
+      resources: [],
+      publishedAt: fields.status === "draft" ? null : l.publishedAt,
+      createdBy: by,
+      createdAt: l.updatedAt,
+      updatedAt: l.updatedAt,
+      ...fields,
     }
-    state.homework.push(hw)
-    return hw
+    s.tasks.push(x)
+
+    return x
   }
-  const guardianOf = (child: Person) =>
-    state.users.find((u) =>
-      state.guardians.some(
-        (g) => g.userId === u.id && g.personId === child.id && g.status === "approved"
-      )
-    )
-  const complete = (hw: HomeworkAssignment, child: Person, by: User | undefined, when: number) => {
-    if (!by) return
-    state.completions.push({
-      id: id(when),
-      assignmentId: hw.id,
-      personId: child.id,
-      completedAt: toInstant(when),
-      completedBy: by.id,
+
+  const complete = (t: Task, p: Person, by: Uuid, ms: number) => {
+    s.completions.push({
+      id: newId(ms),
+      taskId: t.id,
+      personId: p.id,
+      completedAt: toInstant(ms),
+      completedBy: by,
       undoneAt: null,
-      undoneBy: null,
     })
   }
-  const bible = (ref: string) =>
-    `https://www.biblegateway.com/passage/?search=${encodeURIComponent(ref)}&version=NKJV`
 
-  // 3rd Class, prepared by Daniel.
-  addLesson(
-    "c3",
-    "2026-10-04",
-    "Noah Builds the Ark",
-    "completed",
-    "daniel",
-    {
-      passage: "Genesis 6:9–22",
-      memoryVerse: "Noah did according to all that God commanded him. (Genesis 6:22)",
-      objectives:
-        "The children see that Noah trusted God and obeyed, even when others laughed at him.",
-      teachingPoints:
-        "God saw that Noah was faithful.\nGod asked Noah to build an ark.\nNoah obeyed, step by step.",
-      activities: "Build a paper ark and fill it with pairs of animals.",
-      materials: [{ label: "Children’s Bible, pages 14–17", url: null }],
-    },
-    ["2026-09-27", "20:10"]
-  )
-  addLesson(
-    "c3",
-    "2026-10-11",
-    "Abraham Trusts God",
-    "completed",
-    "daniel",
-    {
-      passage: "Genesis 12:1–9",
-      memoryVerse: "Abram believed the Lord. (Genesis 15:6)",
-      objectives:
-        "The children learn that trusting God means following Him even when we don’t know the way.",
-    },
-    ["2026-10-04", "19:45"]
-  )
-  addLesson(
-    "c3",
-    "2026-10-18",
-    "Joseph Forgives His Brothers",
-    "completed",
-    "daniel",
-    {
-      passage: "Genesis 45:1–15",
-      memoryVerse: "You meant evil against me; but God meant it for good. (Genesis 50:20)",
-      objectives: "The children understand forgiveness through Joseph’s story.",
-    },
-    ["2026-10-11", "21:02"]
-  )
-  addLesson(
-    "c3",
-    "2026-10-25",
-    "Baby Moses in the Basket",
-    "completed",
-    "daniel",
-    {
-      passage: "Exodus 2:1–10",
-      objectives:
-        "The children see how God protected Moses through his mother, his sister and Pharaoh’s daughter.",
-    },
-    ["2026-10-18", "18:30"]
-  )
-  const lostSheep = addLesson(
-    "c3",
+  const firstU = u(sundaySchool, first)
+  const thirdU = u(sundaySchool, third)
+  lesson(
+    firstU,
     "2026-11-01",
-    "The Lost Sheep",
-    "completed",
-    "daniel",
     {
-      summary:
-        "Jesus tells the story of a shepherd who leaves ninety-nine sheep to find the one that was lost.",
-      passage: "Luke 15:3–7",
-      memoryVerse: "There will be more joy in heaven over one sinner who repents. (Luke 15:7)",
-      objectives:
-        "The children know that God looks for every one of us and rejoices when we come back to Him.",
-      teachingPoints:
-        "The shepherd knows each sheep.\nHe searches until he finds the lost one.\nHe carries it home with joy.",
-      activities:
-        "Hide a paper sheep in the room and let the children find it.\nSing “The Good Shepherd”.",
-      materials: [{ label: "Paper sheep (cupboard, second shelf)", url: null }],
-      notes: "Two children were upset last week; keep the hiding game calm.",
-      collaborators: ["christine"],
+      title: "God creates the world",
+      status: "published",
+      summary: "In six days God made everything, and He saw that it was good (Genesis 1).",
+      objectives: "The children can name what God made on each day.",
+      teachingPoints: "God made everything out of love.\nWe take care of His creation.",
+      materials: [material("Picture cards of the seven days", null, false)],
     },
-    ["2026-10-25", "20:40"]
+    daniel.account.id
   )
-  const readStory = addHomework(
-    lostSheep,
-    "Read the story together",
-    "Read Luke 15:3–7 with your child. Ask: how did the shepherd feel when he found his sheep? How does God feel about each of us?",
-    "2026-11-07",
-    "daniel",
-    ["2026-11-01", "14:05"],
-    [{ label: "Luke 15:3–7 in the Bible", url: bible("Luke 15:3-7") }]
-  )
-  const drawSheep = addHomework(
-    lostSheep,
-    "Draw the shepherd and his sheep",
-    "Help your child draw the shepherd carrying the lost sheep home. Please bring the drawing next Sunday.",
-    "2026-11-08",
-    "daniel",
-    ["2026-11-01", "14:06"]
-  )
-  for (const child of kids.c3) {
-    if (child.id === minaChild.id || child.id === kirollosChild.id) continue
-    const parent = guardianOf(child)
-    if (rnd.chance(0.78))
-      complete(readStory, child, parent, at("2026-11-02", "18:00") + rnd.int(0, 5 * 24 * 60) * MIN)
-    if (rnd.chance(0.6))
-      complete(drawSheep, child, parent, at("2026-11-03", "17:00") + rnd.int(0, 4 * 24 * 60) * MIN)
-  }
-  complete(readStory, minaChild, user.hoda, at("2026-11-06", "19:40"))
-  // Kirollos finished after the due date: shown as "completed after the due date", never as a failure.
-  complete(readStory, kirollosChild, user.samir, at("2026-11-08", "09:15"))
-
-  const zacchaeus = addLesson(
-    "c3",
+  const noah = lesson(
+    firstU,
     DEMO_DAY,
-    "Zacchaeus Meets Jesus",
-    "ready",
-    "daniel",
     {
+      title: "Noah's ark",
+      status: "published",
       summary:
-        "Zacchaeus climbs a tree to see Jesus, and Jesus visits his house. His life changes.",
-      passage: "Luke 19:1–10",
-      memoryVerse: "The Son of Man has come to seek and to save that which was lost. (Luke 19:10)",
+        "Noah trusted God and built the ark. After the flood, God put the rainbow in the sky as a sign of His promise (Genesis 6–9).",
       objectives:
-        "The children learn that Jesus loves us before we change, and that His love changes us.",
+        "The children can retell the story of Noah.\nThey know that God keeps His promises.",
       teachingPoints:
-        "Zacchaeus was small and unpopular.\nJesus called him by name.\nZacchaeus gave back what he had taken.",
-      activities: "Act out the story; one child stands on a chair as the sycamore tree.",
-      materials: [{ label: "Felt board figures: Zacchaeus, tree, crowd", url: null }],
-      notes: "Daniel leads; Christine joins after the liturgy.",
-      collaborators: ["christine"],
-    },
-    ["2026-11-01", "20:15"]
-  )
-  addHomework(
-    zacchaeus,
-    "Learn the memory verse",
-    "Help your child learn Luke 19:10 by heart: “The Son of Man has come to seek and to save that which was lost.” Say it together each evening.",
-    "2026-11-15",
-    "daniel",
-    null
-  )
-  addLesson(
-    "c3",
-    "2026-11-22",
-    "The Wise and Foolish Builders",
-    "draft",
-    "daniel",
-    {
-      passage: "Matthew 7:24–27",
-      objectives:
-        "The children understand that listening to Jesus and doing what He says is like building on rock.",
+        "Noah listened to God even when others laughed.\nThe rainbow reminds us of God's promise.\nWe can trust God like Noah did.",
+      materials: [
+        material("Children's Bible, page 18", null, true),
+        material("Song: Rise and shine", "https://example.org/songs/rise-and-shine", true),
+        material("Ark craft template", "https://example.org/crafts/ark.pdf", false),
+      ],
       notes:
-        "Bring the building blocks and the sand tray. Ask Monica if she can tell the story with the felt board.",
-      collaborators: ["christine"],
+        "Bring the cardboard ark from the cupboard in Room 2. Mimi and Philip love to help with the animals.",
     },
-    ["2026-11-07", "21:30"]
+    daniel.account.id
+  )
+  lesson(
+    firstU,
+    "2026-11-15",
+    {
+      title: "The Good Samaritan",
+      status: "ready",
+      summary: "Jesus tells of a Samaritan who helps a wounded stranger (Luke 10:25–37).",
+      objectives: "The children understand that everyone is our neighbour.",
+      teachingPoints: "Who is my neighbour?\nHelping costs something, and it is worth it.",
+      materials: [material("Role-play props: bandages and a blanket", null, false)],
+      notes: "Ask George for the first-aid kit for the role-play.",
+    },
+    daniel.account.id
+  )
+  lesson(
+    firstU,
+    "2026-11-22",
+    {
+      title: "The Lost Sheep",
+      status: "draft",
+      summary: "The shepherd leaves the ninety-nine to look for the one (Luke 15:3–7).",
+    },
+    daniel.account.id
   )
 
-  // Other classes.
-  const animals = addLesson(
-    "kg",
-    DEMO_DAY,
-    "God Made the Animals",
-    "ready",
-    "rebecca",
-    {
-      passage: "Genesis 1:20–25",
-      objectives: "The children thank God for the animals He made.",
-      activities: "Animal sounds game; colour a page with five animals.",
-    },
-    ["2026-11-02", "19:00"]
-  )
-  addHomework(
-    animals,
-    "Name five animals God made",
-    "Ask your child to name five animals God made. For each one, say together: “Thank you, God, for the …”.",
-    "2026-11-15",
-    "rebecca",
-    ["2026-11-06", "18:20"]
-  )
-  const loaves = addLesson(
-    "c1",
+  const joseph = lesson(
+    thirdU,
     "2026-11-01",
-    "Jesus Feeds Five Thousand",
-    "completed",
-    "youssef",
     {
-      passage: "John 6:1–14",
-      memoryVerse:
-        "Jesus took the loaves, and when He had given thanks He distributed them. (John 6:11)",
+      title: "Joseph forgives his brothers",
+      status: "published",
+      summary: "Joseph meets his brothers again in Egypt and forgives them (Genesis 45).",
+      objectives: "The children can explain why Joseph forgave.",
+      teachingPoints: "Forgiveness is a choice.\nGod can turn evil into good.",
+      materials: [material("Genesis 45, read together", null, true)],
+    },
+    daniel.account.id
+  )
+  const bush = lesson(
+    thirdU,
+    DEMO_DAY,
+    {
+      title: "Moses and the burning bush",
+      status: "published",
+      summary:
+        "God calls Moses from a bush that burns but is not consumed, and sends him to free His people (Exodus 3).",
       objectives:
-        "The children learn that Jesus cares for our needs and that we give thanks before eating.",
+        "The children can tell how God called Moses.\nThey learn that God is holy and that He hears His people.",
+      teachingPoints:
+        'Moses took off his sandals: God is holy.\n"I AM WHO I AM": God\'s name.\nGod sends Moses even though he feels weak.',
+      materials: [
+        material("Exodus 3:1–12", null, true),
+        material(
+          "Coloring page: the burning bush",
+          "https://example.org/coloring/burning-bush.pdf",
+          true
+        ),
+        material("Video for the introduction", "https://example.org/videos/moses", false),
+      ],
+      notes:
+        "Mina asked last week whether God still speaks today. Keep five minutes for his question.",
     },
-    ["2026-10-26", "19:30"]
+    daniel.account.id
   )
-  const drawLoaves = addHomework(
-    loaves,
-    "Draw the five loaves and two fish",
-    "Help your child draw the boy’s basket with five loaves and two fish. Talk about what we can share with others.",
-    "2026-11-07",
-    "youssef",
-    ["2026-11-01", "13:50"]
-  )
-  complete(drawLoaves, mariamChild, user.nabil, at("2026-11-04", "18:30"))
-  for (const child of kids.c1)
-    if (child.id !== mariamChild.id && rnd.chance(0.65))
-      complete(
-        drawLoaves,
-        child,
-        guardianOf(child),
-        at("2026-11-02", "17:00") + rnd.int(0, 4 * 24 * 60) * MIN
-      )
-  const storm = addLesson(
-    "c1",
-    DEMO_DAY,
-    "Jesus Calms the Storm",
-    "ready",
-    "youssef",
+  lesson(
+    thirdU,
+    "2026-11-22",
     {
-      passage: "Mark 4:35–41",
-      memoryVerse: "Peace, be still! (Mark 4:39)",
-      objectives: "The children learn to call on Jesus when they are afraid.",
+      title: "The Sermon on the Mount",
+      status: "draft",
+      summary: "The Beatitudes (Matthew 5:1–12).",
     },
-    ["2026-11-03", "20:00"]
+    daniel.account.id
   )
-  addHomework(
-    storm,
-    "Pray before sleeping",
-    "Each evening this week, pray a short prayer with your child before bed, like the disciples who called to Jesus in the storm. For example: “Lord Jesus, keep us safe tonight. Amen.”",
+  lesson(
+    u(sundaySchool, kg),
+    DEMO_DAY,
+    {
+      title: "God made the animals",
+      status: "published",
+      summary: "We thank God for every animal He made.",
+      objectives: "The children can name five animals and thank God for them.",
+      teachingPoints: "God made every animal.\nWe are kind to animals.",
+    },
+    george.account.id
+  )
+  lesson(
+    u(sundaySchool, second),
     "2026-11-15",
-    "youssef",
-    ["2026-11-08", "11:40"]
-  )
-  addLesson(
-    "c2",
-    DEMO_DAY,
-    "Daniel in the Lions’ Den",
-    "ready",
-    "marina",
     {
-      passage: "Daniel 6:10–23",
-      memoryVerse: "My God sent His angel and shut the lions’ mouths. (Daniel 6:22)",
+      title: "David and Goliath",
+      status: "ready",
+      summary: "David trusts God against the giant (1 Samuel 17).",
     },
-    ["2026-11-01", "21:00"]
-  )
-  addLesson(
-    "c56",
-    DEMO_DAY,
-    "The Armour of God",
-    "ready",
-    "christine",
-    {
-      passage: "Ephesians 6:10–18",
-      objectives:
-        "The older children name the pieces of God’s armour and what each one means for daily life.",
-    },
-    ["2026-11-02", "20:30"]
-  )
-  addLesson(
-    "c4",
-    "2026-11-15",
-    "The Ten Commandments",
-    "draft",
-    "george",
-    {
-      passage: "Exodus 20:1–17",
-    },
-    ["2026-11-05", "19:15"]
+    marina.account.id
   )
 
-  // ------------------------------------------------------- account requests
-  // People who registered themselves and opened the link in the email minutes later. Their accounts
-  // can't be used until an administrator approves them, linking the children (parents) or giving a
-  // role (servants); declined ones are deleted.
-  const registered = (
-    first: string,
-    last: string,
-    on: [LocalDate, LocalTime],
-    registration: User["registration"],
-    language: User["language"]
-  ) => {
-    const ms = at(...on)
-    const u: User = {
-      id: id(ms),
-      email: `${first}.${last}@example.org`.toLowerCase(),
-      displayName: `${first} ${last}`,
-      personId: null,
-      roleIds: [],
-      permissions: [],
-      passwordHash: demoPasswordHash(),
-      language,
-      registration,
-      emailConfirmedAt: toInstant(ms + 12 * MIN),
-      emailConfirmation: null,
-      privacyAcceptedAt: toInstant(ms),
-      privacyVersion: PRIVACY_VERSION,
-      approvedAt: null,
-      approvedBy: null,
-      ageCheck: null,
-      guardianConsentNote: null,
-      disabledAt: null,
-      createdAt: toInstant(ms),
-    }
-    state.users.push(u)
-    return u
-  }
-  const newFamily = kids.c2[0]
-  registered(
-    "Sandra",
-    newFamily.lastName,
-    ["2026-11-06", "21:14"],
+  const letters = lesson(
+    u(coptic, level1),
+    "2026-11-09",
     {
-      as: "parent",
-      details: `${newFamily.displayName ?? newFamily.firstName} ${newFamily.lastName}, 2nd Class (with Marina)`,
-      serviceId: null,
+      title: "The first eight letters",
+      status: "published",
+      summary: "Alpha to Theta: how each letter is written and pronounced, with a word for each.",
+      objectives: "Read and write the letters Ⲁ to Ⲑ.\nPronounce them as in the hymns.",
+      teachingPoints:
+        "Ⲁ alpha, Ⲃ vida, Ⲅ gamma, Ⲇ delta, Ⲉ ei, Ⲋ so, Ⲍ zita, Ⲏ ita, Ⲑ thita.\nⲂ is read as v in most words.\nPractise with the word Ⲡⲁⲡⲁ.",
+      materials: [
+        material("Alphabet sheet", "https://example.org/coptic/alphabet.pdf", true),
+        material("Audio: the letters read aloud", "https://example.org/coptic/letters.mp3", true),
+        material("Answer key for the worksheet", "https://example.org/coptic/key.pdf", false),
+      ],
+      notes:
+        "Nevine asked about the pronunciation of Ⲉ. Two of the children need the large-print sheet.",
     },
-    "ar"
+    irene.account.id
   )
-  registered(
-    "Fady",
-    "Gerges",
-    ["2026-11-07", "18:02"],
+  lesson(
+    u(youth),
+    "2026-11-13",
     {
-      as: "servant",
-      details:
-        "I served in the youth meeting of my previous parish for three years and moved to Cologne in October. Mark Shenouda knows me.",
-      serviceId: service.youth.id,
+      title: "Prayer in everyday life",
+      status: "ready",
+      summary: "How to keep a rule of prayer between school, friends and family.",
+      objectives: "Everyone leaves with one small, realistic prayer habit.",
+      teachingPoints: "The Agpeya hours as anchors.\nShort prayers during the day.",
     },
-    "de"
+    daniel.account.id
   )
 
-  // --------------------------------------------------- data protection log
-  const dataRequest = (r: Omit<DataRequest, "id" | "dueOn">) => {
-    const received = epochOf(r.receivedAt)
-    state.dataRequests.push({
-      id: id(received),
-      ...r,
-      dueOn: oneMonthAfter(localDateOf(received)),
-    })
-  }
-  // An erasure carried out in September: only the log entry is left, without the name.
-  dataRequest({
-    kind: "erasure",
-    personId: null,
-    userId: null,
-    subjectName: null,
-    erasedSubject: { kind: "member", group: "Youth Meeting" },
-    requestedBy: "The member, in person",
-    channel: "in_person",
-    receivedAt: toInstant(at("2026-09-13", "13:20")),
-    note: null,
-    status: "done",
-    outcome: { person: 1, memberships: 1, attendance: 2 },
-    declineReason: null,
-    closedAt: toInstant(at("2026-09-16", "19:05")),
-    closedBy: user.mariam.id,
-  })
-  // Nabil asked for a copy of what the app stores about him; the office sent it.
-  dataRequest({
-    kind: "copy",
-    personId: user.nabil.personId,
-    userId: user.nabil.id,
-    subjectName: user.nabil.displayName,
-    erasedSubject: null,
-    requestedBy: "Nabil Hanna, by email",
-    channel: "email",
-    receivedAt: toInstant(at("2026-10-05", "08:47")),
-    note: null,
-    status: "done",
-    outcome: null,
-    declineReason: null,
-    closedAt: toInstant(at("2026-10-07", "20:30")),
-    closedBy: user.mariam.id,
-  })
-  // The family that moved away in October asks the office to delete their child's data.
-  dataRequest({
-    kind: "erasure",
-    personId: movedAway.id,
-    userId: null,
-    subjectName: `${movedAway.firstName} ${movedAway.lastName}`,
-    erasedSubject: null,
-    requestedBy: "The parents, by email",
-    channel: "email",
-    receivedAt: toInstant(at("2026-11-02", "19:40")),
-    note: "The family moved to Hamburg and asks us to delete everything about their child.",
-    status: "open",
-    outcome: null,
-    declineReason: null,
-    closedAt: null,
-    closedBy: null,
-  })
-
-  // --------------------------------------------------------- member accounts
-  // Added after everything else, so the random ids and names above stay as they were.
-  //
-  // Members can have an account of their own: it is linked to their member record and shows
-  // their groups, the next meetings and their homework. Nevine (Bible Study, Coptic Language
-  // Course › Level 1) registered as a member in October, and Mariam linked the account to her
-  // record. Hoda, Nabil, Samir and Nadia are parents whose accounts the office linked to their
-  // own records, so they see their own groups too.
-  const nevine = adults[9]
-  const nevineRegistered = at("2026-10-19", "20:40")
-  state.users.push({
-    id: id(nevineRegistered),
-    email: "nevine.boulos@example.org",
-    displayName: `${nevine.firstName} ${nevine.lastName}`,
-    personId: nevine.id,
-    roleIds: [],
-    permissions: [],
-    passwordHash: demoPasswordHash(),
-    language: null,
-    registration: null,
-    emailConfirmedAt: toInstant(nevineRegistered + 5 * MIN),
-    emailConfirmation: null,
-    privacyAcceptedAt: toInstant(nevineRegistered),
-    privacyVersion: PRIVACY_VERSION,
-    approvedAt: toInstant(at("2026-10-20", "09:15")),
-    approvedBy: user.mariam.id,
-    ageCheck: "sixteenOrOlder",
-    guardianConsentNote: null,
-    disabledAt: null,
-    createdAt: toInstant(nevineRegistered),
-  })
-  const nevineAccount = state.users[state.users.length - 1]
-
-  // Coptic Language Course › Level 1 (Mondays): adults and children learn together, so homework
-  // goes to members with their own account as much as to parents.
-  const copticLesson = (
-    teachingDate: LocalDate,
-    title: string,
-    status: Lesson["status"],
-    spec: LessonSpec,
-    created: [LocalDate, LocalTime]
-  ): Lesson => {
-    const createdMs = at(...created)
-    const lesson: Lesson = {
-      id: id(createdMs),
-      serviceId: service.coptic.id,
-      stageId: stage.level1.id,
-      scheduleId: schedule["coptic-1"].id,
-      sessionId: null,
-      teachingDate,
-      title,
-      summary: spec.summary ?? null,
-      passage: spec.passage ?? null,
-      objectives: spec.objectives ?? null,
-      teachingPoints: spec.teachingPoints ?? null,
-      memoryVerse: spec.memoryVerse ?? null,
-      activities: spec.activities ?? null,
-      materials: spec.materials ?? [],
-      notes: spec.notes ?? null,
-      status,
-      responsibleId: user.irene.id,
-      collaboratorIds: [user.youssef.id],
-      completedAt: status === "completed" ? toInstant(at(teachingDate, "19:10")) : null,
-      archivedAt: null,
-      createdAt: toInstant(createdMs),
-      updatedAt: toInstant(createdMs + 86_400_000),
-    }
-    state.lessons.push(lesson)
-    return lesson
-  }
-  const greeting = copticLesson(
-    "2026-10-26",
-    "The Easter greeting",
-    "completed",
+  const verse = task(
+    bush,
     {
-      summary: "How Copts greet each other from Easter to Pentecost, and how to answer.",
-      passage: "Luke 24:1–12",
-      memoryVerse: "Pikhristos aftonf! Khen oumethmi aftonf! (Christ is risen! Truly He is risen!)",
-      objectives: "Everyone can say the Easter greeting and answer it.",
-      activities: "Greet each other around the table, then read the greeting from the board.",
-      materials: [{ label: "Greeting card to take home", url: null }],
+      title: "Learn Exodus 3:14 by heart",
+      instructions: 'Say the verse to someone at home: "I AM WHO I AM." Then tick it off.',
+      status: "published",
+      dueDate: "2026-11-15",
     },
-    ["2026-10-22", "21:00"]
+    daniel.account.id
   )
-  const sayGreeting = addHomework(
-    greeting,
-    "Say the Easter greeting at home",
-    "Say the greeting with someone at home every day this week: one says “Pikhristos aftonf!”, the other answers “Khen oumethmi aftonf!”. It takes a minute.",
-    "2026-11-02",
-    "irene",
-    ["2026-10-26", "19:20"]
-  )
-  complete(sayGreeting, nevine, nevineAccount, at("2026-10-29", "20:15"))
-  complete(sayGreeting, adults[1], user.hoda, at("2026-10-31", "10:05"))
-  const letters = copticLesson(
-    "2026-11-02",
-    "The first eight letters",
-    "completed",
+  task(
+    bush,
     {
-      summary: "Alpha to Eta: how the letters look and how they sound.",
-      objectives: "Recognise, say and write the first eight letters of the Coptic alphabet.",
-      activities: "Trace each letter, then find it in a line of the Agpeya.",
-      materials: [{ label: "Worksheet: letters 1 to 8", url: null }],
+      title: "Colour the burning bush",
+      instructions: "Print the coloring page or draw the bush yourself and bring it next Sunday.",
+      status: "published",
+      dueDate: "2026-11-15",
+      resources: [{ label: "Coloring page", url: "https://example.org/coloring/burning-bush.pdf" }],
     },
-    ["2026-10-29", "20:30"]
+    daniel.account.id
   )
-  addHomework(
+  task(
+    bush,
+    {
+      title: "Draw Moses at the bush",
+      instructions: "Draw what Moses saw.",
+      status: "draft",
+      dueDate: null,
+    },
+    daniel.account.id
+  )
+  const forgive = task(
+    joseph,
+    {
+      title: "Forgive someone this week",
+      instructions: "Think of one person you want to forgive and pray for them every evening.",
+      status: "published",
+      dueDate: "2026-11-08",
+    },
+    daniel.account.id
+  )
+  const ark = task(
+    noah,
+    {
+      title: "Tell the story of Noah at home",
+      instructions: "Tell your family the story of Noah's ark and show them the rainbow you made.",
+      status: "published",
+      dueDate: "2026-11-15",
+    },
+    daniel.account.id
+  )
+  const write = task(
     letters,
-    "Write the first eight letters",
-    "Write each of the first eight letters three times and say its name aloud. It takes about 15 minutes. Bring the sheet next Monday.",
-    "2026-11-09",
-    "irene",
-    ["2026-11-02", "19:25"],
-    [{ label: "The Coptic alphabet (chart)", url: "https://example.org/coptic-alphabet" }]
-  )
-  const words = copticLesson(
-    "2026-11-09",
-    "Reading short words",
-    "ready",
     {
-      summary: "Putting the first letters together: reading short words from the liturgy.",
-      objectives: "Read five short words aloud.",
+      title: "Write the first eight letters",
+      instructions:
+        "Write each letter from Ⲁ to Ⲑ five times on the alphabet sheet and read them aloud.",
+      status: "published",
+      dueDate: "2026-11-16",
+      resources: [{ label: "Alphabet sheet", url: "https://example.org/coptic/alphabet.pdf" }],
     },
-    ["2026-11-05", "21:10"]
-  )
-  addHomework(
-    words,
-    "Read five short words",
-    "Read the five words on the card aloud, twice a day. Tick it off when you can read them without help.",
-    "2026-11-16",
-    "irene",
-    null
+    irene.account.id
   )
 
-  // ------------------------------------------------------------------- roles
-  // Two roles the office added: "Church office" for Sara, who handles account requests, parent
-  // access, member accounts and data protection requests and keeps the member list, and
-  // "Lesson preparation" for people who help prepare lessons and homework without taking
-  // attendance (no one has it yet).
-  const customRole = (name: string, permissions: Permission[], created: [LocalDate, LocalTime]) => {
-    const ms = at(...created)
-    const role: Role = {
-      id: id(ms),
-      name,
-      permissions: inCatalogOrder(permissions),
-      scope: "church",
-      createdAt: toInstant(ms),
-      updatedAt: toInstant(ms),
+  const reporters = (p: Person) =>
+    s.guardianships.filter((g) => g.childId === p.id).map((g) => g.accountId)
+
+  rosterOf(s, thirdU, DEMO_DAY).forEach((p, i) => {
+    if (i < 5 && p.id !== mina.id) {
+      complete(forgive, p, reporters(p)[0], at("2026-11-0" + (3 + (i % 4)), "19:30"))
     }
-    state.roles.push(role)
-    return role
-  }
-  customRole(
-    "Lesson preparation",
-    [
-      "services:read",
-      "lessons:read",
-      "lessons:create",
-      "lessons:update",
-      "homework:read",
-      "homework:create",
-      "homework:update",
-    ],
-    ["2026-10-05", "21:30"]
-  )
-  const office = customRole(
-    "Church office",
-    [
-      "services:read",
-      "members:read",
-      "members:create",
-      "members:update",
-      "users:read",
-      "users:create",
-      "users:update",
-      "users:delete",
-    ],
-    ["2026-10-12", "18:40"]
-  )
-  const saraCreated = at("2026-10-12", "18:45")
-  state.users.push({
-    id: id(saraCreated),
-    email: "sara.wissa@example.org",
-    displayName: "Sara Wissa",
-    personId: null,
-    ...access([office.id]),
-    ...officeAccount(saraCreated),
-    disabledAt: null,
+
+    if (i < 2 && p.id !== mina.id) {
+      complete(verse, p, reporters(p)[0], at(DEMO_DAY, "10:15"))
+    }
   })
-
-  // ------------------------------------------------------------- assignments
-  // Where the servants serve (backend #318): Service leader and Servant hold only there. A leader
-  // is assigned to the whole service, which covers all its stages; a servant to their class.
-  // Mariam assigned everyone when the Coptic course was added. Samuel's account is disabled and has
-  // none; Fady, who waits for approval, gets his with the approval.
-  const assign = (who: UserKey, serviceKey: ServiceKey, stageKey: string | null = null) => {
-    const ms = at("2026-09-01", "21:00") + state.assignments.length * MIN
-    state.assignments.push({
-      id: id(ms),
-      userId: user[who].id,
-      serviceId: service[serviceKey].id,
-      stageId: stageKey ? stage[stageKey].id : null,
-      createdAt: toInstant(ms),
+  complete(forgive, mina, hoda.id, at("2026-11-05", "18:45"))
+  rosterOf(s, firstU, DEMO_DAY)
+    .filter((p) => p.id !== mimi.id)
+    .slice(0, 2)
+    .forEach((p) => complete(ark, p, reporters(p)[0], at(DEMO_DAY, "11:00")))
+  rosterOf(s, u(coptic, level1), DEMO_DAY)
+    .filter((p) => p.id !== nevine.person.id)
+    .slice(0, 3)
+    .forEach((p) => {
+      const own = s.accounts.find((a) => a.personId === p.id)
+      complete(write, p, own?.id ?? irene.account.id, at(DEMO_DAY, "09:30"))
     })
-  }
-  assign("christine", "sunday-school")
-  assign("daniel", "sunday-school", "c3")
-  assign("rebecca", "sunday-school", "kg")
-  assign("youssef", "sunday-school", "c1")
-  assign("youssef", "coptic", "level1")
-  assign("marina", "sunday-school", "c2")
-  assign("george", "sunday-school", "c4")
-  assign("mark", "youth")
-  assign("bishoy", "youth")
-  assign("bishoy", "deacons", "beginners")
-  assign("maged", "bible-study")
-  assign("maged", "servants")
-  assign("peter", "deacons")
-  assign("irene", "coptic")
 
-  return state
+  s.dataRequests.push(
+    {
+      id: newId(at("2026-09-12", "10:00")),
+      kind: "erasure",
+      personId: null,
+      subjectName: null,
+      erasedSubject: "a child in Kindergarten",
+      requestedBy: "The child's mother, in person",
+      channel: "in_person",
+      receivedAt: toInstant(at("2026-09-12", "10:00")),
+      dueOn: "2026-10-12",
+      note: null,
+      status: "done",
+      outcome: { person: 1, memberships: 1, guardianships: 1, attendance: 1 },
+      declineReason: null,
+      closedAt: toInstant(at("2026-09-14", "18:00")),
+      closedBy: mariam.id,
+    },
+    {
+      id: newId(at("2026-11-02", "17:30")),
+      kind: "erasure",
+      personId: theresa.id,
+      subjectName: "Theresa Wadie",
+      erasedSubject: null,
+      requestedBy: "Samir Wadie (her father), by letter",
+      channel: "letter",
+      receivedAt: toInstant(at("2026-11-02", "17:30")),
+      dueOn: "2026-12-02",
+      note: "The family moved to Hamburg in October.",
+      status: "open",
+      outcome: null,
+      declineReason: null,
+      closedAt: null,
+      closedBy: null,
+    }
+  )
+
+  return s
 }

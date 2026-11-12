@@ -1,125 +1,99 @@
 import Link from "next/link"
-import { CircleAlert, ClipboardCheck } from "lucide-react"
+import { ClipboardCheck } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
-import { NotAssigned } from "@/components/not-assigned"
 import { PageHeader, Section } from "@/components/page-header"
-import { AgendaRow, SessionCardView, sessionHref } from "@/components/session-bits"
+import { PresentBar, SessionCardView } from "@/components/session-card"
+import { ServiceSwatch } from "@/components/service-tag"
+import { SessionStatusBadge } from "@/components/status"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
-import { SessionCardAction } from "@/features/attendance/take-attendance"
 import { getFormat } from "@/i18n/server"
-import { getAttendanceHome } from "@/server/queries/attendance"
+import type { SessionCard } from "@/lib/view-models"
+import { getAttendanceOverview } from "@/server/queries/attendance"
 import { getStaffContext } from "@/server/request"
 
 export async function generateMetadata() {
-  const t = await getTranslations("nav")
-  return { title: t("attendance") }
+  return { title: (await getTranslations("nav"))("attendance") }
+}
+
+async function SessionList({ sessions }: { sessions: SessionCard[] }) {
+  const f = await getFormat()
+  const t = await getTranslations("attendance")
+
+  return (
+    <ul className="divide-y border">
+      {sessions.map((x) => (
+        <li key={x.id}>
+          <Link
+            href={`/attendance/${x.id}`}
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          >
+            <span className="w-28 shrink-0 text-sm tabular-nums">
+              {f.dayMonth(x.date)}
+              <span className="block text-xs text-muted-foreground">
+                {f.timeRange(x.startTime, x.endTime)}
+              </span>
+            </span>
+            <span className="flex min-w-48 flex-1 items-center gap-2 font-medium">
+              <ServiceSwatch tone={x.unit.tone} />
+              <bdi>{x.unit.name}</bdi>
+            </span>
+            <span className="flex w-40 flex-col gap-1">
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {t("presentOf", { present: x.present, roster: x.roster })}
+              </span>
+              <PresentBar present={x.present} roster={x.roster} />
+            </span>
+            <SessionStatusBadge status={x.status} />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export default async function AttendancePage() {
-  const d = await getAttendanceHome(await getStaffContext())
-  const [t, tn, f] = await Promise.all([
-    getTranslations("attendance.home"),
-    getTranslations("nav"),
-    getFormat(),
-  ])
+  const data = getAttendanceOverview(await getStaffContext())
+  const t = await getTranslations("attendance")
+  const today = data.today[0]?.date ?? ""
+
   return (
     <>
-      <Topbar crumbs={[{ label: tn("attendance") }]} />
+      <Topbar crumbs={[{ label: t("title") }]} />
       <PageBody>
-        <PageHeader
-          title={tn("attendance")}
-          description={t("description", { date: f.longDate(d.today) })}
-        />
-
-        {d.unassigned ? (
-          <NotAssigned />
-        ) : (
-          <Section id="today" title={t("today")}>
-            {d.sessions.length === 0 ? (
-              <Empty className="border border-dashed">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <ClipboardCheck />
-                  </EmptyMedia>
-                  <EmptyTitle>{t("empty")}</EmptyTitle>
-                  <EmptyDescription>
-                    {d.canRecordAnywhere
-                      ? t.rich("emptyLink", {
-                          link: (chunks) => (
-                            <Link href="/meetings" className="underline underline-offset-4">
-                              {chunks}
-                            </Link>
-                          ),
-                        })
-                      : t("emptyStaff")}
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {d.sessions.map((s) => (
-                  <SessionCardView
-                    key={s.id}
-                    session={s}
-                    today={d.today}
-                    action={<SessionCardAction session={s} today={d.today} />}
-                  />
-                ))}
-              </div>
-            )}
+        <PageHeader title={t("title")} description={t("description")} />
+        <Section title={t("today")}>
+          {data.today.length === 0 ? (
+            <Empty className="border border-dashed py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ClipboardCheck />
+                </EmptyMedia>
+                <EmptyTitle>{t("noneToday")}</EmptyTitle>
+                <EmptyDescription>{t("noneTodayHint")}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {data.today.map((x) => (
+                <SessionCardView key={x.id} session={x} today={today} />
+              ))}
+            </div>
+          )}
+        </Section>
+        {data.unfinished.length > 0 ? (
+          <Section title={t("unfinished")} description={t("unfinishedHint")}>
+            <SessionList sessions={data.unfinished} />
           </Section>
-        )}
-
-        <div className="grid gap-10 lg:grid-cols-2">
-          {d.earlier.length > 0 ? (
-            <Section id="earlier" title={t("earlier")} description={t("earlierDescription")}>
-              <ul className="divide-y border-y">
-                {d.earlier.map((s) => (
-                  <li key={s.id}>
-                    <AgendaRow
-                      item={s}
-                      today={d.today}
-                      href={sessionHref(s)}
-                      trailing={
-                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold tracking-widest text-warning uppercase">
-                          <CircleAlert className="size-3.5" aria-hidden="true" />
-                          {s.status === "active" ? t("notClosed") : t("notTaken")}
-                        </span>
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          ) : null}
-
-          <Section id="closed" title={t("recent")}>
-            {d.closed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("recentEmpty")}</p>
-            ) : (
-              <ul className="divide-y border-y">
-                {d.closed.map((s) => (
-                  <li key={s.id}>
-                    <AgendaRow
-                      item={s}
-                      today={d.today}
-                      href={sessionHref(s)}
-                      trailing={
-                        <span className="text-xs text-muted-foreground">
-                          {s.closedAt
-                            ? t("closedAt", { when: f.atLabel(s.closedAt, d.today) })
-                            : t("closed")}
-                        </span>
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Section>
-        </div>
+        ) : null}
+        <Section title={t("recent")} description={t("recentHint")}>
+          {data.recent.length > 0 ? (
+            <SessionList sessions={data.recent} />
+          ) : (
+            <p className="text-sm text-muted-foreground">{t("noRecent")}</p>
+          )}
+        </Section>
       </PageBody>
     </>
   )

@@ -1,1 +1,3 @@
-export { PageLoading as default } from "@/components/page-loading"
+import { PageLoading } from "@/components/page-loading"
+
+export default PageLoading

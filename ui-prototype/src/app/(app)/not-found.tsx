@@ -1,35 +1,19 @@
 import Link from "next/link"
-import { SearchX } from "lucide-react"
 import { useTranslations } from "next-intl"
 
+import { PageBody } from "@/components/app-shell/topbar"
 import { Button } from "@/components/ui/button"
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
 
-export default function NotFound() {
+export default function AppNotFound() {
   const t = useTranslations("notFound")
+
   return (
-    <div className="flex min-h-[70svh] items-center justify-center p-6">
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <SearchX />
-          </EmptyMedia>
-          <EmptyTitle>{t("title")}</EmptyTitle>
-          <EmptyDescription>{t("app.description")}</EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button asChild>
-            <Link href="/">{t("app.action")}</Link>
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </div>
+    <PageBody>
+      <h1 className="font-heading text-2xl font-semibold">{t("title")}</h1>
+      <p className="text-muted-foreground">{t("app.description")}</p>
+      <Button asChild className="self-start">
+        <Link href="/">{t("app.action")}</Link>
+      </Button>
+    </PageBody>
   )
 }

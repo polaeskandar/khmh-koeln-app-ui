@@ -368,6 +368,7 @@ function create(locale: Locale) {
     mediumDate: (date: LocalDate) => `${dayMonth(date)} ${partsOf(date).year}`,
     dayMonth,
     shortDate,
+    monthYear: (date: LocalDate) => `${t.months[partsOf(date).month - 1]} ${partsOf(date).year}`,
     /** en "Nov" */
     monthShort: (date: LocalDate) => t.monthsShort[partsOf(date).month - 1],
     weekdayLong,

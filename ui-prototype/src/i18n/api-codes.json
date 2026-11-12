@@ -2,265 +2,124 @@
   "forbidden": [],
   "checkFields": [],
   "invalidRequest": [],
-  "conflict": [],
-  "tooManyRequests": [],
-  "internal": [],
-  "unavailable": [],
-  "auth.unauthenticated": [],
-  "auth.invalidCredentials": [],
-  "auth.unconfirmed": [],
-  "auth.pending": [],
-  "auth.disabled": [],
-  "auth.tooManyAttempts": [],
-  "auth.resetLinkInvalid": [],
-  "auth.confirmationLinkInvalid": [],
   "notFound.service": [],
   "notFound.stage": [],
   "notFound.person": [],
-  "notFound.membership": [],
   "notFound.schedule": [],
+  "notFound.plan": [],
   "notFound.session": [],
-  "notFound.attendance": [],
   "notFound.lesson": [],
-  "notFound.homework": [],
-  "notFound.user": [],
-  "notFound.guardian": [],
-  "notFound.request": [],
+  "notFound.task": [],
+  "notFound.account": [],
+  "notFound.role": [],
   "notFound.assignment": [],
-  "notFound.route": [],
+  "notFound.guardianship": [],
+  "notFound.request": [],
+  "notFound.occasion": [],
+  "validation.chooseDate": [],
+  "validation.chooseTime": [],
+  "validation.invalidDate": [],
+  "validation.invalidTime": [],
   "validation.tooLong": [
     "max"
   ],
-  "validation.chooseDate": [],
-  "validation.invalidDate": [],
-  "validation.chooseTime": [],
-  "validation.invalidTime": [],
-  "validation.invalidType": [],
-  "validation.unexpectedField": [],
-  "validation.invalidRange": [
-    "max"
-  ],
-  "validation.birthDateInFuture": [],
-  "validation.addressIncomplete": [],
-  "services.adminOnlyCreate": [],
-  "services.adminOnlyArchive": [],
-  "services.adminOnlyRestore": [],
-  "services.adminOnlyDelete": [],
-  "services.nameRequired": [],
-  "services.nameTaken": [
-    "name"
-  ],
-  "services.nameTakenArchived": [
-    "name"
-  ],
-  "services.alreadyArchived": [
-    "name"
-  ],
-  "services.notArchived": [
-    "name"
-  ],
-  "services.takingAttendance": [
-    "name"
-  ],
-  "services.hasHistory": [
-    "name",
-    "count"
-  ],
-  "services.archivedNoStageChanges": [
-    "name"
-  ],
-  "stages.nameRequired": [],
-  "stages.nameTaken": [
-    "name"
-  ],
-  "stages.nameTakenArchived": [
-    "name"
-  ],
-  "stages.reorderStale": [],
-  "stages.alreadyArchived": [
-    "name"
-  ],
-  "stages.notArchived": [
-    "name"
-  ],
-  "stages.takingAttendance": [
-    "name"
-  ],
-  "stages.hasHistory": [
-    "name",
-    "count"
-  ],
-  "stages.hasMembers": [
-    "count",
-    "name"
-  ],
-  "meetings.chooseService": [],
-  "meetings.serviceArchived": [
-    "name"
-  ],
-  "meetings.chooseStage": [],
-  "meetings.stageArchived": [
-    "name"
-  ],
-  "meetings.scheduleNameRequired": [],
-  "meetings.endAfterStart": [],
-  "meetings.chooseRosterMode": [],
-  "meetings.serviceArchivedRestoreFirst": [
-    "name"
-  ],
-  "meetings.stageArchivedRestoreFirst": [
-    "name"
-  ],
-  "meetings.scheduleHasSessions": [
-    "count"
-  ],
-  "meetings.sessionCanceled": [],
-  "meetings.attendanceClosed": [],
-  "meetings.opensOnTheDay": [],
-  "meetings.onlyActiveCanClose": [],
-  "meetings.reopenLeadersOnly": [],
-  "meetings.onlyCompletedCanReopen": [],
-  "meetings.onlyScheduledCanCancel": [],
-  "meetings.noMeetingOnDate": [],
-  "meetings.scheduleInactive": [],
-  "meetings.dateInPast": [],
-  "recurrence.interval": [],
-  "recurrence.weekdays": [],
-  "recurrence.weekdayRange": [],
-  "recurrence.monthlyOneDay": [],
-  "recurrence.monthWeek": [],
-  "recurrence.monthWeekOnlyMonthly": [],
-  "recurrence.endBeforeStart": [],
-  "attendance.openFirst": [],
-  "attendance.closedReopen": [],
-  "attendance.personInactive": [
-    "name"
-  ],
-  "attendance.alreadyPresent": [
-    "name",
-    "time"
-  ],
-  "attendance.alreadyPresentBy": [
-    "name",
-    "time",
-    "by"
-  ],
-  "attendance.alreadyRemoved": [],
-  "people.firstNameRequired": [],
-  "people.lastNameRequired": [],
-  "people.editOutsideServices": [
-    "name"
-  ],
-  "people.addOutsideServices": [],
-  "people.chooseJoinService": [],
-  "people.duplicate": [
-    "count",
-    "name"
-  ],
-  "people.alreadyIn": [
-    "name",
-    "where"
-  ],
-  "people.membershipOutsideServices": [],
-  "people.membershipEnded": [],
-  "people.moveOutsideStages": [],
-  "roles.adminOnly": [],
-  "roles.chooseService": [],
-  "roles.alreadyHasRole": [
-    "name"
-  ],
-  "roles.ownAdminRole": [],
-  "roles.stageOnlyForServants": [],
-  "roles.lastAdministrator": [],
-  "roles.nameRequired": [],
-  "roles.unknown": [],
-  "materials.labelTooLong": [],
-  "materials.url": [],
-  "materials.tooMany": [],
-  "lessons.titleRequired": [],
-  "lessons.chooseMeeting": [],
-  "lessons.chooseDate": [],
-  "lessons.noMeetingThatDay": [
-    "name"
-  ],
-  "lessons.chooseWhen": [],
-  "lessons.meetingHasLesson": [
-    "title"
-  ],
-  "lessons.chooseResponsible": [],
-  "lessons.helpersInStage": [],
-  "lessons.prepareStageOnly": [],
-  "lessons.changeStageOnly": [],
-  "lessons.stageArchived": [
-    "name"
-  ],
-  "lessons.archived": [],
-  "lessons.taughtAfterDate": [],
-  "lessons.deleteDraftsOnly": [],
-  "lessons.homeworkPublished": [],
-  "homework.titleRequired": [],
-  "homework.instructionsRequired": [],
-  "homework.instructionsTooLong": [],
-  "homework.dueBeforeLesson": [],
-  "homework.changeStageOnly": [],
-  "homework.lessonWithoutStage": [],
-  "homework.assignStageOnly": [],
-  "homework.lessonArchived": [],
-  "homework.archivedNoEdit": [],
-  "homework.archivedNoPublish": [],
-  "homework.notArchived": [],
-  "homework.onlyPublishedBack": [],
-  "homework.alreadyReported": [],
-  "homework.publishedStays": [],
-  "homework.ownChildrenOnly": [],
-  "homework.notAvailable": [],
-  "homework.otherClass": [
-    "name"
-  ],
-  "guardians.adminOnlyGrant": [],
-  "guardians.alreadyHasAccess": [
-    "parent",
-    "child"
-  ],
-  "guardians.adminOnlyApprove": [],
-  "guardians.adminOnlyRemove": [],
-  "accounts.firstNameRequired": [],
-  "accounts.lastNameRequired": [],
-  "accounts.nameRequired": [],
-  "accounts.emailRequired": [],
-  "accounts.emailInvalid": [],
-  "accounts.emailTaken": [],
-  "accounts.passwordTooShort": [
+  "validation.firstNameRequired": [],
+  "validation.lastNameRequired": [],
+  "username.required": [],
+  "username.length": [],
+  "username.characters": [],
+  "username.start": [],
+  "username.end": [],
+  "username.separators": [],
+  "username.taken": [],
+  "password.tooShort": [
     "min"
   ],
-  "accounts.childrenRequired": [],
-  "accounts.serviceDetailsRequired": [],
-  "accounts.chooseService": [],
-  "accounts.chooseServiceForRole": [],
-  "accounts.acceptPrivacy": [],
-  "accounts.adminOnly": [],
-  "accounts.alreadyApproved": [],
-  "accounts.chooseChild": [],
-  "accounts.childNotFound": [],
-  "accounts.stageNotInService": [],
-  "accounts.privacyNoticeOutdated": [],
-  "accounts.currentPasswordWrong": [],
-  "assignments.alreadyAssigned": [
-    "name",
-    "where"
+  "password.currentWrong": [],
+  "password.sameAsBefore": [],
+  "password.mismatch": [],
+  "accounts.personHasAccount": [],
+  "accounts.roleRequired": [],
+  "accounts.notYourOwn": [],
+  "accounts.morePowerful": [],
+  "access.ownAssignments": [],
+  "access.cannotGive": [
+    "role"
   ],
-  "assignments.notAllowed": [],
-  "privacy.adminOnly": [],
-  "privacy.chooseSubject": [],
+  "access.roleNeedsChurch": [
+    "role"
+  ],
+  "access.unknownScope": [],
+  "access.alreadyAssigned": [],
+  "access.lastAccessManager": [],
+  "roles.nameRequired": [],
+  "roles.nameTaken": [],
+  "roles.permissionRequired": [],
+  "roles.protected": [
+    "role"
+  ],
+  "roles.protectedKeepsAccess": [
+    "role"
+  ],
+  "roles.hasGroupAssignments": [],
+  "roles.inUse": [],
+  "guardians.notParent": [],
+  "guardians.self": [],
+  "guardians.alreadyLinked": [],
+  "guardians.notMember": [],
+  "services.nameRequired": [],
+  "services.nameTaken": [],
+  "services.structureLocked": [],
+  "services.noStages": [],
+  "services.openSession": [],
+  "services.hasHistory": [],
+  "stages.nameRequired": [],
+  "stages.nameTaken": [],
+  "stages.atLeastOne": [],
+  "stages.openSession": [],
+  "plans.startTime": [],
+  "plans.endTime": [],
+  "plans.endBeforeStart": [],
+  "plans.startsOn": [],
+  "plans.endsOn": [],
+  "plans.lastBeforeFirst": [],
+  "plans.outsideYear": [],
+  "plans.interval": [],
+  "plans.noDates": [],
+  "plans.chooseUnit": [],
+  "plans.year": [],
+  "plans.alreadyConfirmed": [],
+  "plans.stale": [],
+  "plans.notConfirmed": [],
+  "plans.changeFrom": [],
+  "plans.mandatoryException": [],
+  "sessions.notScheduled": [],
+  "sessions.notCanceled": [],
+  "sessions.inThePast": [],
+  "sessions.tooFar": [],
+  "sessions.conflict": [],
+  "attendance.notScheduled": [],
+  "attendance.notToday": [],
+  "attendance.notOpen": [],
+  "attendance.notClosed": [],
+  "attendance.reasonRequired": [],
+  "learning.titleRequired": [],
+  "learning.instructionsRequired": [],
+  "learning.labelRequired": [],
+  "learning.invalidUrl": [],
+  "learning.sessionOfOtherGroup": [],
+  "learning.chooseDate": [],
+  "learning.summaryBeforePublishing": [],
+  "learning.publishedLesson": [],
+  "learning.lessonHasTasks": [],
+  "learning.taskHasReports": [],
+  "learning.onlyDraftsDeleted": [],
   "privacy.requestedByRequired": [],
-  "privacy.receivedInFuture": [],
+  "privacy.reasonRequired": [],
   "privacy.alreadyRequested": [],
-  "privacy.notOpen": [],
-  "privacy.notErasure": [],
-  "privacy.notCopy": [],
-  "privacy.subjectGone": [],
-  "privacy.ownAccount": [],
-  "privacy.declineReasonRequired": [],
-  "network": [],
-  "sessionExpired": []
+  "privacy.closed": [],
+  "privacy.wrongKind": [],
+  "privacy.ownErasure": [],
+  "calendar.nameRequired": [],
+  "calendar.computed": []
 }

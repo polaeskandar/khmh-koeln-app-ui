@@ -1,354 +1,250 @@
 import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Archive, ArrowRight, CalendarClock, Layers, Pencil, Plus, UsersRound } from "lucide-react"
+import { ArrowRight, CalendarDays, CalendarX2, Layers, UsersRound } from "lucide-react"
 import { getTranslations } from "next-intl/server"
+import { cn } from "cn"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
+import { LinkTabs } from "@/components/link-tabs"
 import { PageHeader, Section } from "@/components/page-header"
-import { RosterCells } from "@/components/roster-cells"
-import { AgendaRow, sessionHref } from "@/components/session-bits"
 import { ServiceSwatch } from "@/components/service-tag"
-import { StatusBadge } from "@/components/status"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { DraftBadge, StatusBadge } from "@/components/status"
 import { Button } from "@/components/ui/button"
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
-import { ScheduleDialog } from "@/features/meetings/schedule-dialog"
-import { ScheduleList } from "@/features/meetings/schedule-list"
-import { ServantsSection } from "@/features/services/servants"
-import { ServiceActionsMenu, ServiceFormDialog } from "@/features/services/service-dialogs"
-import { StageFormDialog } from "@/features/stages/stage-dialogs"
-import { getFormat, getSessionLines } from "@/i18n/server"
-import { today as clockToday } from "@/server/mock/clock"
-import { formServices } from "@/server/queries/meetings"
-import { getServiceDetail } from "@/server/queries/services"
+import { ruleSummary } from "@/features/schedule/rule-summary"
+import { UnitSchedule, YearSwitch } from "@/features/schedule/unit-schedule"
+import { AddStageButton, ServiceActions, StageActions } from "@/features/services/service-actions"
+import { getFormat } from "@/i18n/server"
+import { getScheduleOverview, getService } from "@/server/queries/services"
+import { getUnitSchedule, planningYearOptions, unitFor } from "@/server/queries/schedule"
 import { getStaffContext } from "@/server/request"
 
-export async function generateMetadata() {
-  const t = await getTranslations("services")
-  return { title: t("kind") }
+function yearOf(value: string | string[] | undefined) {
+  const years = planningYearOptions()
+  const year = Number(value)
+
+  return years.includes(year) ? year : years[0]
 }
 
-export default async function ServiceDetailPage({ params }: PageProps<"/services/[serviceId]">) {
+export default async function ServicePage({
+  params,
+  searchParams,
+}: PageProps<"/services/[serviceId]">) {
   const { serviceId } = await params
+  const query = await searchParams
   const ctx = await getStaffContext()
-  const d = await getServiceDetail(ctx, serviceId)
-  if (!d) notFound()
-  const [t, ts, tn, tc, tcommon, f, lines] = await Promise.all([
-    getTranslations("services"),
-    getTranslations("stages"),
-    getTranslations("nav"),
-    getTranslations("counts"),
-    getTranslations("common"),
-    getFormat(),
-    getSessionLines(),
-  ])
-  const { service, can } = d
-  const today = clockToday()
-  const trend = d.stats.trend
-  const listSeparator = f.locale === "ar" ? "، " : ", "
+  const service = getService(ctx, serviceId)
+  const staged = service.structure === "stages"
+  const tab = staged && query.tab !== "schedule" ? "stages" : "schedule"
+  const year = yearOf(query.year)
+  const t = await getTranslations("services")
+  const ts = await getTranslations("schedule")
+  const f = await getFormat()
+  const base = `/services/${service.id}`
+  const activeStages = service.stages.filter((x) => !x.archived)
+  const archivedStages = service.stages.filter((x) => x.archived)
+  const daysOffLink = (
+    <Button asChild variant="outline" size="sm">
+      <Link href={`${base}/days?year=${year}`}>
+        <CalendarX2 data-icon="inline-start" />
+        {t("daysOff")}
+      </Link>
+    </Button>
+  )
+
   return (
     <>
-      <Topbar crumbs={[{ label: tn("services"), href: "/services" }, { label: service.name }]} />
+      <Topbar crumbs={[{ label: t("title"), href: "/services" }, { label: service.name }]} />
       <PageBody>
         <PageHeader
+          title={service.name}
+          description={service.description}
           meta={
             <>
-              <span className="inline-flex items-center gap-2 text-muted-foreground">
-                <ServiceSwatch tone={service.tone} className="size-2.5" />
-                {t("kind")}
+              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
+                <ServiceSwatch tone={service.tone} />
+                {staged ? t("withStages") : t("withoutStages")}
               </span>
               {service.archived ? (
-                <StatusBadge tone="muted" icon={Archive}>
-                  {tcommon("archived")}
-                </StatusBadge>
+                <StatusBadge tone="muted">{t("archivedBadge")}</StatusBadge>
               ) : null}
             </>
           }
-          title={service.name}
-          description={
-            service.description ? (
-              <span dir="auto" className="block">
-                {service.description}
-              </span>
-            ) : undefined
-          }
-          actions={
-            <>
-              {can.edit ? (
-                <ServiceFormDialog
-                  service={{ id: service.id, name: service.name, description: service.description }}
-                  trigger={
-                    <Button variant="outline">
-                      <Pencil data-icon="inline-start" />
-                      {tcommon("edit")}
-                    </Button>
-                  }
-                />
-              ) : null}
-              {can.sessions && !service.archived ? (
-                <ScheduleDialog
-                  services={formServices(ctx)}
-                  today={today}
-                  fixedServiceId={service.id}
-                />
-              ) : null}
-              <ServiceActionsMenu
-                service={{ id: service.id, name: service.name, description: service.description }}
-                archived={service.archived}
-                impact={d.impact}
-                can={{ edit: false, archive: can.archive }}
-                afterDelete="/services"
-                variant="button"
-              />
-            </>
-          }
+          actions={service.can.manage ? <ServiceActions service={service} /> : null}
         />
-
-        {service.archived ? (
-          <Alert>
-            <Archive />
-            <AlertTitle>
-              {service.archivedAt
-                ? t("detail.archivedOn", { date: f.mediumDate(service.archivedAt.slice(0, 10)) })
-                : tcommon("archived")}
-            </AlertTitle>
-            <AlertDescription>{t("detail.archivedNote")}</AlertDescription>
-          </Alert>
+        {staged ? (
+          <LinkTabs
+            label={service.name}
+            active={tab}
+            items={[
+              { key: "stages", href: base, label: t("tabs.stages"), count: activeStages.length },
+              {
+                key: "schedule",
+                href: `${base}?tab=schedule&year=${year}`,
+                label: t("tabs.schedule"),
+              },
+            ]}
+          />
         ) : null}
-
-        <dl className="grid grid-cols-2 border-y sm:grid-cols-4">
-          {[
-            { label: t("detail.stats.stages"), value: d.stages.length, icon: Layers },
-            { label: t("detail.stats.members"), value: d.stats.members, icon: UsersRound },
-            {
-              label: t("detail.stats.activeSchedules"),
-              value: d.schedules.filter((x) => x.active).length,
-              icon: CalendarClock,
-            },
-            {
-              label: t("detail.stats.attendance"),
-              value:
-                trend.rate !== null
-                  ? f.percent(trend.rate)
-                  : trend.averagePresent !== null
-                    ? t("detail.stats.average", { count: trend.averagePresent })
-                    : tcommon("dash"),
-              icon: null,
-            },
-          ].map((stat, i) => (
-            <div
-              key={stat.label}
-              className={`flex flex-col gap-1 px-4 py-4 ${i > 0 ? "sm:border-s" : ""} ${i % 2 === 1 ? "border-s sm:border-s" : ""} ${i > 1 ? "border-t sm:border-t-0" : ""}`}
-            >
-              <dt className="text-xs text-muted-foreground">{stat.label}</dt>
-              <dd className="font-heading text-2xl font-semibold tabular-nums">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
-
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
-          <div className="flex min-w-0 flex-col gap-10">
-            <Section
-              id="stages"
-              title={ts("title")}
-              description={d.stages.length > 0 ? t("detail.stages.description") : undefined}
-              actions={
-                <>
-                  {d.stages.length > 0 ? (
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/services/${service.id}/stages`}>
-                        {t("detail.stages.manage")} <ArrowRight data-icon="inline-end" />
-                      </Link>
-                    </Button>
-                  ) : null}
-                  {can.structure && !service.archived ? (
-                    <StageFormDialog serviceId={service.id} serviceName={service.name} />
-                  ) : null}
-                </>
-              }
-            >
-              {d.stages.length === 0 ? (
-                <Empty className="border border-dashed">
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <Layers />
-                    </EmptyMedia>
-                    <EmptyTitle>{t("detail.stages.empty")}</EmptyTitle>
-                    <EmptyDescription>
-                      {t("detail.stages.emptyDescription", {
-                        name: service.name,
-                        count: d.stats.serviceLevelMembers,
-                      })}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                  {can.structure && !service.archived ? (
-                    <EmptyContent>
-                      <StageFormDialog
-                        serviceId={service.id}
-                        serviceName={service.name}
-                        trigger={
-                          <Button variant="outline" size="sm">
-                            <Plus data-icon="inline-start" />
-                            {t("detail.stages.addFirst")}
-                          </Button>
-                        }
-                      />
-                    </EmptyContent>
-                  ) : null}
-                </Empty>
-              ) : (
-                <ul className="divide-y border-y">
-                  {d.stages.map((st) => (
-                    <li key={st.id}>
+        {tab === "stages" ? (
+          <Section
+            title={t("tabs.stages")}
+            description={t("stagesHint")}
+            actions={service.can.stages ? <AddStageButton serviceId={service.id} /> : null}
+          >
+            <ol className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {activeStages.map((stage, index) => (
+                <li key={stage.id} className="flex flex-col gap-3 border bg-card p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-8 shrink-0 items-center justify-center bg-muted font-heading text-sm font-semibold tabular-nums">
+                      {index + 1}
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <Link
-                        href={`/services/${service.id}/stages/${st.id}`}
-                        className="-mx-2 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-6 gap-y-2 px-2 py-3 hover:bg-muted/60 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,180px)]"
+                        href={`${base}/stages/${stage.id}`}
+                        className="font-heading text-base font-semibold underline-offset-4 hover:underline"
                       >
-                        <span className="flex min-w-0 flex-col">
-                          <span className="truncate font-medium">{st.name}</span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {tc("members", { count: st.members })} · {st.meets ?? ts("noSchedule")}
+                        {stage.name}
+                      </Link>
+                      {stage.description ? (
+                        <p className="text-sm text-muted-foreground">{stage.description}</p>
+                      ) : null}
+                    </div>
+                    {service.can.stages ? (
+                      <StageActions
+                        stage={stage}
+                        first={index === 0}
+                        last={index === activeStages.length - 1}
+                      />
+                    ) : null}
+                  </div>
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <UsersRound className="size-3.5" aria-hidden="true" />
+                      {t("members", { count: stage.members })}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 tabular-nums">
+                      <CalendarDays className="size-3.5" aria-hidden="true" />
+                      {stage.next
+                        ? t("next", {
+                            when: `${f.dayMonth(stage.next.date)}, ${stage.next.startTime}`,
+                          })
+                        : t("noNext")}
+                    </span>
+                    <Link
+                      href={`${base}/stages/${stage.id}`}
+                      className="inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:underline"
+                    >
+                      {t("openSchedule")}
+                      <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {activeStages.length === 0 ? (
+              <p className="border border-dashed p-8 text-center text-sm text-muted-foreground">
+                {t("noStagesYet")}
+              </p>
+            ) : null}
+            {archivedStages.length > 0 ? (
+              <div className="flex flex-col gap-2 pt-2">
+                <h3 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  {t("archivedStages")}
+                </h3>
+                <ul className="flex flex-wrap gap-2">
+                  {archivedStages.map((stage) => (
+                    <li
+                      key={stage.id}
+                      className="flex items-center gap-1 border px-3 py-1 text-sm text-muted-foreground"
+                    >
+                      {stage.name}
+                      {service.can.stages ? <StageActions stage={stage} first last /> : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </Section>
+        ) : staged ? (
+          <Section
+            title={ts("overview.title", { year: String(year) })}
+            description={ts("overview.hint")}
+            actions={daysOffLink}
+          >
+            {(() => {
+              const overview = getScheduleOverview(ctx, service.id, year)
+              const open = overview.filter((u) => u.status !== "confirmed" && u.canManage)
+
+              return (
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <YearSwitch
+                      years={planningYearOptions()}
+                      year={year}
+                      href={(y) => `${base}?tab=schedule&year=${y}`}
+                    />
+                    {open.length > 0 ? (
+                      <Button asChild>
+                        <Link href={`${base}/plan?year=${year}`}>
+                          {ts("overview.prepareAll", { year: String(year), count: open.length })}
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
+                  <ul className="divide-y border">
+                    {overview.map((u) => (
+                      <li
+                        key={u.scheduleId}
+                        className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4"
+                      >
+                        <div className="flex min-w-48 flex-1 flex-col gap-0.5">
+                          <Link
+                            href={`${base}/stages/${u.unit.stageId}?year=${year}`}
+                            className="font-medium underline-offset-4 hover:underline"
+                          >
+                            {u.unit.stageName}
+                          </Link>
+                          <span className="text-sm text-muted-foreground">
+                            {u.rule ? ruleSummary(f, u.rule) : ts("overview.noRule")}
                           </span>
+                        </div>
+                        <span className="text-sm text-muted-foreground tabular-nums">
+                          {u.status === "confirmed"
+                            ? ts("overview.counts", { count: u.sessions, canceled: u.canceled })
+                            : null}
                         </span>
-                        <span className="hidden text-sm text-muted-foreground md:block">
-                          {st.next
-                            ? t("detail.stages.next", {
-                                day: f.relativeDayInline(st.next.date, today),
-                                time: st.next.startTime,
-                              })
-                            : t("nothingPlanned")}
-                        </span>
-                        <span className="flex flex-col items-end gap-1.5">
-                          {st.last && st.last.counts.rosterSize ? (
-                            <>
-                              <RosterCells
-                                filled={st.last.counts.rosterPresent}
-                                total={st.last.counts.rosterSize}
-                                size="sm"
-                                className="w-32"
-                              />
-                              <span className="text-xs text-muted-foreground tabular-nums">
-                                {lines.present(st.last)} · {f.relativeDay(st.last.date, today)}
-                              </span>
-                            </>
+                        <span className={cn("w-32 text-end")}>
+                          {u.status === "confirmed" ? (
+                            <StatusBadge tone="success">{ts("status.confirmed")}</StatusBadge>
+                          ) : u.status === "draft" ? (
+                            <DraftBadge />
                           ) : (
-                            <span className="text-xs text-muted-foreground">
-                              {t("detail.stages.noAttendance")}
-                            </span>
+                            <StatusBadge tone="muted" dashed>
+                              {ts("status.none")}
+                            </StatusBadge>
                           )}
                         </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {d.archivedStages.length > 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  {t.rich("detail.stages.archived", {
-                    names: d.archivedStages.map((x) => x.name).join(listSeparator),
-                    link: (chunks) => (
-                      <Link
-                        href={`/services/${service.id}/stages`}
-                        className="underline underline-offset-4"
-                      >
-                        {chunks}
-                      </Link>
-                    ),
-                  })}
-                </p>
-              ) : null}
-            </Section>
-
-            <Section
-              id="schedules"
-              title={t("detail.schedules.title")}
-              description={t("detail.schedules.description")}
-            >
-              <ScheduleList
-                schedules={d.schedules}
-                today={today}
-                showService={false}
-                emptyText={t("detail.schedules.empty")}
-              />
-            </Section>
-
-            <Section id="recent" title={t("detail.recent.title")}>
-              {d.recent.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("detail.recent.empty")}</p>
-              ) : (
-                <ul className="divide-y border-y">
-                  {d.recent.map((s) => (
-                    <li key={s.id}>
-                      <Link
-                        href={sessionHref(s)}
-                        className="-mx-2 flex items-center gap-4 px-2 py-3 hover:bg-muted/60"
-                      >
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate font-medium">{s.group}</span>
-                          <span className="truncate text-xs text-muted-foreground">
-                            {f.relativeDay(s.date, today)} · {s.title}
-                          </span>
-                        </span>
-                        {s.counts.rosterSize ? (
-                          <RosterCells
-                            filled={s.counts.rosterPresent}
-                            total={s.counts.rosterSize}
-                            size="sm"
-                            className="hidden w-32 sm:grid"
-                          />
-                        ) : null}
-                        <span className="w-36 shrink-0 text-end text-sm tabular-nums">
-                          {lines.present(s)}
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-          </div>
-
-          <div className="flex min-w-0 flex-col gap-10">
-            <Section id="upcoming" title={t("detail.upcoming.title")}>
-              {d.upcoming.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t("detail.upcoming.empty")}</p>
-              ) : (
-                <ul className="divide-y border-y">
-                  {d.upcoming.map((item) => (
-                    <li key={item.kind === "session" ? item.id : item.key}>
-                      <AgendaRow
-                        compact
-                        item={item}
-                        today={today}
-                        href={
-                          item.kind === "session"
-                            ? `/meetings/sessions/${item.id}`
-                            : `/meetings/schedules/${item.scheduleId}`
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-
-            <ServantsSection
-              service={{
-                id: service.id,
-                name: service.name,
-                stages: d.stages.map((st) => ({ id: st.id, name: st.name })),
-              }}
-              servants={d.servants}
+                      </li>
+                    ))}
+                  </ul>
+                  {overview.length === 0 ? (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Layers className="size-4" />
+                      {t("noStagesYet")}
+                    </p>
+                  ) : null}
+                </div>
+              )
+            })()}
+          </Section>
+        ) : (
+          <Section title={t("tabs.schedule")} description={ts("year.hint")} actions={daysOffLink}>
+            <UnitSchedule
+              data={getUnitSchedule(ctx, unitFor(ctx, service.id, null), year)}
+              hrefFor={(y) => `${base}?year=${y}`}
+              planHref={`${base}/plan?year=${year}`}
             />
-          </div>
-        </div>
+          </Section>
+        )}
       </PageBody>
     </>
   )

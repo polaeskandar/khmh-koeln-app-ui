@@ -12,7 +12,6 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group"
 
-/** A password field with a button to show what was typed (easier on phones than typing it twice). */
 export function PasswordField({
   label,
   description,
@@ -23,7 +22,6 @@ export function PasswordField({
   label: string
   description?: React.ReactNode
   error?: string
-  /** Shown opposite the label, e.g. "Forgot your password?". */
   labelExtra?: React.ReactNode
 }) {
   const t = useTranslations("auth.password")
