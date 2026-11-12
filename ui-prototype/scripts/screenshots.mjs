@@ -314,6 +314,12 @@ async function accountsAndFirstSignIn() {
     "Andrew sees his class today"
   )
   await shot(andrew, "home", "05-new-servant-home")
+  await go(andrew, "/lessons")
+  check(
+    (await visible(andrew.getByText("David and Goliath")).count()) === 0,
+    "a servant doesn't see a colleague's lesson of the same class"
+  )
+  await shot(andrew, "lessons", "10-servant-own-lessons")
   await andrew.context().close()
   await page.context().close()
 }
@@ -392,7 +398,7 @@ async function annualPlanning(christine, sundaySchool) {
   )
   await shot(page, "services", "08-days-marked-by-hand")
   await go(page, `${sundaySchool}?tab=schedule&year=2027`)
-  await clickAndWait(page, link(page, /^Prepare 2027 for 5 stages/), /\/plan/)
+  await clickAndWait(page, link(page, "Prepare 2027 for Kindergarten"), /\/stages\/.+\/plan/)
   await field(page, "Starts at").fill("12:00")
   await field(page, /^Ends at/).fill("13:15")
   await field(page, /^First date/).fill("2027-03-01")
@@ -426,16 +432,26 @@ async function annualPlanning(christine, sundaySchool) {
   await clickAndWait(
     page,
     dialog(page).getByRole("button", { name: "Confirm plan" }),
-    /tab=schedule/
+    /\/stages\/[^/]+\?year=2027/
   )
-  check(!(await visible(page.getByText("Not planned")).count()), "every stage has a confirmed plan")
-  await shot(page, "schedule", "04-overview-confirmed")
-  await clickAndWait(page, link(page, "1st Class"), /\/stages\//)
+  const kindergarten = new URL(page.url()).pathname
   check(
     (await visible(page.getByText("Pentecost")).count()) === 0,
     "Pentecost was kept as a session"
   )
   await shot(page, "schedule", "05-year-2027")
+  await go(page, `${sundaySchool}?tab=schedule&year=2027`)
+  check(
+    (await visible(page.getByText("Not planned", { exact: true })).count()) === 4,
+    "only Kindergarten is planned, each stage on its own"
+  )
+  check(
+    await link(page, "Prepare 2027 for 1st Class").isVisible(),
+    "every other stage keeps its own plan action"
+  )
+  await shot(page, "schedule", "04-overview-confirmed")
+  await go(page, `${kindergarten}/plan?year=2027`)
+  check(new URL(page.url()).pathname === kindergarten, "a confirmed plan can't be opened again")
 
   console.log("Scenario E: a one-off session")
   await go(page, `${sundaySchool}?tab=stages`)
@@ -545,6 +561,10 @@ async function lessonsAndTasks() {
   console.log("Scenario G: Daniel prepares a lesson")
   const page = await signIn("Daniel Michael")
   await go(page, "/lessons")
+  check(
+    await visible(page.getByText("Prepared by Marina Samuel")).first().isVisible(),
+    "a service leader sees every lesson of the service with its servant"
+  )
   await shot(page, "lessons", "01-preparation")
   await clickAndWait(
     page,
@@ -732,7 +752,8 @@ async function languagesAndDarkMode(sundaySchool, sessionUrl) {
     await shot(page, "languages", `${locale}-01-home`)
     await go(page, "/services")
     await shot(page, "languages", `${locale}-02-services`)
-    await go(page, `${sundaySchool}/plan?year=2028`)
+    await go(page, `${sundaySchool}?tab=schedule&year=2028`)
+    await clickAndWait(page, page.locator('a[href*="/plan?year=2028"]').first(), /\/plan/)
     await field(page, locale === "de" ? "Beginnt um" : "يبدأ الساعة").fill("12:00")
     await shot(page, "languages", `${locale}-03-plan-editor`)
     await go(page, sessionUrl)
