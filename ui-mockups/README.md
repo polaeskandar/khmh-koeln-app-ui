@@ -54,8 +54,8 @@ Desktop pictures are 1440 px wide at 2×, phone pictures 390 × 844 at 3×. To r
 | Screen | Screenshot | Route |
 | --- | --- | --- |
 | 2027 not planned yet, for five classes | [01](schedule/01-overview-not-planned.png) | `/services/:id?tab=schedule&year=2027` |
-| Plan editor with feast-day suggestions, confirm | [02](schedule/02-plan-editor.png), [03](schedule/03-confirm-plan.png) | `/services/:id/plan?year=2027` |
-| Confirmed: all classes, one class's year | [04](schedule/04-overview-confirmed.png), [05](schedule/05-year-2027.png) | `/services/:id?tab=schedule`, `/services/:id/stages/:stage` |
+| Plan editor with feast-day suggestions, confirm | [02](schedule/02-plan-editor.png), [03](schedule/03-confirm-plan.png) | `/services/:id/stages/:stage/plan?year=2027` (`/services/:id/plan?year=…` without stages) |
+| Kindergarten confirmed while the other classes aren't planned, its year | [04](schedule/04-overview-confirmed.png), [05](schedule/05-year-2027.png) | `/services/:id?tab=schedule`, `/services/:id/stages/:stage` |
 | A year with history, a one-off session | [06](schedule/06-year-2026.png), [07](schedule/07-one-off-session.png), [08](schedule/08-one-off-in-calendar.png) | `/services/:id/stages/:stage` |
 | A draft plan | [09](schedule/09-draft-2027.png) | `/services/:id?year=2027` |
 | A session's actions, reschedule, change the plan from a date | [10](schedule/10-session-menu.png), [11](schedule/11-reschedule.png), [12](schedule/12-change-plan.png) | `/services/:id/stages/:stage` |
@@ -73,7 +73,8 @@ Desktop pictures are 1440 px wide at 2×, phone pictures 390 × 844 at 3×. To r
 
 | Screen | Screenshot | Route |
 | --- | --- | --- |
-| Preparation, grouped by class | [01](lessons/01-preparation.png) | `/lessons` |
+| Preparation, grouped by class, as a service leader (every lesson with its servant) | [01](lessons/01-preparation.png) | `/lessons` |
+| A new servant sees only their own lessons, not a colleague's | [10](lessons/10-servant-own-lessons.png) | `/lessons` as Andrew |
 | Lesson editor, draft, publish, published | [02](lessons/02-lesson-editor.png), [03](lessons/03-lesson-draft.png), [04](lessons/04-publish.png), [05](lessons/05-lesson-published.png) | `/lessons/new`, `/lessons/:id` |
 | Tasks, task editor, progress | [06](lessons/06-tasks.png), [07](lessons/07-task-editor.png), [08](lessons/08-task-progress.png), [reported by a parent](lessons/09-task-progress-reported.png) | `/lessons/tasks`, `/lessons/tasks/:id` |
 
