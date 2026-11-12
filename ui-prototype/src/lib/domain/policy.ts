@@ -15,7 +15,10 @@ export const PERMISSION_GROUPS: { group: PermissionGroup; permissions: Permissio
   { group: "organization", permissions: ["services.view", "services.manage", "stages.manage"] },
   { group: "schedule", permissions: ["schedule.manage"] },
   { group: "attendance", permissions: ["attendance.record", "attendance.correct"] },
-  { group: "learning", permissions: ["lessons.prepare", "lessons.publish", "tasks.manage"] },
+  {
+    group: "learning",
+    permissions: ["lessons.prepare", "lessons.manage", "lessons.publish", "tasks.manage"],
+  },
   {
     group: "administration",
     permissions: ["accounts.manage", "access.manage", "guardians.manage", "data.manage"],
@@ -120,6 +123,7 @@ export const DEFAULT_ROLES: {
       "attendance.record",
       "attendance.correct",
       "lessons.prepare",
+      "lessons.manage",
       "lessons.publish",
       "tasks.manage",
     ]),

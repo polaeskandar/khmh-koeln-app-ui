@@ -1,5 +1,5 @@
 import { allows, allowsInService, covers, type Grant } from "@/lib/domain/policy"
-import type { Account, Permission, Unit, Uuid } from "@/lib/domain/types"
+import type { Account, Lesson, Permission, Unit, Uuid } from "@/lib/domain/types"
 import { forbidden, notFound, type Thing } from "@/server/errors"
 
 import { unitsOf } from "./selectors"
@@ -82,5 +82,15 @@ export function isStaff(s: State, account: Account): boolean {
 export function holdsChurchWide(s: State, account: Account, permission: Permission): boolean {
   return grantsOf(s, account.id).some(
     (g) => g.scope.type === "church" && g.permissions.includes(permission)
+  )
+}
+
+export function canOpenLesson(s: State, account: Account, lesson: Lesson): boolean {
+  const unit = { serviceId: lesson.serviceId, stageId: lesson.stageId }
+
+  return (
+    canSeeUnit(s, account, unit) &&
+    (can(s, account, "lessons.manage", unit) ||
+      (lesson.responsibleId === account.id && can(s, account, "lessons.prepare", unit)))
   )
 }

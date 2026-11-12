@@ -1,11 +1,12 @@
 import { describe, expect, test } from "vitest"
 
 import { ProblemError } from "@/server/errors"
+import { getLesson, getPreparation } from "@/server/queries/learning"
 import { getParentLesson, getMemberLesson } from "@/server/queries/portals"
 import { accountNamed, contextFor } from "@/test/context"
 
 import { linkChild } from "./commands/guardians"
-import { createTask, setLessonStatus, setTaskDone } from "./commands/learning"
+import { createTask, deleteLesson, setLessonStatus, setTaskDone } from "./commands/learning"
 import { erase } from "./commands/privacy"
 import { seed } from "./seed"
 
@@ -78,6 +79,38 @@ describe("what parents and members see of a lesson", () => {
     expect(
       JSON.stringify(getMemberLesson(nevine, lessonNamed(s, "The first eight letters").id))
     ).not.toContain("pronunciation")
+  })
+})
+
+describe("who opens a lesson", () => {
+  test("a servant opens, changes and deletes only their own lessons", () => {
+    const s = seed("church")
+    const george = contextFor(s, accountNamed(s, "george.nashed"))
+    const rebecca = contextFor(s, accountNamed(s, "rebecca.habib"))
+    const animals = lessonNamed(s, "God made the animals")
+    const titles = (ctx: typeof george) =>
+      getPreparation(ctx).flatMap((g) => [...g.upcoming, ...g.earlier].map((l) => l.title))
+
+    expect(status(() => getLesson(rebecca, animals.id))).toBe(404)
+    expect(status(() => setLessonStatus(rebecca, animals.id, "ready"))).toBe(404)
+    expect(status(() => deleteLesson(rebecca, animals.id))).toBe(404)
+    expect(titles(rebecca)).not.toContain("God made the animals")
+    expect(titles(george)).toContain("God made the animals")
+    expect(status(() => getLesson(george, animals.id))).toBe("ok")
+  })
+
+  test("a service leader manages every lesson of the service", () => {
+    const s = seed("church")
+    const christine = contextFor(s, accountNamed(s, "christine.adel"))
+    const animals = lessonNamed(s, "God made the animals")
+
+    expect(status(() => getLesson(christine, animals.id))).toBe("ok")
+    expect(status(() => setLessonStatus(christine, animals.id, "ready"))).toBe("ok")
+    expect(
+      getPreparation(christine)
+        .flatMap((g) => [...g.upcoming, ...g.earlier])
+        .find((l) => l.title === "God made the animals")?.responsible?.name
+    ).toBe("George Nashed")
   })
 })
 

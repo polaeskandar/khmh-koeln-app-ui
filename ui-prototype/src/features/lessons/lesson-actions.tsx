@@ -13,13 +13,11 @@ import { deleteLessonAction, setLessonStatusAction } from "@/server/actions/lear
 export function LessonStatusActions({
   lessonId,
   status,
-  canPrepare,
   canPublish,
   hasTasks,
 }: {
   lessonId: string
   status: LessonStatus
-  canPrepare: boolean
   canPublish: boolean
   hasTasks: boolean
 }) {
@@ -30,7 +28,7 @@ export function LessonStatusActions({
 
   return (
     <div className="flex flex-col gap-2">
-      {status === "draft" && canPrepare ? (
+      {status === "draft" ? (
         <Button
           variant="outline"
           onClick={() => setStatus.execute(lessonId, "ready")}
@@ -69,7 +67,7 @@ export function LessonStatusActions({
           onConfirm={async () => (await setStatus.execute(lessonId, "ready")).ok}
         />
       ) : null}
-      {status === "ready" && canPrepare ? (
+      {status === "ready" ? (
         <Button
           variant="ghost"
           onClick={() => setStatus.execute(lessonId, "draft")}
@@ -79,7 +77,7 @@ export function LessonStatusActions({
           {t("backToDraft")}
         </Button>
       ) : null}
-      {status !== "published" && canPrepare && !hasTasks ? (
+      {status !== "published" && !hasTasks ? (
         <ConfirmDialog
           trigger={
             <Button variant="ghost" className="text-destructive">

@@ -95,6 +95,7 @@ export const UNIT_PERMISSIONS = [
   "attendance.record",
   "attendance.correct",
   "lessons.prepare",
+  "lessons.manage",
   "lessons.publish",
   "tasks.manage",
 ] as const

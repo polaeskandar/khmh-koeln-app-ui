@@ -11,7 +11,7 @@ import type {
 } from "@/lib/domain/types"
 import { forbidden, ruleViolation } from "@/server/errors"
 
-import { can, requireIn } from "../access"
+import { can, canOpenLesson, requireIn } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
@@ -109,35 +109,24 @@ export function createLesson(actor: Actor, unit: Unit, input: LessonInput) {
   return lesson
 }
 
-function lessonFor(
-  actor: Actor,
-  lessonId: Uuid,
-  permission: "lessons.prepare" | "lessons.publish"
-) {
-  const lesson = found(
-    actor.state.lessons.find((l) => l.id === lessonId),
+function lessonFor({ state: s, viewer }: Actor, lessonId: Uuid) {
+  return found(
+    s.lessons.find((l) => l.id === lessonId && canOpenLesson(s, viewer, l)),
     "lesson"
   )
-  requireIn(actor.state, actor.viewer, permission, unitOf(lesson), "lesson")
-
-  return lesson
 }
 
 export function updateLesson(actor: Actor, lessonId: Uuid, input: LessonInput) {
-  const lesson = lessonFor(actor, lessonId, "lessons.prepare")
+  const lesson = lessonFor(actor, lessonId)
   Object.assign(lesson, cleanLesson(actor.state, unitOf(lesson), input), { updatedAt: now() })
 
   return lesson
 }
 
 export function setLessonStatus(actor: Actor, lessonId: Uuid, status: LessonStatus) {
-  const lesson = lessonFor(
-    actor,
-    lessonId,
-    status === "published" ? "lessons.publish" : "lessons.prepare"
-  )
+  const lesson = lessonFor(actor, lessonId)
 
-  if (lesson.status === "published" && status !== "published") {
+  if (status === "published" || lesson.status === "published") {
     requireIn(actor.state, actor.viewer, "lessons.publish", unitOf(lesson), "lesson")
   }
 
@@ -151,7 +140,7 @@ export function setLessonStatus(actor: Actor, lessonId: Uuid, status: LessonStat
 }
 
 export function deleteLesson(actor: Actor, lessonId: Uuid) {
-  const lesson = lessonFor(actor, lessonId, "lessons.prepare")
+  const lesson = lessonFor(actor, lessonId)
 
   if (lesson.status === "published") {
     throw ruleViolation(msg("errors.learning.publishedLesson"))
@@ -193,10 +182,7 @@ function cleanTask(input: TaskInput) {
 }
 
 export function createTask(actor: Actor, lessonId: Uuid, input: TaskInput, publish: boolean) {
-  const lesson = found(
-    actor.state.lessons.find((l) => l.id === lessonId),
-    "lesson"
-  )
+  const lesson = lessonFor(actor, lessonId)
   requireIn(actor.state, actor.viewer, "tasks.manage", unitOf(lesson), "lesson")
   const task: Task = {
     id: uuidv7(nowMs()),
@@ -216,7 +202,13 @@ export function createTask(actor: Actor, lessonId: Uuid, input: TaskInput, publi
 
 function taskFor(actor: Actor, taskId: Uuid) {
   const task = found(
-    actor.state.tasks.find((t) => t.id === taskId),
+    actor.state.tasks.find(
+      (t) =>
+        t.id === taskId &&
+        actor.state.lessons.some(
+          (l) => l.id === t.lessonId && canOpenLesson(actor.state, actor.viewer, l)
+        )
+    ),
     "task"
   )
   requireIn(actor.state, actor.viewer, "tasks.manage", unitOf(task), "task")

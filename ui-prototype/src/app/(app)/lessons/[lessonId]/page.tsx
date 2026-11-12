@@ -37,14 +37,12 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
             </>
           }
           actions={
-            data.can.prepare ? (
-              <Button asChild variant="outline">
-                <Link href={`/lessons/${lesson.id}/edit`}>
-                  <Pencil data-icon="inline-start" />
-                  {t("edit")}
-                </Link>
-              </Button>
-            ) : null
+            <Button asChild variant="outline">
+              <Link href={`/lessons/${lesson.id}/edit`}>
+                <Pencil data-icon="inline-start" />
+                {t("edit")}
+              </Link>
+            </Button>
           }
         >
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -119,7 +117,6 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
               <LessonStatusActions
                 lessonId={lesson.id}
                 status={lesson.status}
-                canPrepare={data.can.prepare}
                 canPublish={data.can.publish}
                 hasTasks={data.tasks.length > 0}
               />

@@ -2,8 +2,8 @@ import "server-only"
 
 import { notFound } from "next/navigation"
 
-import type { Lesson, Person, Task, Unit, Uuid } from "@/lib/domain/types"
-import { can, canSeeUnit, unitsWith } from "@/server/mock/access"
+import type { Account, Lesson, Person, Task, Unit, Uuid } from "@/lib/domain/types"
+import { can, canOpenLesson, canSeeUnit, unitsWith } from "@/server/mock/access"
 import { today } from "@/server/mock/clock"
 import {
   accountOfPerson,
@@ -46,6 +46,7 @@ function lessonSummary(s: State, l: Lesson) {
     title: l.title,
     date: l.date,
     status: l.status,
+    responsible: accountRef(s, l.responsibleId),
     tasks: s.tasks.filter((t) => t.lessonId === l.id && t.status !== "archived").length,
   }
 }
@@ -54,13 +55,14 @@ export function getPreparation(ctx: Context) {
   const { state: s, viewer } = ctx
   const date = today()
 
-  return unitsWith(s, viewer, "lessons.prepare")
+  return lessonUnits(s, viewer)
     .filter((u) => canSeeUnit(s, viewer, u))
     .map((u) => {
-      const lessons = s.lessons.filter((l) => sameUnit(unitOf(l), u))
+      const lessons = s.lessons.filter((l) => sameUnit(unitOf(l), u) && canOpenLesson(s, viewer, l))
 
       return {
         unit: unitRef(s, u),
+        canCreate: can(s, viewer, "lessons.prepare", u),
         upcoming: lessons
           .filter((l) => l.date >= date)
           .sort((a, b) => a.date.localeCompare(b.date))
@@ -74,17 +76,19 @@ export function getPreparation(ctx: Context) {
     })
 }
 
+function lessonUnits(s: State, viewer: Account): Unit[] {
+  const units = [
+    ...unitsWith(s, viewer, "lessons.manage"),
+    ...unitsWith(s, viewer, "lessons.prepare"),
+  ]
+
+  return units.filter((u, i) => units.findIndex((x) => sameUnit(x, u)) === i)
+}
+
 export function lessonFor({ state: s, viewer }: Context, lessonId: Uuid): Lesson {
   const lesson = s.lessons.find((l) => l.id === lessonId)
 
-  if (
-    !lesson ||
-    !canSeeUnit(s, viewer, unitOf(lesson)) ||
-    !(
-      can(s, viewer, "lessons.prepare", unitOf(lesson)) ||
-      can(s, viewer, "tasks.manage", unitOf(lesson))
-    )
-  ) {
+  if (!lesson || !canOpenLesson(s, viewer, lesson)) {
     notFound()
   }
 
@@ -114,7 +118,6 @@ export function getLesson(ctx: Context, lessonId: Uuid) {
         ...progress(s, t),
       })),
     can: {
-      prepare: can(s, viewer, "lessons.prepare", unit),
       publish: can(s, viewer, "lessons.publish", unit),
       tasks: can(s, viewer, "tasks.manage", unit),
     },
@@ -139,11 +142,11 @@ export function sessionOptions(s: State, unit: Unit, keep: Uuid | null) {
 export function getLessonEditor(ctx: Context, unit: Unit, lessonId: Uuid | null) {
   const { state: s, viewer } = ctx
 
-  if (!canSeeUnit(s, viewer, unit) || !can(s, viewer, "lessons.prepare", unit)) {
+  const lesson = lessonId ? lessonFor(ctx, lessonId) : null
+
+  if (!canSeeUnit(s, viewer, unit) || (!lesson && !can(s, viewer, "lessons.prepare", unit))) {
     notFound()
   }
-
-  const lesson = lessonId ? lessonFor(ctx, lessonId) : null
 
   return {
     unit: unitRef(s, unit),
@@ -154,13 +157,15 @@ export function getLessonEditor(ctx: Context, unit: Unit, lessonId: Uuid | null)
 
 export function getTasks(ctx: Context) {
   const { state: s, viewer } = ctx
+  const opens = (t: Task) =>
+    s.lessons.some((l) => l.id === t.lessonId && canOpenLesson(s, viewer, l))
 
   return unitsWith(s, viewer, "tasks.manage")
     .filter((u) => canSeeUnit(s, viewer, u))
     .map((u) => ({
       unit: unitRef(s, u),
       tasks: s.tasks
-        .filter((t) => sameUnit(unitOf(t), u) && t.status !== "archived")
+        .filter((t) => sameUnit(unitOf(t), u) && t.status !== "archived" && opens(t))
         .sort((a, b) => (b.dueDate ?? "9999").localeCompare(a.dueDate ?? "9999"))
         .map((t) => ({
           id: t.id,
@@ -170,7 +175,8 @@ export function getTasks(ctx: Context) {
           lesson: s.lessons.find((l) => l.id === t.lessonId)?.title ?? "",
           ...progress(s, t),
         })),
-      archived: s.tasks.filter((t) => sameUnit(unitOf(t), u) && t.status === "archived").length,
+      archived: s.tasks.filter((t) => sameUnit(unitOf(t), u) && t.status === "archived" && opens(t))
+        .length,
     }))
 }
 
@@ -179,8 +185,8 @@ export function taskFor({ state: s, viewer }: Context, taskId: Uuid): Task {
 
   if (
     !task ||
-    !canSeeUnit(s, viewer, unitOf(task)) ||
-    !can(s, viewer, "tasks.manage", unitOf(task))
+    !can(s, viewer, "tasks.manage", unitOf(task)) ||
+    !s.lessons.some((l) => l.id === task.lessonId && canOpenLesson(s, viewer, l))
   ) {
     notFound()
   }
@@ -239,7 +245,10 @@ export function taskLessonChoices(ctx: Context) {
   return unitsWith(s, viewer, "tasks.manage").map((u) => ({
     unit: unitRef(s, u),
     lessons: s.lessons
-      .filter((l) => sameUnit(unitOf(l), u) && l.date >= date.slice(0, 8) + "01")
+      .filter(
+        (l) =>
+          sameUnit(unitOf(l), u) && l.date >= date.slice(0, 8) + "01" && canOpenLesson(s, viewer, l)
+      )
       .sort((a, b) => a.date.localeCompare(b.date))
       .map((l) => ({ id: l.id, title: l.title, date: l.date })),
   }))

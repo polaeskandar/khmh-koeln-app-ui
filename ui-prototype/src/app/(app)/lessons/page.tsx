@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BookOpenText, ListChecks, Plus } from "lucide-react"
+import { BookOpenText, ListChecks, Plus, UserRound } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
@@ -18,7 +18,7 @@ export async function generateMetadata() {
 
 type Summary = ReturnType<typeof getPreparation>[number]["upcoming"][number]
 
-async function LessonLink({ lesson }: { lesson: Summary }) {
+async function LessonLink({ lesson, viewerId }: { lesson: Summary; viewerId: string }) {
   const f = await getFormat()
   const t = await getTranslations("lessons")
 
@@ -39,12 +39,20 @@ async function LessonLink({ lesson }: { lesson: Summary }) {
         <span className="truncate font-medium">
           <bdi>{lesson.title}</bdi>
         </span>
-        {lesson.tasks > 0 ? (
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <ListChecks className="size-3.5" aria-hidden="true" />
-            {t("tasks", { count: lesson.tasks })}
-          </span>
-        ) : null}
+        <span className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+          {lesson.responsible && lesson.responsible.id !== viewerId ? (
+            <span className="inline-flex items-center gap-1">
+              <UserRound className="size-3.5" aria-hidden="true" />
+              {t("responsible", { name: lesson.responsible.name })}
+            </span>
+          ) : null}
+          {lesson.tasks > 0 ? (
+            <span className="inline-flex items-center gap-1">
+              <ListChecks className="size-3.5" aria-hidden="true" />
+              {t("tasks", { count: lesson.tasks })}
+            </span>
+          ) : null}
+        </span>
       </span>
       <LessonStatusBadge status={lesson.status} />
     </Link>
@@ -52,7 +60,8 @@ async function LessonLink({ lesson }: { lesson: Summary }) {
 }
 
 export default async function PreparationPage() {
-  const groups = getPreparation(await getStaffContext())
+  const ctx = await getStaffContext()
+  const groups = getPreparation(ctx)
   const t = await getTranslations("lessons")
 
   return (
@@ -83,14 +92,16 @@ export default async function PreparationPage() {
                   <ServiceSwatch tone={g.unit.tone} className="size-2.5" />
                   <bdi>{g.unit.name}</bdi>
                 </h2>
-                <Button asChild variant="outline" size="sm">
-                  <Link
-                    href={`/lessons/new?service=${g.unit.serviceId}${g.unit.stageId ? `&stage=${g.unit.stageId}` : ""}`}
-                  >
-                    <Plus data-icon="inline-start" />
-                    {t("new")}
-                  </Link>
-                </Button>
+                {g.canCreate ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link
+                      href={`/lessons/new?service=${g.unit.serviceId}${g.unit.stageId ? `&stage=${g.unit.stageId}` : ""}`}
+                    >
+                      <Plus data-icon="inline-start" />
+                      {t("new")}
+                    </Link>
+                  </Button>
+                ) : null}
               </div>
               <div className="border bg-card">
                 {g.upcoming.length === 0 ? (
@@ -99,7 +110,7 @@ export default async function PreparationPage() {
                   <ul className="divide-y">
                     {g.upcoming.map((l) => (
                       <li key={l.id}>
-                        <LessonLink lesson={l} />
+                        <LessonLink lesson={l} viewerId={ctx.viewer.id} />
                       </li>
                     ))}
                   </ul>
@@ -112,7 +123,7 @@ export default async function PreparationPage() {
                     <ul className="divide-y border-t">
                       {g.earlier.map((l) => (
                         <li key={l.id}>
-                          <LessonLink lesson={l} />
+                          <LessonLink lesson={l} viewerId={ctx.viewer.id} />
                         </li>
                       ))}
                     </ul>
