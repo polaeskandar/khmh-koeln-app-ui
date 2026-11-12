@@ -10,7 +10,7 @@ import {
   discardDraft,
   rescheduleSession,
   restoreSession,
-  savePlans,
+  savePlan,
 } from "@/server/mock/commands/schedule"
 
 import { run } from "./run"
@@ -42,19 +42,19 @@ const rule = z.object({
 })
 
 const plan = z.object({
-  scheduleIds: z.array(uuid).max(30),
+  scheduleId: uuid,
   year: z.number().int(),
   rule,
   decisions: z.record(localDate, z.enum(["cancel", "keep"])),
-  versions: z.record(z.string(), z.number().int()),
+  version: z.number().int().nullable(),
   confirm: z.boolean(),
 })
 
-export async function savePlansAction(input: z.input<typeof plan>) {
+export async function savePlanAction(input: z.input<typeof plan>) {
   const data = plan.parse(input)
 
   return run(
-    (ctx) => savePlans(ctx, data),
+    (ctx) => savePlan(ctx, data),
     (r) =>
       data.confirm
         ? msg("toast.planConfirmed", { count: r.created, year: String(data.year) })

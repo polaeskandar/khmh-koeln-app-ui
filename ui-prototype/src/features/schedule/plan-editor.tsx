@@ -11,8 +11,6 @@ import { FormPanel } from "@/components/form-panel"
 import { useOccasionName } from "@/components/session-card"
 import { StatusBadge } from "@/components/status"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { FieldError } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { useServerAction } from "@/hooks/use-server-action"
 import { useFormat } from "@/i18n/format"
@@ -20,17 +18,9 @@ import { type OccasionHit, type PreviewRow, previewRows } from "@/lib/domain/pla
 import { isValidLocalTime } from "@/lib/domain/time"
 import type { LocalDate, PlanDecision, PlanRule } from "@/lib/domain/types"
 import type { UnitRef } from "@/lib/view-models"
-import { savePlansAction } from "@/server/actions/schedule"
+import { savePlanAction } from "@/server/actions/schedule"
 
 import { RuleFields } from "./rule-fields"
-
-type UnitChoice = {
-  unit: UnitRef
-  scheduleId: string
-  status: "none" | "draft" | "confirmed"
-  version: number
-  selected: boolean
-}
 
 function Row({
   row,
@@ -110,9 +100,10 @@ function Row({
 }
 
 export function PlanEditor({
-  serviceName,
+  unit,
+  scheduleId,
+  version,
   year,
-  units: initialUnits,
   rule: initialRule,
   decisions: initialDecisions,
   hits,
@@ -120,9 +111,10 @@ export function PlanEditor({
   canKeepMandatory,
   returnTo,
 }: {
-  serviceName: string
+  unit: UnitRef
+  scheduleId: string
+  version: number | null
   year: number
-  units: UnitChoice[]
   rule: PlanRule
   decisions: Record<LocalDate, PlanDecision>
   hits: Record<LocalDate, OccasionHit[]>
@@ -135,11 +127,8 @@ export function PlanEditor({
   const router = useRouter()
   const [rule, setRule] = useState(initialRule)
   const [decisions, setDecisions] = useState(initialDecisions)
-  const [selected, setSelected] = useState(
-    () => new Set(initialUnits.filter((u) => u.selected).map((u) => u.scheduleId))
-  )
   const [confirming, setConfirming] = useState(false)
-  const { execute, pending, fieldErrors, problem } = useServerAction(savePlansAction, {
+  const { execute, pending, fieldErrors, problem } = useServerAction(savePlanAction, {
     onSuccess: () => router.push(returnTo),
   })
   const rows = useMemo(
@@ -156,69 +145,23 @@ export function PlanEditor({
 
     return [...map.entries()]
   }, [rows])
-  const chosen = initialUnits.filter((u) => selected.has(u.scheduleId))
-  const staged = initialUnits.some((u) => u.unit.stageId !== null)
   const timeMissing = !isValidLocalTime(rule.startTime)
 
   const save = (confirm: boolean) =>
-    execute({
-      scheduleIds: chosen.map((u) => u.scheduleId),
-      year,
-      rule,
-      decisions,
-      versions: Object.fromEntries(
-        chosen.filter((u) => u.status !== "none").map((u) => [u.scheduleId, u.version])
-      ),
-      confirm,
-    })
+    execute({ scheduleId, year, rule, decisions, version, confirm })
 
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
       <div className="flex flex-col gap-6 lg:sticky lg:top-20 lg:self-start">
-        {staged ? (
-          <FormPanel title={t("planFor")}>
-            <ul className="flex flex-col gap-2">
-              {initialUnits.map((u) => (
-                <li key={u.scheduleId}>
-                  <label className="flex items-center gap-3 text-sm">
-                    <Checkbox
-                      checked={selected.has(u.scheduleId)}
-                      disabled={u.status === "confirmed"}
-                      onCheckedChange={(checked) => {
-                        const next = new Set(selected)
-
-                        if (checked) {
-                          next.add(u.scheduleId)
-                        } else {
-                          next.delete(u.scheduleId)
-                        }
-
-                        setSelected(next)
-                      }}
-                    />
-                    <span className="flex-1">{u.unit.stageName}</span>
-                    <span className="text-xs text-muted-foreground">{t(`status.${u.status}`)}</span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-            {fieldErrors.scheduleIds ? <FieldError>{fieldErrors.scheduleIds}</FieldError> : null}
-            <p className="text-xs text-pretty text-muted-foreground">{t("planForHint")}</p>
-          </FormPanel>
-        ) : null}
         <FormPanel title={t("when")}>
           <RuleFields rule={rule} onChange={setRule} errors={fieldErrors} year={year} />
         </FormPanel>
         <div className="flex flex-wrap gap-2">
-          <Button
-            variant="outline"
-            disabled={pending || chosen.length === 0}
-            onClick={() => save(false)}
-          >
+          <Button variant="outline" disabled={pending} onClick={() => save(false)}>
             {t("saveDraft")}
           </Button>
           <Button
-            disabled={pending || chosen.length === 0 || timeMissing || meets === 0}
+            disabled={pending || timeMissing || meets === 0}
             onClick={() => setConfirming(true)}
           >
             <CalendarCheck2 data-icon="inline-start" />
@@ -299,10 +242,10 @@ export function PlanEditor({
         title={t("confirmTitle", { year: String(year) })}
         description={t("confirmDescription", {
           count: meets,
-          where: chosen.map((u) => u.unit.stageName ?? serviceName).join(", "),
+          where: unit.name,
         })}
         consequences={[
-          t("confirmCreates", { count: meets * chosen.length }),
+          t("confirmCreates", { count: meets }),
           t("confirmCanceled", { count: rows.length - meets }),
           t("confirmLater"),
         ]}

@@ -11,8 +11,9 @@ import {
   addOneOffSession,
   cancelSession,
   changePlan,
+  discardDraft,
   rescheduleSession,
-  savePlans,
+  savePlan,
 } from "./commands/schedule"
 import { automaticDays, daysOffOf, occasionHits } from "./scheduling"
 import { seed } from "./seed"
@@ -58,12 +59,12 @@ describe("annual plans", () => {
     const { s, schedules } = setUp()
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
     const before = s.sessions.length
-    const result = savePlans(christine, {
-      scheduleIds: [schedules[0].id],
+    const result = savePlan(christine, {
+      scheduleId: schedules[0].id,
       year: 2027,
       rule: sundays,
       decisions: {},
-      versions: {},
+      version: null,
       confirm: true,
     })
     const created = s.sessions.filter(
@@ -82,17 +83,17 @@ describe("annual plans", () => {
     const { s, schedules } = setUp()
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
     const input = {
-      scheduleIds: [schedules[0].id],
+      scheduleId: schedules[0].id,
       year: 2027,
       rule: sundays,
       decisions: {},
-      versions: {},
+      version: null,
       confirm: true,
     }
-    savePlans(christine, input)
+    savePlan(christine, input)
     const count = s.sessions.length
 
-    expect(fail(() => savePlans(christine, { ...input, versions: { [schedules[0].id]: 1 } }))).toBe(
+    expect(fail(() => savePlan(christine, { ...input, version: 1 }))).toBe(
       "errors.plans.alreadyConfirmed"
     )
     expect(s.sessions.length).toBe(count)
@@ -102,32 +103,47 @@ describe("annual plans", () => {
     const { s, schedules } = setUp()
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
     const input = {
-      scheduleIds: [schedules[0].id],
+      scheduleId: schedules[0].id,
       year: 2027,
       rule: sundays,
       decisions: {},
-      versions: {},
+      version: null,
       confirm: false,
     }
-    savePlans(christine, input)
-    savePlans(christine, { ...input, versions: { [schedules[0].id]: 1 } })
+    savePlan(christine, input)
+    savePlan(christine, { ...input, version: 1 })
 
-    expect(
-      fail(() =>
-        savePlans(christine, { ...input, versions: { [schedules[0].id]: 1 }, confirm: true })
-      )
-    ).toBe("errors.plans.stale")
+    expect(fail(() => savePlan(christine, { ...input, version: 1, confirm: true }))).toBe(
+      "errors.plans.stale"
+    )
+  })
+
+  test("a draft discarded meanwhile can't be saved over", () => {
+    const { s, schedules } = setUp()
+    const christine = contextFor(s, accountNamed(s, "christine.adel"))
+    const input = {
+      scheduleId: schedules[0].id,
+      year: 2027,
+      rule: sundays,
+      decisions: {},
+      version: null,
+      confirm: false,
+    }
+    savePlan(christine, input)
+    discardDraft(christine, schedules[0].id, 2027)
+
+    expect(fail(() => savePlan(christine, { ...input, version: 1 }))).toBe("errors.plans.stale")
   })
 
   test("the end time and the last date stay empty when not given", () => {
     const { s, schedules } = setUp()
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
-    savePlans(christine, {
-      scheduleIds: [schedules[1].id],
+    savePlan(christine, {
+      scheduleId: schedules[1].id,
       year: 2027,
       rule: sundays,
       decisions: {},
-      versions: {},
+      version: null,
       confirm: true,
     })
     const plan = s.plans.find((p) => p.scheduleId === schedules[1].id && p.year === 2027)!
@@ -145,12 +161,12 @@ describe("annual plans", () => {
 
     expect(
       fail(() =>
-        savePlans(christine, {
-          scheduleIds: [schedules[0].id],
+        savePlan(christine, {
+          scheduleId: schedules[0].id,
           year: 2027,
           rule: sundays,
           decisions: { "2027-06-27": "keep" },
-          versions: {},
+          version: null,
           confirm: false,
         })
       )
@@ -227,22 +243,22 @@ describe("single sessions", () => {
       (x) => s.stages.find((st) => st.id === x.stageId)?.name === "3rd Class"
     )!
     const input = (id: string) => ({
-      scheduleIds: [id],
+      scheduleId: id,
       year: 2027,
       rule: sundays,
       decisions: {},
-      versions: {},
+      version: null,
       confirm: false,
     })
 
-    expect(fail(() => savePlans(daniel, input(third.id)))).toBe("errors.forbidden")
-    expect(fail(() => savePlans(daniel, input(schedules[0].id)))).toBe("errors.notFound.schedule")
+    expect(fail(() => savePlan(daniel, input(third.id)))).toBe("errors.forbidden")
+    expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("errors.notFound.schedule")
     assignRole(mariam, daniel.viewer.id, ROLE_IDS.serviceLeader, {
       type: "service",
       serviceId: sundaySchool,
     })
-    expect(fail(() => savePlans(daniel, input(schedules[0].id)))).toBe("ok")
-    expect(fail(() => savePlans(daniel, input(youthSchedule.id)))).toBe("errors.forbidden")
+    expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("ok")
+    expect(fail(() => savePlan(daniel, input(youthSchedule.id)))).toBe("errors.forbidden")
   })
 })
 

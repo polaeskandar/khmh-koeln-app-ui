@@ -172,59 +172,79 @@ export default async function ServicePage({
           >
             {(() => {
               const overview = getScheduleOverview(ctx, service.id, year)
-              const open = overview.filter((u) => u.status !== "confirmed" && u.canManage)
 
               return (
                 <div className="flex flex-col gap-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <YearSwitch
-                      years={planningYearOptions()}
-                      year={year}
-                      href={(y) => `${base}?tab=schedule&year=${y}`}
-                    />
-                    {open.length > 0 ? (
-                      <Button asChild>
-                        <Link href={`${base}/plan?year=${year}`}>
-                          {ts("overview.prepareAll", { year: String(year), count: open.length })}
-                        </Link>
-                      </Button>
-                    ) : null}
-                  </div>
+                  <YearSwitch
+                    years={planningYearOptions()}
+                    year={year}
+                    href={(y) => `${base}?tab=schedule&year=${y}`}
+                  />
                   <ul className="divide-y border">
-                    {overview.map((u) => (
-                      <li
-                        key={u.scheduleId}
-                        className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4"
-                      >
-                        <div className="flex min-w-48 flex-1 flex-col gap-0.5">
-                          <Link
-                            href={`${base}/stages/${u.unit.stageId}?year=${year}`}
-                            className="font-medium underline-offset-4 hover:underline"
-                          >
-                            {u.unit.stageName}
-                          </Link>
-                          <span className="text-sm text-muted-foreground">
-                            {u.rule ? ruleSummary(f, u.rule) : ts("overview.noRule")}
+                    {overview.map((u) => {
+                      const stage = `${base}/stages/${u.unit.stageId}`
+                      const name = u.unit.stageName ?? ""
+                      const planning = u.canManage && u.status !== "confirmed"
+
+                      return (
+                        <li
+                          key={u.scheduleId}
+                          className="flex flex-wrap items-center gap-x-4 gap-y-2 p-4"
+                        >
+                          <div className="flex min-w-48 flex-1 flex-col gap-0.5">
+                            <Link
+                              href={`${stage}?year=${year}`}
+                              className="font-medium underline-offset-4 hover:underline"
+                            >
+                              {u.unit.stageName}
+                            </Link>
+                            <span className="text-sm text-muted-foreground">
+                              {u.rule ? ruleSummary(f, u.rule) : ts("overview.noRule")}
+                            </span>
+                          </div>
+                          <span className="text-sm text-muted-foreground tabular-nums">
+                            {u.status === "confirmed"
+                              ? ts("overview.counts", { count: u.sessions, canceled: u.canceled })
+                              : null}
                           </span>
-                        </div>
-                        <span className="text-sm text-muted-foreground tabular-nums">
-                          {u.status === "confirmed"
-                            ? ts("overview.counts", { count: u.sessions, canceled: u.canceled })
-                            : null}
-                        </span>
-                        <span className={cn("w-32 text-end")}>
-                          {u.status === "confirmed" ? (
-                            <StatusBadge tone="success">{ts("status.confirmed")}</StatusBadge>
-                          ) : u.status === "draft" ? (
-                            <DraftBadge />
-                          ) : (
-                            <StatusBadge tone="muted" dashed>
-                              {ts("status.none")}
-                            </StatusBadge>
-                          )}
-                        </span>
-                      </li>
-                    ))}
+                          <span className={cn("w-32 text-end")}>
+                            {u.status === "confirmed" ? (
+                              <StatusBadge tone="success">{ts("status.confirmed")}</StatusBadge>
+                            ) : u.status === "draft" ? (
+                              <DraftBadge />
+                            ) : (
+                              <StatusBadge tone="muted" dashed>
+                                {ts("status.none")}
+                              </StatusBadge>
+                            )}
+                          </span>
+                          <Button
+                            asChild
+                            size="sm"
+                            variant={planning && u.status === "none" ? "default" : "outline"}
+                          >
+                            <Link
+                              href={
+                                planning ? `${stage}/plan?year=${year}` : `${stage}?year=${year}`
+                              }
+                              aria-label={
+                                !planning
+                                  ? ts("overview.openLabel", { name })
+                                  : u.status === "draft"
+                                    ? ts("overview.continueLabel", { name, year: String(year) })
+                                    : ts("overview.prepareLabel", { name, year: String(year) })
+                              }
+                            >
+                              {!planning
+                                ? ts("overview.open")
+                                : u.status === "draft"
+                                  ? ts("year.continue")
+                                  : ts("year.prepare", { year: String(year) })}
+                            </Link>
+                          </Button>
+                        </li>
+                      )
+                    })}
                   </ul>
                   {overview.length === 0 ? (
                     <p className="flex items-center gap-2 text-sm text-muted-foreground">

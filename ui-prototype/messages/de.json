@@ -233,7 +233,6 @@
       "outsideYear": "Dieses Datum liegt außerhalb des Jahres, das Sie planen.",
       "interval": "Wählen Sie, wie oft sich die Treffen wiederholen.",
       "noDates": "Mit diesen Daten gäbe es in diesem Jahr kein Treffen.",
-      "chooseUnit": "Wählen Sie mindestens eine Stufe zum Planen.",
       "year": "Sie können dieses Jahr und die nächsten zwei Jahre planen.",
       "alreadyConfirmed": "Der Plan für dieses Jahr ist schon bestätigt. Verwenden Sie stattdessen „Ab einem Datum ändern“.",
       "stale": "Jemand anderes hat diesen Plan inzwischen geändert. Laden Sie die Seite neu und prüfen Sie ihn noch einmal.",
@@ -455,10 +454,13 @@
     },
     "overview": {
       "title": "Zeitplan {year}",
-      "hint": "Jede Stufe hat einen Zeitplan. Planen Sie ein Jahr für eine Stufe oder für mehrere auf einmal.",
-      "prepareAll": "{count, plural, one {{year} vorbereiten} other {{year} für # Stufen vorbereiten}}",
+      "hint": "Jede Stufe hat ihren eigenen Zeitplan und wird einzeln geplant.",
       "noRule": "Noch nicht geplant",
-      "counts": "{count, plural, one {# Treffen} other {# Treffen}}{canceled, plural, =0 {} other {, # abgesagt}}"
+      "counts": "{count, plural, one {# Treffen} other {# Treffen}}{canceled, plural, =0 {} other {, # abgesagt}}",
+      "open": "Öffnen",
+      "openLabel": "{name} öffnen",
+      "prepareLabel": "{year} für {name} vorbereiten",
+      "continueLabel": "Planung {year} für {name} fortsetzen"
     },
     "year": {
       "chooseYear": "Jahr",
@@ -505,13 +507,6 @@
       "crumb": "Plan {year}",
       "title": "{name}: Plan {year}",
       "description": "Legen Sie fest, wann sich die Gruppe trifft. Die Vorschau zeigt jedes Treffen des Jahres; Tage ohne Treffen dieses Dienstes werden zur Absage vorgeschlagen, und Sie entscheiden.",
-      "planFor": "Planen für",
-      "planForHint": "Alle gewählten Stufen bekommen denselben Plan. Jede behält ihren eigenen Zeitplan.",
-      "status": {
-        "none": "Nicht geplant",
-        "draft": "Entwurf",
-        "confirmed": "Bestätigt"
-      },
       "when": "Wann",
       "saveDraft": "Entwurf speichern",
       "confirm": "Plan bestätigen",

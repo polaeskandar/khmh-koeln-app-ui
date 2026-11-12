@@ -233,7 +233,6 @@
       "outsideYear": "This date is outside the year you are planning.",
       "interval": "Choose how often the sessions repeat.",
       "noDates": "With these dates there would be no session in this year.",
-      "chooseUnit": "Choose at least one stage to plan.",
       "year": "You can plan this year and the next two years.",
       "alreadyConfirmed": "This year’s plan is already confirmed. Use “Change from a date” instead.",
       "stale": "Someone else changed this plan in the meantime. Reload the page and check it again.",
@@ -455,10 +454,13 @@
     },
     "overview": {
       "title": "Schedule {year}",
-      "hint": "Each stage has one schedule. Plan a year for one stage or for several at once.",
-      "prepareAll": "{count, plural, one {Prepare {year}} other {Prepare {year} for # stages}}",
+      "hint": "Each stage has its own schedule and is planned on its own.",
       "noRule": "Not planned yet",
-      "counts": "{count, plural, one {# session} other {# sessions}}{canceled, plural, =0 {} other {, # canceled}}"
+      "counts": "{count, plural, one {# session} other {# sessions}}{canceled, plural, =0 {} other {, # canceled}}",
+      "open": "Open",
+      "openLabel": "Open {name}",
+      "prepareLabel": "Prepare {year} for {name}",
+      "continueLabel": "Continue planning {year} for {name}"
     },
     "year": {
       "chooseYear": "Year",
@@ -505,13 +507,6 @@
       "crumb": "Plan {year}",
       "title": "{name}: plan {year}",
       "description": "Set when the group meets. The preview shows every session of the year; days without sessions of this service are suggested as canceled, and you decide.",
-      "planFor": "Plan for",
-      "planForHint": "All chosen stages get the same plan. Each keeps its own schedule.",
-      "status": {
-        "none": "Not planned",
-        "draft": "Draft",
-        "confirmed": "Confirmed"
-      },
       "when": "When",
       "saveDraft": "Save draft",
       "confirm": "Confirm plan",

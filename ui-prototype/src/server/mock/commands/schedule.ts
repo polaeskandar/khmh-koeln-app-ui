@@ -71,78 +71,67 @@ function checkDecisions(
 }
 
 export type PlanInput = {
-  scheduleIds: Uuid[]
+  scheduleId: Uuid
   year: number
   rule: PlanRule
   decisions: Record<LocalDate, PlanDecision>
-  versions: Record<Uuid, number>
+  version: number | null
   confirm: boolean
 }
 
-export function savePlans(actor: Actor, input: PlanInput) {
+export function savePlan(actor: Actor, input: PlanInput) {
   const s = actor.state
-
-  if (input.scheduleIds.length === 0) {
-    throw invalid({ scheduleIds: msg("errors.plans.chooseUnit") })
-  }
+  const schedule = managedSchedule(actor, input.scheduleId)
 
   if (input.year < Number(today().slice(0, 4)) || input.year > Number(today().slice(0, 4)) + 2) {
     throw ruleViolation(msg("errors.plans.year"))
   }
 
   checkRule(input.rule, input.year)
-  const schedules = input.scheduleIds.map((id) => managedSchedule(actor, id))
+  checkDecisions(actor, schedule, input.year, input.decisions)
+  const existing = planOf(s, schedule.id, input.year)
 
-  for (const schedule of schedules) {
-    checkDecisions(actor, schedule, input.year, input.decisions)
-    const existing = planOf(s, schedule.id, input.year)
-
-    if (existing?.status === "confirmed") {
-      throw ruleViolation(msg("errors.plans.alreadyConfirmed"))
-    }
-
-    if (existing && input.versions[schedule.id] !== existing.version) {
-      throw ruleViolation(msg("errors.plans.stale"))
-    }
+  if (existing?.status === "confirmed") {
+    throw ruleViolation(msg("errors.plans.alreadyConfirmed"))
   }
 
-  let created = 0
-
-  for (const schedule of schedules) {
-    const existing = planOf(s, schedule.id, input.year)
-    const plan: AnnualPlan = existing ?? {
-      id: uuidv7(nowMs()),
-      scheduleId: schedule.id,
-      year: input.year,
-      status: "draft",
-      rule: input.rule,
-      decisions: {},
-      version: 0,
-      updatedAt: now(),
-      updatedBy: actor.viewer.id,
-      confirmedAt: null,
-      confirmedBy: null,
-    }
-
-    if (!existing) {
-      s.plans.push(plan)
-    }
-
-    plan.rule = { ...input.rule }
-    plan.decisions = { ...input.decisions }
-    plan.version++
-    plan.updatedAt = now()
-    plan.updatedBy = actor.viewer.id
-
-    if (input.confirm) {
-      plan.status = "confirmed"
-      plan.confirmedAt = now()
-      plan.confirmedBy = actor.viewer.id
-      created += materialize(s, schedule, plan, () => uuidv7(nowMs()), now())
-    }
+  if ((existing?.version ?? null) !== input.version) {
+    throw ruleViolation(msg("errors.plans.stale"))
   }
 
-  return { plans: schedules.length, created }
+  const plan: AnnualPlan = existing ?? {
+    id: uuidv7(nowMs()),
+    scheduleId: schedule.id,
+    year: input.year,
+    status: "draft",
+    rule: input.rule,
+    decisions: {},
+    version: 0,
+    updatedAt: now(),
+    updatedBy: actor.viewer.id,
+    confirmedAt: null,
+    confirmedBy: null,
+  }
+
+  if (!existing) {
+    s.plans.push(plan)
+  }
+
+  plan.rule = { ...input.rule }
+  plan.decisions = { ...input.decisions }
+  plan.version++
+  plan.updatedAt = now()
+  plan.updatedBy = actor.viewer.id
+
+  if (!input.confirm) {
+    return { created: 0 }
+  }
+
+  plan.status = "confirmed"
+  plan.confirmedAt = now()
+  plan.confirmedBy = actor.viewer.id
+
+  return { created: materialize(s, schedule, plan, () => uuidv7(nowMs()), now()) }
 }
 
 export function discardDraft(actor: Actor, scheduleId: Uuid, year: number) {

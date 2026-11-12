@@ -44,7 +44,7 @@ export default async function StagePage({
         <UnitSchedule
           data={data}
           hrefFor={(y) => `${base}?year=${y}`}
-          planHref={`/services/${serviceId}/plan?year=${year}&stage=${stageId}`}
+          planHref={`${base}/plan?year=${year}`}
         />
       </PageBody>
     </>
