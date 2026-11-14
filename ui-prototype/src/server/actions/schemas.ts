@@ -1,11 +1,18 @@
 import { z } from "zod"
 
+import { type ResourceType, resourceTypes } from "@/lib/domain/resources"
+
 export const uuid = z.uuid()
 
-export const scope = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("church") }),
-  z.object({ type: z.literal("service"), serviceId: z.uuid() }),
-  z.object({ type: z.literal("stage"), serviceId: z.uuid(), stageId: z.uuid() }),
+/** A resource: the church, or one resource of a type. */
+export const resource = z.union([
+  z.object({ type: z.literal("church"), id: z.literal("church") }),
+  z.object({
+    type: z.enum(
+      resourceTypes().filter((t) => t !== "church") as [ResourceType, ...ResourceType[]]
+    ),
+    id: z.uuid(),
+  }),
 ])
 
 export const unit = z.object({ serviceId: z.uuid(), stageId: z.uuid().nullable() })

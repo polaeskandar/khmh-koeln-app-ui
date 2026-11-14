@@ -7,6 +7,7 @@ import {
   createLesson,
   createTask,
   deleteLesson,
+  setResponsible,
   deleteTask,
   setLessonStatus,
   setTaskDone,
@@ -54,6 +55,13 @@ export async function setLessonStatusAction(
   const value = z.enum(["draft", "ready", "published"]).parse(status)
 
   return run((ctx) => setLessonStatus(ctx, id, value), msg(`toast.lessonStatus.${value}`))
+}
+
+export async function setResponsibleAction(lessonId: string, accountId: string) {
+  const id = uuid.parse(lessonId)
+  const account = uuid.parse(accountId)
+
+  return run((ctx) => setResponsible(ctx, id, account), msg("toast.responsibleChanged"))
 }
 
 export async function deleteLessonAction(lessonId: string) {

@@ -27,13 +27,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { FieldError } from "@/components/ui/field"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { useServerAction } from "@/hooks/use-server-action"
 import { fold } from "@/lib/domain/names"
 import { ROLE_IDS } from "@/lib/domain/policy"
-import type { Scope, Unit } from "@/lib/domain/types"
+import type { Unit } from "@/lib/domain/types"
 import { suggestUsername } from "@/lib/domain/username"
+import { refKey } from "@/lib/domain/resources"
+import type { ResourceLabel } from "@/lib/view-models"
 import { createAccountAction } from "@/server/actions/accounts"
 import type { getAccountForm } from "@/server/queries/admin"
 
@@ -43,10 +46,10 @@ import {
   TemporaryPasswordField,
   UsernameField,
 } from "./credentials"
-import { ScopePicker, UnitPicker } from "./scope-picker"
+import { UnitPicker } from "./scope-picker"
 
 type Form = ReturnType<typeof getAccountForm>
-type Chosen = { roleId: string; scope: Scope }
+type Chosen = { roleId: string; resource: ResourceLabel }
 
 const PRESETS = [
   { key: "servant", roleId: ROLE_IDS.servant, icon: HandHeart },
@@ -140,7 +143,7 @@ export function NewAccountDialog({ form }: { form: Form }) {
   const person = form.people.find((p) => p.id === personId)
   const name = mode === "existing" ? (person?.name ?? "") : `${firstName} ${lastName}`.trim()
   const duplicate = mode === "new" && name !== "" && form.existingNames.includes(name.toLowerCase())
-  const giveable = form.roles.filter((r) => r.giveable)
+  const giveable = form.roles.map((o) => o.role)
   const hasRole = (roleId: string) => roles.some((r) => r.roleId === roleId)
   const [childQuery, setChildQuery] = useState("")
   const children = useMemo(
@@ -167,7 +170,7 @@ export function NewAccountDialog({ form }: { form: Form }) {
   }
 
   const toggleRole = (roleId: string) => {
-    const role = form.roles.find((r) => r.id === roleId)!
+    const option = form.roles.find((o) => o.role.id === roleId)!
 
     if (hasRole(roleId)) {
       setRoles(roles.filter((r) => r.roleId !== roleId))
@@ -175,11 +178,7 @@ export function NewAccountDialog({ form }: { form: Form }) {
       return
     }
 
-    const scope: Scope =
-      role.churchOnly || form.scopes.length === 0
-        ? { type: "church" }
-        : { type: "service", serviceId: form.scopes[0].serviceId }
-    setRoles([...roles, { roleId, scope }])
+    setRoles([...roles, { roleId, resource: option.resources[0] }])
   }
 
   const next = () => {
@@ -330,19 +329,31 @@ export function NewAccountDialog({ form }: { form: Form }) {
                 </ul>
               </details>
               {roles.map((chosen) => {
-                const role = form.roles.find((r) => r.id === chosen.roleId)!
+                const option = form.roles.find((o) => o.role.id === chosen.roleId)!
 
-                return role.churchOnly ? null : (
-                  <ScopePicker
-                    key={chosen.roleId}
-                    label={t("where", { role: role.name })}
-                    scopes={form.scopes}
-                    value={chosen.scope}
-                    allowChurch={false}
-                    onChange={(scope) =>
-                      setRoles(roles.map((r) => (r.roleId === chosen.roleId ? { ...r, scope } : r)))
-                    }
-                  />
+                return option.resources.length < 2 ? null : (
+                  <Field key={chosen.roleId}>
+                    <FieldLabel htmlFor={`where-${chosen.roleId}`}>
+                      {t("where", { role: option.role.name })}
+                    </FieldLabel>
+                    <NativeSelect
+                      id={`where-${chosen.roleId}`}
+                      className="w-full"
+                      value={refKey(chosen.resource)}
+                      onChange={(e) => {
+                        const resource = option.resources.find((p) => refKey(p) === e.target.value)!
+                        setRoles(
+                          roles.map((r) => (r.roleId === chosen.roleId ? { ...r, resource } : r))
+                        )
+                      }}
+                    >
+                      {option.resources.map((p) => (
+                        <NativeSelectOption key={refKey(p)} value={refKey(p)}>
+                          {p.name}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </Field>
                 )
               })}
               {hasRole(ROLE_IDS.member) ? (
@@ -388,8 +399,8 @@ export function NewAccountDialog({ form }: { form: Form }) {
                   <p className="text-xs text-muted-foreground">{t("childrenLater")}</p>
                 </div>
               ) : null}
-              {fieldErrors.roles || fieldErrors.scope ? (
-                <FieldError>{fieldErrors.roles ?? fieldErrors.scope}</FieldError>
+              {fieldErrors.roles || fieldErrors.resource ? (
+                <FieldError>{fieldErrors.roles ?? fieldErrors.resource}</FieldError>
               ) : null}
             </div>
           ) : null}
@@ -435,7 +446,12 @@ export function NewAccountDialog({ form }: { form: Form }) {
                     lastName,
                     username,
                     temporaryPassword: password,
-                    roles,
+                    roles: roles.map((r) => ({
+                      roleId: r.roleId,
+                      resource: { type: r.resource.type, id: r.resource.id } as Parameters<
+                        typeof createAccountAction
+                      >[0]["roles"][number]["resource"],
+                    })),
                     groups,
                     childIds,
                   })

@@ -5,7 +5,7 @@ import { Check, Lock, LockOpen, PlayCircle, Search, UserPlus } from "lucide-reac
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
-import { ConfirmDialog, ReasonDialog } from "@/components/confirm-dialog"
+import { ConfirmDialog } from "@/components/confirm-dialog"
 import { MemberAvatar } from "@/components/member-avatar"
 import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
@@ -191,7 +191,7 @@ export function AttendanceBoard({ page }: { page: Page }) {
             />
           ) : null}
           {session.status === "closed" && page.can.correct ? (
-            <ReasonDialog
+            <ConfirmDialog
               trigger={
                 <Button variant="outline">
                   <LockOpen data-icon="inline-start" />
@@ -200,10 +200,8 @@ export function AttendanceBoard({ page }: { page: Page }) {
               }
               title={t("reopenTitle")}
               description={t("reopenHint")}
-              reasonLabel={t("reopenReason")}
-              requireReason
               confirmLabel={t("reopen")}
-              onConfirm={async (reason) => (await reopen.execute(session.id, reason ?? "")).ok}
+              onConfirm={async () => (await reopen.execute(session.id)).ok}
             />
           ) : null}
         </div>

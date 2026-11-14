@@ -70,6 +70,22 @@ export async function run<T>(
   return attempt(async () => mutate(await getContext()), message)
 }
 
+/**
+ * Runs a read a client component asks for (the explorer's next page, a preview before giving or
+ * removing a role): like run, without refreshing any page.
+ */
+export async function read<T>(query: (ctx: Context) => T): Promise<ActionResult<T>> {
+  const translate = await getMessageTranslator()
+  const ctx = await getContext()
+
+  try {
+    return { ok: true, data: query(ctx) }
+  } catch (error) {
+    if (error instanceof ProblemError) return { ok: false, problem: toProblem(error, translate) }
+    throw error
+  }
+}
+
 export async function runDuringPasswordChange<T>(
   mutate: (ctx: Context) => T,
   message?: Message | ((result: T) => Message)

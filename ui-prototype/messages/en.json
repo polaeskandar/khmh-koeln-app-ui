@@ -187,21 +187,32 @@
       "morePowerful": "This account may do more than you. Ask an administrator."
     },
     "access": {
-      "ownAssignments": "Nobody can change their own roles. Ask another administrator.",
-      "cannotGive": "You can’t give the role {role}: it allows more than your own roles do.",
-      "roleNeedsChurch": "{role} can only be given for the whole church.",
-      "unknownScope": "Choose a service or a class of that service.",
-      "alreadyAssigned": "This person already has this role there.",
-      "lastAccessManager": "Someone active must still be able to manage access. Give this to another person first."
+      "ownAssignments": "Nobody can change their own access. Ask someone else.",
+      "notHere": "You don’t manage access here.",
+      "protectedRole": "Only administrators can give or remove {role}.",
+      "notDelegated": "Your role doesn’t let you give or remove {role}.",
+      "notDelegatedHere": "You can’t give {role} at this level.",
+      "wrongPlace": "{role} can’t be given at this level.",
+      "exceedsOwn": "{role} allows more than you may do here, so you can’t give it.",
+      "alreadyAssigned": "This person already has this role here.",
+      "alreadyCovered": "This person already has {role} for a broader place that includes this one.",
+      "unknownPlace": "Choose something that exists.",
+      "archivedPlace": "This is archived. Restore it first.",
+      "lastAdministrator": "Someone must keep a protected role, such as Administrator, for the whole church. Give it to another person first."
     },
     "roles": {
       "nameRequired": "Enter a name for the role.",
       "nameTaken": "Another role already has this name.",
-      "permissionRequired": "Choose at least one permission.",
+      "permissionRequired": "Choose at least one permission, or a role to build on.",
       "protected": "{role} is protected and can’t be deleted.",
-      "protectedKeepsAccess": "{role} always keeps “Manage roles and assignments”.",
-      "hasGroupAssignments": "This role is given for single services or classes. Remove those assignments before adding church-wide permissions.",
-      "inUse": "Remove this role from everyone who has it first."
+      "inUse": "Remove this role from everyone who has it first.",
+      "included": "{roles} build on this role. Remove it from them first.",
+      "cannotInherit": "A role can’t build on itself or on a protected role.",
+      "loop": "That would make a loop: {path}.",
+      "scopeRequired": "Choose where the role can be given.",
+      "scopeUnused": "Choose only places where its permissions apply.",
+      "cannotDelegate": "A protected role can’t be given by others.",
+      "delegationScope": "{role} can only be given where {role} itself can be given."
     },
     "guardians": {
       "notParent": "Give this account the Parent role first.",
@@ -251,8 +262,7 @@
       "notScheduled": "Attendance for this session was already opened.",
       "notToday": "Attendance opens on the day of the session.",
       "notOpen": "Attendance isn’t open.",
-      "notClosed": "Attendance isn’t closed.",
-      "reasonRequired": "Say why the attendance needs a correction."
+      "notClosed": "Attendance isn’t closed."
     },
     "learning": {
       "titleRequired": "Enter a title.",
@@ -265,7 +275,8 @@
       "publishedLesson": "Unpublish the lesson before deleting it.",
       "lessonHasTasks": "Delete the tasks of this lesson first.",
       "taskHasReports": "Someone already reported this task as done. Archive it instead.",
-      "onlyDraftsDeleted": "Only drafts can be deleted. Archive the task instead."
+      "onlyDraftsDeleted": "Only drafts can be deleted. Archive the task instead.",
+      "responsibleCannotEdit": "This person can’t edit the lesson, so they can’t be responsible for it."
     },
     "privacy": {
       "requestedByRequired": "Write who asked.",
@@ -342,7 +353,8 @@
     "calendarChecked": "The {year} calendar is checked.",
     "accountDeleted": "The account is deleted.",
     "daysOffCustom": "The days are now marked by hand.",
-    "daysOffAutomatic": "The system chooses the days again."
+    "daysOffAutomatic": "The system chooses the days again.",
+    "responsibleChanged": "Responsible changed."
   },
   "home": {
     "greeting": {
@@ -678,8 +690,7 @@
       "closeHint": "{present, number} of {roster, number} marked present. Corrections are still possible afterwards.",
       "reopen": "Reopen for a correction",
       "reopenTitle": "Reopen the attendance?",
-      "reopenHint": "The correction is recorded with your name and the reason.",
-      "reopenReason": "Reason",
+      "reopenHint": "Everyone who records attendance here can change it again until it is closed.",
       "notYet": "Attendance opens on the day of the session.",
       "neverOpened": "Attendance for this session was never opened.",
       "roster": "Who belongs to this group",
@@ -694,16 +705,6 @@
       "notOnRoster": "Present, not on the list",
       "visitor": "Someone not on the list",
       "visitorPlaceholder": "Name of someone not on the list"
-    },
-    "history": {
-      "title": "History",
-      "created": "Added",
-      "opened": "Attendance opened",
-      "closed": "Attendance closed",
-      "reopened": "Reopened for a correction",
-      "canceled": "Canceled",
-      "restored": "Takes place again",
-      "rescheduled": "Rescheduled"
     }
   },
   "lessons": {
@@ -861,8 +862,8 @@
     },
     "roles": {
       "title": "Roles and where they apply",
-      "hint": "What this person may do, and in which services or classes.",
-      "manage": "All assignments in Access"
+      "hint": "What this person may do, and where. Roles are given and removed in Access.",
+      "manage": "Open Access"
     },
     "groups": {
       "title": "Groups",
@@ -959,59 +960,253 @@
   },
   "access": {
     "title": "Access",
-    "description": "Roles, who has them and where, and which parents may follow which children.",
     "tabs": {
+      "resources": "Resource management",
       "roles": "Roles & permissions",
-      "assignments": "Assignments",
       "parents": "Parental access"
     },
-    "roles": {
-      "hint": "A role is a set of permissions. Give it to people in Assignments.",
-      "new": "New role",
-      "protected": "Protected role",
-      "holders": "{count, plural, =0 {Nobody} one {# person} other {# people}}",
-      "churchWide": "Given for the whole church",
-      "inGroups": "Given for a service or a class"
+    "tabHints": {
+      "resources": "Choose a place in the church to see who has access there, what they can do, and where it comes from.",
+      "roles": "Roles are named sets of permissions. A role can build on other roles and is given for a place.",
+      "parents": "Which children each parent follows in the parent portal."
     },
-    "editor": {
-      "hint": "Choose what the role allows. Where it applies is chosen when it is given to someone.",
-      "protectedHint": "This role is protected: it can’t be deleted and always manages roles and assignments.",
-      "name": "Name",
-      "noneYet": "Choose what this role allows.",
-      "givenChurchWide": "Because of the administration or portal permissions, this role can only be given for the whole church.",
-      "givenInGroups": "This role can be given for the whole church, one service or one class.",
-      "holders": "{count, plural, =0 {Nobody has this role} one {# person has this role} other {# people have this role}}",
-      "create": "Create role",
+    "types": {
+      "church": {
+        "one": "Church",
+        "other": "Church"
+      },
+      "service": {
+        "one": "Service",
+        "other": "Services"
+      },
+      "stage": {
+        "one": "Stage",
+        "other": "Stages"
+      },
+      "schedule": {
+        "one": "Schedule",
+        "other": "Schedules"
+      },
+      "session": {
+        "one": "Session",
+        "other": "Sessions"
+      },
+      "lesson": {
+        "one": "Lesson",
+        "other": "Lessons"
+      },
+      "task": {
+        "one": "Task",
+        "other": "Tasks"
+      },
+      "event": {
+        "one": "Event",
+        "other": "Events"
+      },
+      "account": {
+        "one": "Account",
+        "other": "Accounts"
+      },
+      "role": {
+        "one": "Role",
+        "other": "Roles"
+      },
+      "guardianship": {
+        "one": "Parental link",
+        "other": "Parental links"
+      },
+      "dataRequest": {
+        "one": "Data request",
+        "other": "Data requests"
+      },
+      "access": {
+        "one": "Access",
+        "other": "Managing access"
+      },
+      "portal": {
+        "one": "Portal",
+        "other": "Portals"
+      }
+    },
+    "explorer": {
+      "label": "Resources",
+      "church": "Whole church",
+      "schedule": "Schedule",
+      "search": "Find a service, stage, lesson or date",
+      "searchLabel": "Search resources",
+      "noMatch": "Nothing you manage matches “{query}”.",
+      "results": "{count, plural, one {# match} other {# matches}}",
+      "showMore": "Show more",
+      "loading": "Loading…",
+      "error": "This part couldn’t be loaded.",
+      "context": "You manage access further down",
+      "direct": "{count, plural, one {# role given here} other {# roles given here}}",
+      "browse": "Browse resources",
+      "sheetHint": "Open a place to see who has access there.",
+      "boundary": "You manage access within {places}."
+    },
+    "panel": {
+      "path": "Where it is",
+      "open": "Open",
+      "people": "{count, plural, =0 {Nobody has access here yet} one {# person has access here} other {# people have access here}}",
+      "archived": "Archived: it is read-only and no roles can be given here.",
+      "noAssign": "You can see who has access here, but there is no role you can give here.",
+      "direct": "Assigned here",
+      "directHint": "Roles given for exactly this place.",
+      "noDirect": "Nobody has a role given for exactly this place.",
+      "inherited": "Through a broader place",
+      "inheritedHint": "Roles given for a place above apply here too. They can only be changed where they were given.",
+      "inheritedLock": "Given for {place}. Change it there.",
+      "from": "From {place}",
+      "manageThere": "Manage on {place}",
+      "canHere": "What this role allows here",
+      "showAll": "Show all {count, number}",
+      "showLess": "Show fewer",
+      "filter": "Filter people",
+      "createdIt": "Created it",
+      "givenBy": "Given by {name} on {date}",
+      "givenOn": "Given on {date}",
+      "protected": "Protected role",
+      "history": "Recent changes here",
+      "granted": "{actor} gave {person} the role {role}",
+      "revoked": "{actor} removed the role {role} from {person}",
+      "system": "The app",
+      "outside": "This place is outside the area where you manage access.",
+      "outsideHint": "You manage access within {places}. For anything else, ask an administrator."
+    },
+    "assign": {
+      "open": "Assign role",
+      "title": "Assign a role",
+      "for": "On {place}",
+      "stepOf": "Step {step, number} of 4",
+      "steps": {
+        "person": "Person",
+        "role": "Role",
+        "scope": "Where",
+        "review": "Review"
+      },
+      "person": "Who should get access?",
+      "personHint": "Only people who already have an account can be chosen. Accounts are created by the church office.",
+      "searchPerson": "Find by name or username",
+      "noPeople": "No account matches.",
+      "role": "Which role?",
+      "roleHint": "Only the roles you may give here are listed.",
+      "includes": "Includes {roles}",
+      "why": "Why can’t I give other roles?",
+      "scope": "Where should it apply?",
+      "scopeHint": "The role applies to the place you choose and to everything in it.",
+      "here": "{place}, as selected",
+      "all": "All of {place}",
+      "allows": "{role} allows here",
+      "checking": "Checking…",
+      "summary": "{name} gets the role {role} for {place}.",
+      "gains": "New for {name}",
+      "already": "{name} can already",
+      "nothingNew": "{name} can already do all of this here.",
+      "overlapAbove": "Also has {role} for {place}.",
+      "overlapBelow": "Also has {role} for {place}; that stays as it is.",
+      "delegates": "Will be able to give {role}: {places}",
+      "next": "Next",
+      "back": "Back",
+      "confirm": "Assign role"
+    },
+    "revoke": {
+      "action": "Remove {role} from {name}",
+      "title": "Remove {role} from {name}?",
+      "description": "Given for {place}.",
+      "loses": "{name} will no longer be able to",
+      "losesNothing": "{name} keeps the same access here through other roles.",
+      "keeps": "Still in place",
+      "keep": {
+        "above": "{role} for {place}, which includes this place",
+        "here": "{role} for {place}",
+        "below": "{role} for {place}"
+      },
+      "locked": "Can’t be removed here",
+      "confirm": "Remove role"
+    },
+    "roles": {
+      "listLabel": "Roles",
+      "new": "New role",
+      "levels": {
+        "church": "For the whole church",
+        "unit": "For services and stages",
+        "item": "For single items"
+      },
+      "holders": "{count, plural, =0 {Nobody} one {# person} other {# people}}",
+      "includes": "Includes {roles}",
+      "protected": "Protected",
+      "protectedHint": "This role is protected: it holds every permission, may give every role, and can’t be weakened or deleted. Someone always keeps it for the whole church.",
+      "edit": "Edit role",
       "delete": "Delete role",
       "deleteTitle": "Delete {name}?",
       "deleteHint": "Nobody has this role. This can’t be undone.",
-      "deleteInUse": "People still have this role. Remove it from them first."
+      "count": "{count, plural, one {# permission} other {# permissions}}",
+      "updated": "changed {date}",
+      "hierarchy": "Builds on",
+      "hierarchyHint": "{name} includes everything the roles below it allow, also when they change.",
+      "includesNothing": "This role builds on no other role.",
+      "includedBy": "Included in",
+      "repeated": "(shown above)",
+      "assignable": "Can be given for",
+      "owner": "Ownership rule ({type}): whoever creates one gets this role for it.",
+      "permissions": "Permissions",
+      "permissionsHint": "Solid ticks are set on this role. Dashed ones come from the roles it builds on and are changed there.",
+      "everything": "Every permission, including those of resource types added later.",
+      "showAll": "Show what it doesn’t allow",
+      "direct": "Own",
+      "inheritedFrom": "from {roles}",
+      "delegation": "Can give others",
+      "delegationHint": "Holders may give and remove these roles, only within the place where they hold this role.",
+      "delegationAll": "Every role, everywhere.",
+      "delegationNone": "Holders can’t give roles to others.",
+      "delegationFrom": "through {role}",
+      "holdersTitle": "Who has it",
+      "holdersMore": "and {count, number} more",
+      "openPlace": "Open {place} in Resource management"
     },
-    "assignments": {
-      "hint": "Who has which role, and where it applies. A role for a service also applies in all its stages.",
-      "search": "Find a person",
-      "wholeChurch": "whole church",
-      "portalHidden": "Accounts that only have Parent or Member are found by searching.",
-      "remove": "Remove {assignment}",
-      "removeTitle": "Remove {assignment}?",
-      "removeHint": "The person immediately loses what this role allowed there.",
-      "removeConfirm": "Remove"
-    },
-    "assign": {
-      "open": "Give a role",
-      "title": "Give a role",
-      "description": "The person may then do what the role allows, only where you choose.",
-      "person": "Person",
-      "searchPerson": "Find by name or username",
-      "role": "Role",
-      "where": "Where",
-      "churchOnly": "This role can only be given for the whole church.",
-      "scopeHint": "A service includes all its stages. A stage covers only that class.",
-      "confirm": "Give role"
-    },
-    "scope": {
-      "church": "Whole church",
-      "wholeService": "{name} (all stages)"
+    "editor": {
+      "newTitle": "New role",
+      "newHint": "Name it, choose what it builds on and what it allows, and where it can be given.",
+      "editTitle": "Edit {name}",
+      "editHint": "Changes apply at once to everyone who has this role and to the roles that build on it.",
+      "basics": "Name and purpose",
+      "name": "Name",
+      "description": "What is it for? (optional)",
+      "inherits": "Builds on",
+      "inheritsHint": "The role includes everything these roles allow, now and after they change.",
+      "loop": "{role} already includes this role.",
+      "protectedParent": "Protected roles can’t be included.",
+      "permissions": "Permissions",
+      "permissionsHint": "Tick what this role allows. Dashed ticks come from the roles it builds on; change them there.",
+      "inheritedFrom": "from {roles}",
+      "groups": {
+        "work": "Church work",
+        "administration": "Administration",
+        "access": "Managing access",
+        "portals": "Portals"
+      },
+      "where": "Can be given for",
+      "whereHint": "Where the role can be assigned. A role given for a service applies to everything in it.",
+      "whereUnused": "None of its permissions apply here.",
+      "whereChurchOnly": "Its administration or portal permissions only apply to the whole church.",
+      "delegation": "Can give others",
+      "delegationHint": "Holders may give and remove these roles, only within the place where they hold this role, and never a role that allows more than they hold.",
+      "delegationNeeds": "Tick “Assign roles” or “Remove roles” under Managing access first.",
+      "delegateAt": "May give {role} for {place}",
+      "impact": "Effect of your changes",
+      "effective": "{count, plural, one {# permission in total} other {# permissions in total}}",
+      "added": "{count, plural, one {+# permission} other {+# permissions}}",
+      "removed": "{count, plural, one {−# permission} other {−# permissions}}",
+      "holders": "{count, plural, =0 {Nobody has this role yet.} one {Changes what # person can do.} other {Changes what # people can do.}}",
+      "alsoChanges": "Also changes {roles}, which build on this role.",
+      "delegators": "{roles} can give this role.",
+      "ceiling": "Holders of {role} will no longer be able to give this role: it would allow more than they hold themselves.",
+      "owner": "Ownership rule ({type}): whoever creates one gets this role for it.",
+      "protected": "This role is protected: only its name and description can change.",
+      "create": "Create role",
+      "save": "Save role",
+      "cancel": "Cancel"
     },
     "parents": {
       "hint": "Parents see only the members linked here, with their lessons and tasks. Links are made directly by the church office.",
@@ -1029,53 +1224,35 @@
       "member": "Member",
       "searchMember": "Find a member",
       "membersOnly": "Children are members with their own account. Create one in Accounts first.",
-      "noGroup": "In no group"
+      "noGroup": "In no group",
+      "search": "Find a parent or child"
+    },
+    "lesson": {
+      "title": "Access",
+      "responsible": "Responsible",
+      "responsibleHint": "The responsible servant prepares the lesson. It gives no extra rights.",
+      "change": "Change",
+      "responsibleTitle": "Who is responsible for this lesson?",
+      "responsibleDescription": "Only people who can edit the lesson can be responsible.",
+      "save": "Save",
+      "manage": "Manage access"
     }
   },
   "permissions": {
-    "groups": {
-      "organization": "Services and stages",
-      "schedule": "Schedule and sessions",
-      "attendance": "Attendance",
-      "learning": "Lessons and tasks",
-      "administration": "Administration",
-      "portals": "Portals"
-    },
-    "labels": {
-      "services_view": "See the service",
-      "services_manage": "Create and archive services",
-      "stages_manage": "Manage stages",
-      "schedule_manage": "Plan the schedule",
-      "attendance_record": "Take attendance",
-      "attendance_correct": "Correct closed attendance",
-      "lessons_prepare": "Prepare lessons",
-      "lessons_manage": "Manage all lessons",
-      "lessons_publish": "Publish lessons",
-      "tasks_manage": "Give tasks",
-      "accounts_manage": "Manage accounts",
-      "access_manage": "Manage roles and assignments",
-      "guardians_manage": "Manage parental access",
-      "data_manage": "Handle data requests",
-      "portal_parent": "Use the parent portal",
-      "portal_member": "Use the member portal"
-    },
-    "hints": {
-      "services_view": "See the service or class, its schedule and who belongs to it.",
-      "services_manage": "Create, rename, archive and delete services, and keep the church calendar.",
-      "stages_manage": "Add, rename, reorder and archive the stages of a service.",
-      "schedule_manage": "Prepare and confirm annual plans, choose the service’s days without sessions, cancel, move and add single sessions.",
-      "attendance_record": "Open, take and close attendance on the day of a session.",
-      "attendance_correct": "Reopen closed attendance to correct it, with a reason.",
-      "lessons_prepare": "Write lessons and their preparation notes, and edit or delete your own.",
-      "lessons_manage": "See, edit and delete every lesson of the group, not only your own.",
-      "lessons_publish": "Make lessons visible to parents and members.",
-      "tasks_manage": "Create, publish and archive tasks, and see who has done them.",
-      "accounts_manage": "Create and delete accounts, reset passwords.",
-      "access_manage": "Create roles and give them to people.",
-      "guardians_manage": "Link parents to the members they may follow.",
-      "data_manage": "Record and carry out requests for a copy or the erasure of personal data.",
-      "portal_parent": "Follow the linked children’s lessons and tasks.",
-      "portal_member": "See one’s own groups, sessions, lessons and tasks."
+    "actions": {
+      "create": "Create",
+      "read": "View",
+      "update": "Change",
+      "delete": "Delete",
+      "publish": "Publish",
+      "takeAttendance": "Take attendance",
+      "correctAttendance": "Correct attendance",
+      "plan": "Plan the year",
+      "confirm": "Confirm the year",
+      "assign": "Assign roles",
+      "revoke": "Remove roles",
+      "parent": "Parent portal",
+      "member": "Member portal"
     }
   },
   "data": {

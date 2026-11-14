@@ -12,7 +12,7 @@ import { accountOfPerson, personOf, unitLabel } from "../selectors"
 import type { State } from "../state"
 
 import { type Actor, forgetAccount } from "./accounts"
-import { ensureAccessManagerRemains } from "./access"
+import { ensureAdministratorRemains } from "./access"
 
 export function recordRequest(
   { state: s, viewer }: Actor,
@@ -24,7 +24,7 @@ export function recordRequest(
     note: string | null
   }
 ) {
-  authorize(s, viewer, "data.manage")
+  authorize(s, viewer, "dataRequest.create")
   const person = found(personOf(s, input.personId), "person")
   const v = new Violations()
   const requestedBy = v.name(
@@ -85,7 +85,7 @@ export function requestOwnErasure({ state: s, viewer }: Actor) {
 }
 
 function openRequest({ state: s, viewer }: Actor, requestId: Uuid) {
-  authorize(s, viewer, "data.manage")
+  authorize(s, viewer, "dataRequest.update")
   const request = found(
     s.dataRequests.find((r) => r.id === requestId),
     "request"
@@ -160,7 +160,7 @@ export function erase(actor: Actor, requestId: Uuid) {
   }
 
   if (account) {
-    ensureAccessManagerRemains(s, { removedAccountId: account.id })
+    ensureAdministratorRemains(s, { removedAccountId: account.id })
   }
 
   const outcome = erasureImpact(s, personId)

@@ -210,7 +210,7 @@ describe("single sessions", () => {
     const { s, schedules } = setUp()
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
     const third = schedules.find(
-      (x) => s.stages.find((st) => st.id === x.stageId)?.name === "3rd Class"
+      (x) => s.stages.find((st) => st.id === x.stageId)?.name === "1st Class"
     )!
     const next = s.sessions.find((x) => x.scheduleId === third.id && x.date === "2026-11-15")!
     cancelSession(christine, next.id, "Church cleaning")
@@ -240,7 +240,7 @@ describe("single sessions", () => {
     const daniel = contextFor(s, accountNamed(s, "daniel.michael"))
     const sundaySchool = schedules[0].serviceId
     const third = schedules.find(
-      (x) => s.stages.find((st) => st.id === x.stageId)?.name === "3rd Class"
+      (x) => s.stages.find((st) => st.id === x.stageId)?.name === "1st Class"
     )!
     const input = (id: string) => ({
       scheduleId: id,
@@ -255,7 +255,7 @@ describe("single sessions", () => {
     expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("errors.notFound.schedule")
     assignRole(mariam, daniel.viewer.id, ROLE_IDS.serviceLeader, {
       type: "service",
-      serviceId: sundaySchool,
+      id: sundaySchool,
     })
     expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("ok")
     expect(fail(() => savePlan(daniel, input(youthSchedule.id)))).toBe("errors.forbidden")

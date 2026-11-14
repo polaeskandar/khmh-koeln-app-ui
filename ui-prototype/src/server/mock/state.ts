@@ -1,8 +1,10 @@
 import "server-only"
 
 import type {
+  AccessEvent,
   Account,
   AnnualPlan,
+  ChurchEvent,
   AnonymousCounts,
   Attendance,
   CalendarOccasion,
@@ -18,7 +20,6 @@ import type {
   Service,
   ServiceDaysOff,
   Session,
-  SessionEvent,
   Stage,
   Task,
   TaskCompletion,
@@ -36,11 +37,14 @@ export type State = {
   accounts: Account[]
   guardianships: Guardianship[]
   roles: Role[]
+  /** Bumped on every role change, so cached effective permissions are recomputed. */
+  rolesVersion: number
   assignments: RoleAssignment[]
+  accessEvents: AccessEvent[]
+  events: ChurchEvent[]
   schedules: Schedule[]
   plans: AnnualPlan[]
   sessions: Session[]
-  events: SessionEvent[]
   attendance: Attendance[]
   occasions: CalendarOccasion[]
   daysOff: ServiceDaysOff[]

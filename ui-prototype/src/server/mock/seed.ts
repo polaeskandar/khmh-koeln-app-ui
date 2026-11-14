@@ -1,28 +1,29 @@
 import { computeOccasions } from "@/lib/domain/calendar"
-import { DEFAULT_ROLES, ROLE_IDS } from "@/lib/domain/policy"
+import { DEFAULT_ROLES, OWNERSHIP, ROLE_IDS } from "@/lib/domain/policy"
 import { addDays, epochOf, localInstant, toInstant } from "@/lib/domain/time"
-import type {
-  Account,
-  AnnualPlan,
-  CalendarOccasion,
-  Lesson,
-  LocalDate,
-  LocalTime,
-  Material,
-  Person,
-  PlanDecision,
-  PlanRule,
-  Role,
-  Schedule,
-  Scope,
-  Service,
-  ServiceStructure,
-  Session,
-  SessionEventType,
-  Stage,
-  Task,
-  Unit,
-  Uuid,
+import {
+  CHURCH,
+  type Account,
+  type AnnualPlan,
+  type CalendarOccasion,
+  type ChurchEvent,
+  type Lesson,
+  type LocalDate,
+  type LocalTime,
+  type Material,
+  type Person,
+  type PlanDecision,
+  type PlanRule,
+  type Role,
+  type Schedule,
+  type ResourceRef,
+  type Service,
+  type ServiceStructure,
+  type Session,
+  type Stage,
+  type Task,
+  type Unit,
+  type Uuid,
 } from "@/lib/domain/types"
 import { suggestUsername } from "@/lib/domain/username"
 
@@ -30,7 +31,7 @@ import { uuidv7 } from "./ids"
 import { demoPasswordHash } from "./passwords"
 import { createRandom } from "./random"
 import { automaticDays, materialize, newSession, recurringSessionOn } from "./scheduling"
-import { rosterOf } from "./selectors"
+import { accountOf, rosterOf } from "./selectors"
 import type { DemoData, State } from "./state"
 
 export const DEMO_DAY: LocalDate = "2026-11-08"
@@ -180,11 +181,13 @@ export function seed(data: DemoData): State {
     accounts: [],
     guardianships: [],
     roles: [],
+    rolesVersion: 0,
     assignments: [],
+    accessEvents: [],
+    events: [],
     schedules: [],
     plans: [],
     sessions: [],
-    events: [],
     attendance: [],
     occasions: [],
     daysOff: [],
@@ -197,7 +200,7 @@ export function seed(data: DemoData): State {
   }
 
   for (const role of DEFAULT_ROLES) {
-    s.roles.push({ ...role, createdAt: setupAt } satisfies Role)
+    s.roles.push({ ...role, createdAt: setupAt, updatedAt: setupAt } satisfies Role)
   }
 
   const person = (firstName: string, lastName: string, displayName: string | null = null) => {
@@ -209,7 +212,7 @@ export function seed(data: DemoData): State {
 
   const account = (
     p: Person,
-    roles: { roleId: Uuid; scope: Scope }[],
+    roles: { roleId: Uuid; resource: ResourceRef }[],
     options: Partial<Account> = {}
   ): Account => {
     const a: Account = {
@@ -232,7 +235,8 @@ export function seed(data: DemoData): State {
         id: newId(),
         accountId: a.id,
         roleId: r.roleId,
-        scope: r.scope,
+        resource: r.resource,
+        origin: "granted",
         createdAt: a.createdAt,
         createdBy: a.createdBy,
       })
@@ -241,7 +245,7 @@ export function seed(data: DemoData): State {
     return a
   }
 
-  const church: Scope = { type: "church" }
+  const church: ResourceRef = CHURCH
 
   const uniqueUsername = (base: string) => {
     let candidate = base
@@ -272,7 +276,7 @@ export function seed(data: DemoData): State {
   }
 
   const mariamP = person("Mariam", "Fahmy")
-  const mariam = account(mariamP, [{ roleId: ROLE_IDS.administrator, scope: church }], {
+  const mariam = account(mariamP, [{ roleId: ROLE_IDS.administrator, resource: church }], {
     createdBy: null,
     language: "en",
   })
@@ -397,24 +401,57 @@ export function seed(data: DemoData): State {
     serviceId: svc.id,
     stageId: st?.id ?? null,
   })
-  const scope = (svc: Service, st: Stage | null = null): Scope =>
-    st
-      ? { type: "stage", serviceId: svc.id, stageId: st.id }
-      : { type: "service", serviceId: svc.id }
+  const groupOf = (svc: Service, st: Stage | null = null): ResourceRef =>
+    st ? { type: "stage", id: st.id } : { type: "service", id: svc.id }
 
   const churchOffice: Role = {
-    id: newId(),
+    id: ROLE_IDS.churchOffice,
     name: "Church office",
-    permissions: ["services.view", "accounts.manage", "guardians.manage", "data.manage"],
+    description: "Creates accounts, links parents to their children and handles data requests.",
+    inherits: [],
+    permissions: [
+      "service.read",
+      "stage.read",
+      "account.create",
+      "account.read",
+      "account.update",
+      "account.delete",
+      "guardianship.create",
+      "guardianship.read",
+      "guardianship.delete",
+      "dataRequest.create",
+      "dataRequest.read",
+      "dataRequest.update",
+      "access.assign",
+      "access.revoke",
+    ],
+    assignableAt: ["church"],
+    delegation: [
+      { roleId: ROLE_IDS.parent, at: ["church"] },
+      { roleId: ROLE_IDS.member, at: ["church"] },
+    ],
     protected: false,
     createdAt: toInstant(at("2026-09-02", "11:00")),
+    updatedAt: toInstant(at("2026-09-02", "11:00")),
   }
-  s.roles.push(churchOffice)
+  const eventCoordinator: Role = {
+    id: ROLE_IDS.eventCoordinator,
+    name: "Event coordinator",
+    description: "Organizes one event, or the events of a service.",
+    inherits: [],
+    permissions: ["event.create", "event.read", "event.update", "event.delete"],
+    assignableAt: ["event", "service", "church"],
+    delegation: [],
+    protected: false,
+    createdAt: toInstant(at("2026-11-03", "18:00")),
+    updatedAt: toInstant(at("2026-11-03", "18:00")),
+  }
+  s.roles.push(churchOffice, eventCoordinator)
 
   const staff = (
     first: string,
     last: string,
-    roles: { roleId: Uuid; scope: Scope }[],
+    roles: { roleId: Uuid; resource: ResourceRef }[],
     options: Partial<Account> = {}
   ) => {
     const p = person(first, last)
@@ -422,36 +459,42 @@ export function seed(data: DemoData): State {
     return { person: p, account: account(p, roles, options) }
   }
 
-  const sara = staff("Sara", "Wissa", [{ roleId: churchOffice.id, scope: church }])
+  const sara = staff("Sara", "Wissa", [{ roleId: churchOffice.id, resource: church }])
   const christine = staff("Christine", "Adel", [
-    { roleId: ROLE_IDS.serviceLeader, scope: scope(sundaySchool) },
+    { roleId: ROLE_IDS.serviceLeader, resource: groupOf(sundaySchool) },
   ])
   const daniel = staff("Daniel", "Michael", [
-    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, first) },
-    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, third) },
-    { roleId: ROLE_IDS.servant, scope: scope(youth) },
+    { roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, first) },
+    { roleId: ROLE_IDS.servant, resource: groupOf(youth) },
+  ])
+  const youssef = staff("Youssef", "Kamel", [
+    { roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, third) },
   ])
   const george = staff("George", "Nashed", [
-    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, kg) },
+    { roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, kg) },
   ])
   const marina = staff("Marina", "Samuel", [
-    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, second) },
+    { roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, second) },
   ])
   const bishoy = staff("Bishoy", "Tawfik", [
-    { roleId: ROLE_IDS.servant, scope: scope(sundaySchool, fourth) },
+    { roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, fourth) },
   ])
-  const mark = staff("Mark", "Shenouda", [{ roleId: ROLE_IDS.serviceLeader, scope: scope(youth) }])
+  const mark = staff("Mark", "Shenouda", [
+    { roleId: ROLE_IDS.serviceLeader, resource: groupOf(youth) },
+  ])
   const peter = staff("Peter", "Girgis", [
-    { roleId: ROLE_IDS.serviceLeader, scope: scope(university) },
+    { roleId: ROLE_IDS.serviceLeader, resource: groupOf(university) },
   ])
-  const irene = staff("Irene", "Wahba", [{ roleId: ROLE_IDS.serviceLeader, scope: scope(coptic) }])
+  const irene = staff("Irene", "Wahba", [
+    { roleId: ROLE_IDS.serviceLeader, resource: groupOf(coptic) },
+  ])
   const maged = staff("Maged", "Botros", [
-    { roleId: ROLE_IDS.serviceLeader, scope: scope(servantsMeeting) },
+    { roleId: ROLE_IDS.serviceLeader, resource: groupOf(servantsMeeting) },
   ])
   const rebecca = staff(
     "Rebecca",
     "Habib",
-    [{ roleId: ROLE_IDS.servant, scope: scope(sundaySchool, kg) }],
+    [{ roleId: ROLE_IDS.servant, resource: groupOf(sundaySchool, kg) }],
     {
       mustChangePassword: true,
       passwordChangedAt: null,
@@ -466,6 +509,7 @@ export function seed(data: DemoData): State {
     sara,
     christine,
     daniel,
+    youssef,
     george,
     marina,
     bishoy,
@@ -485,7 +529,7 @@ export function seed(data: DemoData): State {
     [kg.id, george.account.id],
     [first.id, daniel.account.id],
     [second.id, marina.account.id],
-    [third.id, daniel.account.id],
+    [third.id, youssef.account.id],
     [fourth.id, bishoy.account.id],
     [level1.id, irene.account.id],
     [level2.id, irene.account.id],
@@ -505,14 +549,14 @@ export function seed(data: DemoData): State {
     gender === "b" ? BOYS[boy++ % BOYS.length] : GIRLS[girl++ % GIRLS.length]
 
   const parentAccount = (p: Person, createdAt = setupAt) =>
-    account(p, [{ roleId: ROLE_IDS.parent, scope: church }], {
+    account(p, [{ roleId: ROLE_IDS.parent, resource: church }], {
       createdAt,
       createdBy: sara.account.id,
       lastSignInAt: rnd.chance(0.7) ? toInstant(at("2026-11-0" + rnd.int(1, 7), "20:00")) : null,
     })
 
   const childAccount = (child: Person, signedIn: boolean) =>
-    account(child, [{ roleId: ROLE_IDS.member, scope: church }], {
+    account(child, [{ roleId: ROLE_IDS.member, resource: church }], {
       createdBy: sara.account.id,
       mustChangePassword: !signedIn,
       passwordChangedAt: signedIn ? setupAt : null,
@@ -585,7 +629,7 @@ export function seed(data: DemoData): State {
     options: Partial<Account> = {}
   ) => {
     const p = person(first, last)
-    const a = account(p, [{ roleId: ROLE_IDS.member, scope: church }], {
+    const a = account(p, [{ roleId: ROLE_IDS.member, resource: church }], {
       createdBy: sara.account.id,
       ...options,
     })
@@ -599,6 +643,33 @@ export function seed(data: DemoData): State {
 
   const nevine = memberAccount("Nevine", "Boulos", [u(coptic, level1)], { language: "en" })
   memberAccount("Kirollos", "Ibrahim", [u(youth), u(coptic, level2)])
+  memberAccount("Maria", "Hanna", [u(university)])
+
+  const event = (name: string, date: LocalDate, svc: Service | null) => {
+    const x: ChurchEvent = {
+      id: newId(),
+      name,
+      serviceId: svc?.id ?? null,
+      date,
+      createdAt: setupAt,
+    }
+    s.events.push(x)
+
+    return x
+  }
+
+  event("Christmas play", "2026-12-20", sundaySchool)
+  event("Summer camp 2027", "2027-07-12", youth)
+  const picnic = event("Parish picnic", "2027-06-27", null)
+  s.assignments.push({
+    id: newId(),
+    accountId: sara.account.id,
+    roleId: eventCoordinator.id,
+    resource: { type: "event", id: picnic.id },
+    origin: "granted",
+    createdAt: toInstant(at("2026-11-03", "18:05")),
+    createdBy: mariam.id,
+  })
 
   for (let i = 0; i < 11; i++) {
     memberAccount(childName(i % 2 === 0 ? "b" : "g"), LAST[lastName++ % LAST.length], [u(youth)])
@@ -757,51 +828,24 @@ export function seed(data: DemoData): State {
     "2026-08-30"
   )
 
-  const event = (
-    session: Session,
-    type: SessionEventType,
-    ms: number,
-    actorId: Uuid | null,
-    note: string | null = null
-  ) => {
-    s.events.push({
-      id: newId(ms),
-      sessionId: session.id,
-      type,
-      occurredAt: toInstant(ms),
-      actorId,
-      note,
-    })
-  }
-
   const session = (unit: Unit, date: LocalDate) => recurringSessionOn(s, scheduleOf(unit).id, date)!
 
-  const cancel = (x: Session, reason: string, by: Uuid, when: number) => {
+  const cancel = (x: Session, reason: string) => {
     x.status = "canceled"
     x.cancelReason = reason
     x.changedByHand = true
-    event(x, "canceled", when, by, reason)
   }
 
   cancel(
     session(u(sundaySchool, fourth), DEMO_DAY),
-    "Bishoy is ill. 4th Class joins 3rd Class today.",
-    christine.account.id,
-    at("2026-11-07", "21:12")
+    "Bishoy is ill. 4th Class joins 3rd Class today."
   )
-  cancel(
-    session(u(university), "2026-11-18"),
-    "Exam week at the university.",
-    peter.account.id,
-    at("2026-11-04", "21:30")
-  )
+  cancel(session(u(university), "2026-11-18"), "Exam week at the university.")
 
   for (const st of [kg, first, second, third, fourth]) {
     cancel(
       session(u(sundaySchool, st), "2026-12-27"),
-      "Christmas holidays: many families are away.",
-      christine.account.id,
-      at("2026-11-02", "19:00")
+      "Christmas holidays: many families are away."
     )
   }
 
@@ -809,7 +853,6 @@ export function seed(data: DemoData): State {
   moved.startTime = "20:00"
   moved.changedByHand = true
   moved.originalDate = moved.date
-  event(moved, "rescheduled", at("2026-11-06", "22:40"), mark.account.id, "19:30")
 
   const oneOff = newSession(
     scheduleOf(u(youth)),
@@ -825,7 +868,6 @@ export function seed(data: DemoData): State {
     toInstant(at("2026-11-03", "20:15"))
   )
   s.sessions.push(oneOff)
-  event(oneOff, "created", at("2026-11-03", "20:15"), mark.account.id)
 
   const mark_ = (x: Session, p: Person, ms: number, by: Uuid) => {
     s.attendance.push({
@@ -852,15 +894,12 @@ export function seed(data: DemoData): State {
     x.openedAt = toInstant(opened)
     x.closedAt = toInstant(opened + 70 * MIN)
     x.closedBy = by
-    event(x, "opened", opened, by)
 
     for (const p of rosterOf(s, unit, x.date)) {
       if (rnd.chance(0.86)) {
         mark_(x, p, opened + rnd.int(1, 20) * MIN, by)
       }
     }
-
-    event(x, "closed", opened + 70 * MIN, by)
   }
 
   const openToday = (st: Stage, present: number) => {
@@ -869,7 +908,6 @@ export function seed(data: DemoData): State {
     const opened = at(DEMO_DAY, "12:02")
     x.status = "open"
     x.openedAt = toInstant(opened)
-    event(x, "opened", opened, by)
     rosterOf(s, u(sundaySchool, st), DEMO_DAY)
       .slice(0, present)
       .forEach((p, i) => mark_(x, p, opened + (i + 1) * MIN, by))
@@ -882,7 +920,7 @@ export function seed(data: DemoData): State {
   const thirdToday = openToday(third, 5)
 
   for (const p of rosterOf(s, u(sundaySchool, fourth), DEMO_DAY).slice(0, 2)) {
-    mark_(thirdToday, p, at(DEMO_DAY, "12:07"), daniel.account.id)
+    mark_(thirdToday, p, at(DEMO_DAY, "12:07"), youssef.account.id)
   }
 
   const lessonAt = (unit: Unit, date: LocalDate) => recurringSessionOn(s, scheduleOf(unit).id, date)
@@ -968,7 +1006,7 @@ export function seed(data: DemoData): State {
       teachingPoints: "God made everything out of love.\nWe take care of His creation.",
       materials: [material("Picture cards of the seven days", null, false)],
     },
-    daniel.account.id
+    christine.account.id
   )
   const noah = lesson(
     firstU,
@@ -1014,7 +1052,7 @@ export function seed(data: DemoData): State {
       status: "draft",
       summary: "The shepherd leaves the ninety-nine to look for the one (Luke 15:3–7).",
     },
-    daniel.account.id
+    christine.account.id
   )
 
   const joseph = lesson(
@@ -1028,7 +1066,7 @@ export function seed(data: DemoData): State {
       teachingPoints: "Forgiveness is a choice.\nGod can turn evil into good.",
       materials: [material("Genesis 45, read together", null, true)],
     },
-    daniel.account.id
+    youssef.account.id
   )
   const bush = lesson(
     thirdU,
@@ -1054,7 +1092,7 @@ export function seed(data: DemoData): State {
       notes:
         "Mina asked last week whether God still speaks today. Keep five minutes for his question.",
     },
-    daniel.account.id
+    youssef.account.id
   )
   lesson(
     thirdU,
@@ -1064,7 +1102,7 @@ export function seed(data: DemoData): State {
       status: "draft",
       summary: "The Beatitudes (Matthew 5:1–12).",
     },
-    daniel.account.id
+    youssef.account.id
   )
   lesson(
     u(sundaySchool, kg),
@@ -1130,7 +1168,7 @@ export function seed(data: DemoData): State {
       status: "published",
       dueDate: "2026-11-15",
     },
-    daniel.account.id
+    youssef.account.id
   )
   task(
     bush,
@@ -1141,7 +1179,7 @@ export function seed(data: DemoData): State {
       dueDate: "2026-11-15",
       resources: [{ label: "Coloring page", url: "https://example.org/coloring/burning-bush.pdf" }],
     },
-    daniel.account.id
+    youssef.account.id
   )
   task(
     bush,
@@ -1151,7 +1189,7 @@ export function seed(data: DemoData): State {
       status: "draft",
       dueDate: null,
     },
-    daniel.account.id
+    youssef.account.id
   )
   const forgive = task(
     joseph,
@@ -1161,7 +1199,7 @@ export function seed(data: DemoData): State {
       status: "published",
       dueDate: "2026-11-08",
     },
-    daniel.account.id
+    youssef.account.id
   )
   const ark = task(
     noah,
@@ -1247,6 +1285,22 @@ export function seed(data: DemoData): State {
       closedBy: null,
     }
   )
+
+  for (const l of s.lessons) {
+    const roleId = OWNERSHIP.lesson
+
+    if (roleId && l.responsibleId && accountOf(s, l.responsibleId)) {
+      s.assignments.push({
+        id: newId(epochOf(l.createdAt)),
+        accountId: l.responsibleId,
+        roleId,
+        resource: { type: "lesson", id: l.id },
+        origin: "owner",
+        createdAt: l.createdAt,
+        createdBy: l.responsibleId,
+      })
+    }
+  }
 
   return s
 }

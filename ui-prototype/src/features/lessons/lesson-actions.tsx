@@ -13,12 +13,14 @@ import { deleteLessonAction, setLessonStatusAction } from "@/server/actions/lear
 export function LessonStatusActions({
   lessonId,
   status,
-  canPublish,
+  canEdit,
+  canDelete,
   hasTasks,
 }: {
   lessonId: string
   status: LessonStatus
-  canPublish: boolean
+  canEdit: boolean
+  canDelete: boolean
   hasTasks: boolean
 }) {
   const t = useTranslations("lessons.actions")
@@ -28,7 +30,7 @@ export function LessonStatusActions({
 
   return (
     <div className="flex flex-col gap-2">
-      {status === "draft" ? (
+      {status === "draft" && canEdit ? (
         <Button
           variant="outline"
           onClick={() => setStatus.execute(lessonId, "ready")}
@@ -38,7 +40,7 @@ export function LessonStatusActions({
           {t("markReady")}
         </Button>
       ) : null}
-      {status !== "published" && canPublish ? (
+      {status !== "published" && canEdit ? (
         <ConfirmDialog
           trigger={
             <Button>
@@ -53,7 +55,7 @@ export function LessonStatusActions({
           onConfirm={async () => (await setStatus.execute(lessonId, "published")).ok}
         />
       ) : null}
-      {status === "published" && canPublish ? (
+      {status === "published" && canEdit ? (
         <ConfirmDialog
           trigger={
             <Button variant="outline">
@@ -67,7 +69,7 @@ export function LessonStatusActions({
           onConfirm={async () => (await setStatus.execute(lessonId, "ready")).ok}
         />
       ) : null}
-      {status === "ready" ? (
+      {status === "ready" && canEdit ? (
         <Button
           variant="ghost"
           onClick={() => setStatus.execute(lessonId, "draft")}
@@ -77,7 +79,7 @@ export function LessonStatusActions({
           {t("backToDraft")}
         </Button>
       ) : null}
-      {status !== "published" && !hasTasks ? (
+      {status !== "published" && canDelete && !hasTasks ? (
         <ConfirmDialog
           trigger={
             <Button variant="ghost" className="text-destructive">

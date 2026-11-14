@@ -3,7 +3,7 @@ import "server-only"
 import { fullName, initials, unitName } from "@/lib/domain/names"
 import type { Account, Person, Session, Unit, Uuid } from "@/lib/domain/types"
 import type { AccountRef, PersonRef, SessionCard, UnitRef, ViewerInfo } from "@/lib/view-models"
-import { can, grantsOf, isStaff } from "@/server/mock/access"
+import { can, isStaff, sessionRef } from "@/server/mock/access"
 import {
   accountOf,
   personOf,
@@ -75,8 +75,8 @@ export function sessionCard({ state: s, viewer }: Context, x: Session): SessionC
     originalDate: x.originalDate,
     present: presentIds(s, x.id).size + anonymous,
     roster: rosterOf(s, unit, x.date).length,
-    canRecord: can(s, viewer, "attendance.record", unit),
-    canManage: can(s, viewer, "schedule.manage", unit),
+    canRecord: can(s, viewer, "session.takeAttendance", sessionRef(x.id)),
+    canManage: can(s, viewer, "session.update", sessionRef(x.id)),
   }
 }
 
@@ -113,8 +113,4 @@ export function viewerInfo(s: State, account: Account): ViewerInfo {
       member: can(s, account, "portal.member"),
     },
   }
-}
-
-export function hasGrants(s: State, account: Account): boolean {
-  return grantsOf(s, account.id).length > 0
 }

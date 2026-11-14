@@ -3,7 +3,7 @@ import { Clock, MapPin } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
-import { PageHeader, Section } from "@/components/page-header"
+import { PageHeader } from "@/components/page-header"
 import { ServiceSwatch } from "@/components/service-tag"
 import { useOccasionName } from "@/components/session-card"
 import { OneOffBadge, RescheduledBadge, SessionStatusBadge } from "@/components/status"
@@ -45,13 +45,15 @@ export default async function SessionPage({ params }: PageProps<"/attendance/[se
           description={f.longDate(session.date)}
           meta={
             <>
-              <Link
-                href={unitHref}
-                className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline"
-              >
-                <ServiceSwatch tone={session.unit.tone} />
-                {t("schedule")}
-              </Link>
+              {page.can.unit ? (
+                <Link
+                  href={unitHref}
+                  className="inline-flex items-center gap-1.5 text-muted-foreground hover:underline"
+                >
+                  <ServiceSwatch tone={session.unit.tone} />
+                  {t("schedule")}
+                </Link>
+              ) : null}
               <SessionStatusBadge status={session.status} />
               {session.kind === "oneOff" ? <OneOffBadge /> : null}
               {session.originalDate && session.kind === "recurring" ? <RescheduledBadge /> : null}
@@ -87,23 +89,6 @@ export default async function SessionPage({ params }: PageProps<"/attendance/[se
           </p>
         ) : null}
         <AttendanceBoard page={page} />
-        {page.history.length > 0 ? (
-          <Section title={t("history.title")}>
-            <ol className="flex flex-col gap-2 border-s ps-4">
-              {page.history.map((e) => (
-                <li key={e.id} className="text-sm">
-                  <span className="font-medium">{t(`history.${e.type}`)}</span>
-                  <span className="text-muted-foreground">
-                    {" · "}
-                    {f.instantLabel(e.occurredAt, page.today)}
-                    {e.actor ? ` · ${e.actor.name}` : ""}
-                    {e.note && e.type !== "rescheduled" ? ` · ${e.note}` : ""}
-                  </span>
-                </li>
-              ))}
-            </ol>
-          </Section>
-        ) : null}
       </PageBody>
     </>
   )

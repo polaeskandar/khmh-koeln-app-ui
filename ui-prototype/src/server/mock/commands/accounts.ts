@@ -1,11 +1,12 @@
 import { msg } from "@/i18n/message"
 import { cleanName, fullName } from "@/lib/domain/names"
-import { isPortalPermission } from "@/lib/domain/policy"
-import type { Account, Person, Scope, Unit, Uuid } from "@/lib/domain/types"
+import { PORTALS } from "@/lib/domain/resources"
+import type { Account, Person, ResourceRef, Unit, Uuid } from "@/lib/domain/types"
 import { normalizeUsername, PASSWORD_MIN, usernameProblem } from "@/lib/domain/username"
 import { forbidden, ruleViolation } from "@/server/errors"
 
-import { authorize, grantsOf, holdsChurchWide } from "../access"
+import { authorize, can, effectiveOf, heldBy, roleOf } from "../access"
+import { checkGrant } from "../delegation"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
@@ -13,9 +14,11 @@ import { hashPassword, verifyPassword } from "../passwords"
 import { accountOf, personOf } from "../selectors"
 import type { State } from "../state"
 
-import { checkAssignable, ensureAccessManagerRemains } from "./access"
+import { addAssignment, ensureAdministratorRemains } from "./access"
 
 export type Actor = { state: State; viewer: Account }
+
+const isPortal = (p: string) => (PORTALS as readonly string[]).includes(p)
 
 export type SignInResult = { ok: true; account: Account } | { ok: false }
 
@@ -89,13 +92,13 @@ export type NewAccountInput = {
   lastName: string
   username: string
   temporaryPassword: string
-  roles: { roleId: Uuid; scope: Scope }[]
+  roles: { roleId: Uuid; resource: ResourceRef }[]
   groups: Unit[]
   childIds: Uuid[]
 }
 
 export function createAccount({ state: s, viewer }: Actor, input: NewAccountInput) {
-  authorize(s, viewer, "accounts.manage")
+  authorize(s, viewer, "account.create")
   const v = new Violations()
   let person: Person | undefined
 
@@ -119,12 +122,15 @@ export function createAccount({ state: s, viewer }: Actor, input: NewAccountInpu
 
   v.throwIfAny()
 
-  for (const r of input.roles) {
-    checkAssignable(s, viewer, r.roleId, r.scope, null)
-  }
+  const roles = input.roles.map((r) => {
+    const role = found(roleOf(s, r.roleId), "role")
+    checkGrant(s, viewer, null, role, r.resource)
+
+    return { role, resource: r.resource }
+  })
 
   if (input.childIds.length > 0) {
-    authorize(s, viewer, "guardians.manage")
+    authorize(s, viewer, "guardianship.create")
   }
 
   const time = now()
@@ -154,14 +160,13 @@ export function createAccount({ state: s, viewer }: Actor, input: NewAccountInpu
   }
   s.accounts.push(account)
 
-  for (const r of input.roles) {
-    s.assignments.push({
-      id: uuidv7(nowMs()),
+  for (const r of roles) {
+    addAssignment(s, {
       accountId: account.id,
-      roleId: r.roleId,
-      scope: r.scope,
-      createdAt: time,
-      createdBy: viewer.id,
+      role: r.role,
+      resource: r.resource,
+      by: viewer.id,
+      origin: "granted",
     })
   }
 
@@ -204,17 +209,27 @@ export function addGroup(s: State, personId: Uuid, unit: Unit) {
   }
 }
 
-function managedAccount({ state: s, viewer }: Actor, accountId: Uuid): Account {
-  authorize(s, viewer, "accounts.manage")
+/**
+ * An account the viewer may change: not their own, and holding nothing the viewer doesn't hold
+ * where it applies, so nobody takes over a more powerful account.
+ */
+function managedAccount(
+  { state: s, viewer }: Actor,
+  accountId: Uuid,
+  permission: "account.update" | "account.delete" = "account.update"
+): Account {
+  authorize(s, viewer, permission)
   const account = found(accountOf(s, accountId), "account")
 
   if (account.id === viewer.id) {
     throw ruleViolation(msg("errors.accounts.notYourOwn"))
   }
 
-  const stronger = grantsOf(s, account.id)
-    .flatMap((g) => g.permissions)
-    .some((p) => !isPortalPermission(p) && !holdsChurchWide(s, viewer, p))
+  const stronger = heldBy(s, account.id).some((h) =>
+    [...effectiveOf(s, h.role.id)].some(
+      (p) => !isPortal(p) && !can(s, viewer, p, h.assignment.resource)
+    )
+  )
 
   if (stronger) {
     throw forbidden(msg("errors.accounts.morePowerful"))
@@ -236,7 +251,7 @@ export function resetPassword(actor: Actor, accountId: Uuid, temporaryPassword: 
 }
 
 export function changeUsername(actor: Actor, accountId: Uuid, value: string) {
-  authorize(actor.state, actor.viewer, "accounts.manage")
+  authorize(actor.state, actor.viewer, "account.update")
   const account = found(accountOf(actor.state, accountId), "account")
   const v = new Violations()
   const username = checkUsername(actor.state, v, value, account.id)
@@ -257,9 +272,6 @@ export function forgetAccount(s: State, accountId: Uuid) {
   })
   s.sessions.forEach((x) => {
     x.closedBy = clear(x.closedBy)
-  })
-  s.events.forEach((e) => {
-    e.actorId = clear(e.actorId)
   })
   s.lessons.forEach((l) => {
     l.responsibleId = clear(l.responsibleId)
@@ -292,19 +304,19 @@ export function forgetAccount(s: State, accountId: Uuid) {
 }
 
 export function deleteAccount(actor: Actor, accountId: Uuid) {
-  const account = managedAccount(actor, accountId)
-  ensureAccessManagerRemains(actor.state, { removedAccountId: account.id })
+  const account = managedAccount(actor, accountId, "account.delete")
+  ensureAdministratorRemains(actor.state, { removedAccountId: account.id })
   forgetAccount(actor.state, account.id)
 }
 
 export function addAccountGroup({ state: s, viewer }: Actor, accountId: Uuid, unit: Unit) {
-  authorize(s, viewer, "accounts.manage")
+  authorize(s, viewer, "account.update")
   const account = found(accountOf(s, accountId), "account")
   addGroup(s, account.personId, unit)
 }
 
 export function endAccountGroup({ state: s, viewer }: Actor, membershipId: Uuid) {
-  authorize(s, viewer, "accounts.manage")
+  authorize(s, viewer, "account.update")
   const membership = found(
     s.memberships.find((m) => m.id === membershipId),
     "person"

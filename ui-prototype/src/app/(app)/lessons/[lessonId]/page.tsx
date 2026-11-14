@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { CalendarDays, Lock, Pencil, Plus, UserRound } from "lucide-react"
+import { ArrowRight, CalendarDays, Lock, Pencil, Plus, UserRound } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
@@ -9,6 +9,7 @@ import { ServiceSwatch } from "@/components/service-tag"
 import { LessonStatusBadge, TaskStatusBadge } from "@/components/status"
 import { Button } from "@/components/ui/button"
 import { LessonStatusActions } from "@/features/lessons/lesson-actions"
+import { ResponsibleDialog } from "@/features/lessons/responsible-dialog"
 import { getFormat } from "@/i18n/server"
 import { getLesson } from "@/server/queries/learning"
 import { getStaffContext } from "@/server/request"
@@ -18,6 +19,7 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
   const data = getLesson(await getStaffContext(), lessonId)
   const { lesson } = data
   const t = await getTranslations("lessons")
+  const ta = await getTranslations("access")
   const f = await getFormat()
   const internal = lesson.materials.filter((m) => !m.shared)
 
@@ -37,12 +39,14 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
             </>
           }
           actions={
-            <Button asChild variant="outline">
-              <Link href={`/lessons/${lesson.id}/edit`}>
-                <Pencil data-icon="inline-start" />
-                {t("edit")}
-              </Link>
-            </Button>
+            data.can.edit ? (
+              <Button asChild variant="outline">
+                <Link href={`/lessons/${lesson.id}/edit`}>
+                  <Pencil data-icon="inline-start" />
+                  {t("edit")}
+                </Link>
+              </Button>
+            ) : null
           }
         >
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
@@ -117,7 +121,8 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
               <LessonStatusActions
                 lessonId={lesson.id}
                 status={lesson.status}
-                canPublish={data.can.publish}
+                canEdit={data.can.edit}
+                canDelete={data.can.delete}
                 hasTasks={data.tasks.length > 0}
               />
             </section>
@@ -158,6 +163,38 @@ export default async function LessonPage({ params }: PageProps<"/lessons/[lesson
                   ))}
                 </ul>
               )}
+            </Section>
+            <Section title={ta("lesson.title")}>
+              <div className="flex flex-col gap-1 border p-3">
+                <span className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  {ta("lesson.responsible")}
+                </span>
+                <span className="flex items-center justify-between gap-2 text-sm">
+                  <span className="inline-flex items-center gap-1.5 font-medium">
+                    <UserRound className="size-4 text-muted-foreground" aria-hidden="true" />
+                    {data.responsible?.name ?? "—"}
+                  </span>
+                  {data.can.responsible ? (
+                    <ResponsibleDialog
+                      lessonId={lesson.id}
+                      current={data.responsible?.id ?? null}
+                      choices={data.responsibleChoices}
+                    />
+                  ) : null}
+                </span>
+                <p className="text-xs text-pretty text-muted-foreground">
+                  {ta("lesson.responsibleHint")}
+                </p>
+              </div>
+              {data.accessHref ? (
+                <Link
+                  href={data.accessHref}
+                  className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
+                >
+                  {ta("lesson.manage")}
+                  <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
+                </Link>
+              ) : null}
             </Section>
           </aside>
         </div>

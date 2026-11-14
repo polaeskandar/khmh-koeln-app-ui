@@ -5,7 +5,7 @@ import { notFound } from "next/navigation"
 import { fullName, matchesQuery, unitName } from "@/lib/domain/names"
 import { addDays } from "@/lib/domain/time"
 import type { Uuid } from "@/lib/domain/types"
-import { can, canSeeUnit, unitsWith } from "@/server/mock/access"
+import { can, canSeeSession, canSeeUnit, sessionRef, sessionsWith } from "@/server/mock/access"
 import { today } from "@/server/mock/clock"
 import {
   currentUnitsOfPerson,
@@ -21,11 +21,10 @@ import { accountRef, bySessionTime, personRef, sessionCard, unitOf } from "./pre
 
 export function getAttendanceOverview(ctx: Context) {
   const { state: s, viewer } = ctx
-  const units = unitsWith(s, viewer, "attendance.record")
   const date = today()
-  const inUnits = (x: { serviceId: Uuid; stageId: Uuid | null }) =>
-    units.some((u) => u.serviceId === x.serviceId && u.stageId === x.stageId)
-  const mine = s.sessions.filter((x) => inUnits(x) && canSeeUnit(s, viewer, unitOf(x)))
+  const mine = sessionsWith(s, viewer, "session.takeAttendance").filter((x) =>
+    canSeeSession(s, viewer, x)
+  )
 
   return {
     today: mine
@@ -47,7 +46,7 @@ export function getSessionPage(ctx: Context, sessionId: Uuid) {
   const { state: s, viewer } = ctx
   const session = sessionOf(s, sessionId)
 
-  if (!session || !canSeeUnit(s, viewer, unitOf(session))) {
+  if (!session || !canSeeSession(s, viewer, session)) {
     notFound()
   }
 
@@ -83,20 +82,11 @@ export function getSessionPage(ctx: Context, sessionId: Uuid) {
       .map(row)
       .sort(byName),
     anonymous: s.anonymousCounts[session.id]?.present ?? 0,
-    history: s.events
-      .filter((e) => e.sessionId === session.id)
-      .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
-      .map((e) => ({
-        id: e.id,
-        type: e.type,
-        occurredAt: e.occurredAt,
-        actor: accountRef(s, e.actorId),
-        note: e.note,
-      })),
     can: {
-      record: can(s, viewer, "attendance.record", unit),
-      correct: can(s, viewer, "attendance.correct", unit),
-      manage: can(s, viewer, "schedule.manage", unit),
+      record: can(s, viewer, "session.takeAttendance", sessionRef(session.id)),
+      correct: can(s, viewer, "session.correctAttendance", sessionRef(session.id)),
+      manage: can(s, viewer, "session.update", sessionRef(session.id)),
+      unit: canSeeUnit(s, viewer, unit),
     },
   }
 }
@@ -104,7 +94,7 @@ export function getSessionPage(ctx: Context, sessionId: Uuid) {
 export function searchPeople(ctx: Context, query: string) {
   const { state: s, viewer } = ctx
 
-  if (unitsWith(s, viewer, "attendance.record").length === 0 || query.trim().length < 2) {
+  if (query.trim().length < 2 || sessionsWith(s, viewer, "session.takeAttendance").length === 0) {
     return []
   }
 

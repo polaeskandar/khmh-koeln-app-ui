@@ -3,11 +3,10 @@ import "server-only"
 import { notFound } from "next/navigation"
 
 import { fullName, initials, matchesQuery } from "@/lib/domain/names"
-import { isPortalPermission, needsChurchScope, PERMISSIONS } from "@/lib/domain/policy"
-import type { Account, Role, Scope, Uuid } from "@/lib/domain/types"
-import { can, holdsChurchWide } from "@/server/mock/access"
+import { CHURCH, isPortalPermission, type ResourceRef } from "@/lib/domain/resources"
+import type { Account, Uuid } from "@/lib/domain/types"
+import { can, effectiveOf, heldBy } from "@/server/mock/access"
 import { today } from "@/server/mock/clock"
-import { canGiveRole } from "@/server/mock/commands/access"
 import { erasureImpact } from "@/server/mock/commands/privacy"
 import {
   accountOf,
@@ -18,10 +17,12 @@ import {
   stagesOf,
   unitLabel,
 } from "@/server/mock/selectors"
+import { resourcesUnder } from "@/server/mock/resources"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
 import { accountName, personRef, unitRef } from "./present"
+import { assignmentsOf, opensAccess, roleOptions } from "./access"
 
 export type AccountStatus = "active" | "mustChange"
 export type AccountFilter = "all" | "staff" | "parents" | "members"
@@ -30,40 +31,19 @@ export function statusOf(a: Account): AccountStatus {
   return a.mustChangePassword ? "mustChange" : "active"
 }
 
-export function scopeLabel(s: State, scope: Scope): string | null {
-  if (scope.type === "church") {
-    return null
-  }
+/** Where onboarding may give first roles: the whole church, and each service and stage. */
+function onboardingScopes(s: State): ResourceRef[] {
+  const date = today()
+  const services = resourcesUnder(s, CHURCH, "service", date)
 
-  return unitLabel(s, {
-    serviceId: scope.serviceId,
-    stageId: scope.type === "stage" ? scope.stageId : null,
-  })
-}
-
-function assignmentsOf(s: State, accountId: Uuid) {
-  return s.assignments
-    .filter((a) => a.accountId === accountId)
-    .map((a) => {
-      const role = s.roles.find((r) => r.id === a.roleId)!
-
-      return {
-        id: a.id,
-        roleId: role.id,
-        role: role.name,
-        scope: a.scope,
-        where: scopeLabel(s, a.scope),
-      }
-    })
+  return [CHURCH, ...services.flatMap((svc) => [svc, ...resourcesUnder(s, svc, "stage", date)])]
 }
 
 function kinds(s: State, accountId: Uuid) {
-  const permissions = s.assignments
-    .filter((a) => a.accountId === accountId)
-    .flatMap((a) => s.roles.find((r) => r.id === a.roleId)?.permissions ?? [])
+  const permissions = heldBy(s, accountId).flatMap((h) => [...effectiveOf(s, h.role.id)])
 
   return {
-    staff: permissions.some((p) => !p.startsWith("portal.")),
+    staff: permissions.some((p) => !isPortalPermission(p)),
     parent: permissions.includes("portal.parent"),
     member: permissions.includes("portal.member"),
   }
@@ -90,7 +70,7 @@ function inFilter(
 export function getAccounts(ctx: Context, query: string, filter: AccountFilter) {
   const { state: s, viewer } = ctx
 
-  if (!can(s, viewer, "accounts.manage")) {
+  if (!can(s, viewer, "account.read")) {
     notFound()
   }
 
@@ -104,7 +84,7 @@ export function getAccounts(ctx: Context, query: string, filter: AccountFilter) 
       username: a.username,
       status: statusOf(a),
       kinds: kinds(s, a.id),
-      roles: assignmentsOf(s, a.id),
+      roles: assignmentsOf(ctx, a.id),
       lastSignInAt: a.lastSignInAt,
       createdAt: a.createdAt,
     }
@@ -155,16 +135,6 @@ export function memberChoices(s: State) {
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
 
-function roleChoice(s: State, viewer: Account, role: Role) {
-  return {
-    id: role.id,
-    name: role.name,
-    permissions: role.permissions,
-    churchOnly: needsChurchScope(role.permissions),
-    giveable: canGiveRole(s, viewer, role),
-  }
-}
-
 export function scopeChoices(s: State) {
   return s.services
     .filter((x) => x.archivedAt === null)
@@ -180,7 +150,7 @@ export function scopeChoices(s: State) {
 export function getAccountForm(ctx: Context) {
   const { state: s, viewer } = ctx
 
-  if (!can(s, viewer, "accounts.manage")) {
+  if (!can(s, viewer, "account.create")) {
     notFound()
   }
 
@@ -197,9 +167,9 @@ export function getAccountForm(ctx: Context) {
       })),
     members: memberChoices(s),
     existingNames: s.persons.map((p) => fullName(p).toLowerCase()),
-    roles: s.roles.map((r) => roleChoice(s, viewer, r)),
+    roles: roleOptions(ctx, onboardingScopes(s)),
     scopes: scopeChoices(s),
-    canLinkChildren: can(s, viewer, "guardians.manage"),
+    canLinkChildren: can(s, viewer, "guardianship.create"),
   }
 }
 
@@ -207,7 +177,7 @@ export function getAccount(ctx: Context, accountId: Uuid) {
   const { state: s, viewer } = ctx
   const account = accountOf(s, accountId)
 
-  if (!account || !can(s, viewer, "accounts.manage")) {
+  if (!account || !can(s, viewer, "account.read")) {
     notFound()
   }
 
@@ -227,7 +197,7 @@ export function getAccount(ctx: Context, accountId: Uuid) {
       : null,
     lastSignInAt: account.lastSignInAt,
     passwordChangedAt: account.passwordChangedAt,
-    roles: assignmentsOf(s, account.id),
+    roles: assignmentsOf(ctx, account.id),
     groups: s.memberships
       .filter((m) => m.personId === person.id && isCurrentOn(m, date))
       .map((m) => ({ id: m.id, unit: unitRef(s, m) })),
@@ -244,116 +214,60 @@ export function getAccount(ctx: Context, accountId: Uuid) {
       }),
     self: account.id === viewer.id,
     can: {
-      access: holdsChurchWide(s, viewer, "access.manage"),
-      guardians: can(s, viewer, "guardians.manage"),
+      guardians: can(s, viewer, "guardianship.create"),
+      access: opensAccess(s, viewer),
     },
     scopes: scopeChoices(s),
   }
 }
 
-export function getAccess(ctx: Context) {
+export function getParentalAccess(ctx: Context) {
   const { state: s, viewer } = ctx
-  const canAccess = can(s, viewer, "access.manage")
-  const canGuardians = can(s, viewer, "guardians.manage")
 
-  if (!canAccess && !canGuardians) {
+  if (!can(s, viewer, "guardianship.read")) {
     notFound()
   }
 
-  const parents = s.accounts
-    .filter((a) => can(s, a, "portal.parent") || s.guardianships.some((g) => g.accountId === a.id))
-    .map((a) => ({
-      account: { id: a.id, name: accountName(s, a), username: a.username },
-      children: s.guardianships
-        .filter((g) => g.accountId === a.id)
-        .map((g) => {
-          const child = personOf(s, g.childId)!
-
-          return {
-            id: g.id,
-            child: personRef(child),
-            groups: currentUnitsOfPerson(s, child.id, today()).map((u) => unitLabel(s, u)),
-            otherGuardians: s.guardianships
-              .filter((x) => x.childId === child.id && x.accountId !== a.id)
-              .map((x) => accountName(s, accountOf(s, x.accountId)!)),
-          }
-        }),
-    }))
-    .sort((a, b) => a.account.name.localeCompare(b.account.name, "de"))
+  const date = today()
 
   return {
-    can: { access: canAccess, guardians: canGuardians },
-    roles: s.roles.map((r) => ({
-      ...roleChoice(s, viewer, r),
-      protected: r.protected,
-      holders: new Set(s.assignments.filter((a) => a.roleId === r.id).map((a) => a.accountId)).size,
-    })),
-    assignments: s.accounts
-      .filter((a) => s.assignments.some((x) => x.accountId === a.id))
-      .map((a) => ({
-        account: { id: a.id, name: accountName(s, a), username: a.username },
-        self: a.id === viewer.id,
-        items: assignmentsOf(s, a.id).map((x) => {
-          const role = s.roles.find((r) => r.id === x.roleId)!
-
-          return {
-            ...x,
-            giveable: canGiveRole(s, viewer, role),
-            portal: role.permissions.every(isPortalPermission),
-          }
-        }),
-      }))
-      .sort((a, b) => a.account.name.localeCompare(b.account.name, "de")),
-    accounts: s.accounts
-      .map((a) => ({ id: a.id, name: accountName(s, a), username: a.username }))
-      .sort((a, b) => a.name.localeCompare(b.name, "de")),
+    canLink: can(s, viewer, "guardianship.create"),
+    canUnlink: can(s, viewer, "guardianship.delete"),
     parentAccounts: s.accounts
       .filter((a) => can(s, a, "portal.parent"))
       .map((a) => ({ id: a.id, name: accountName(s, a), username: a.username }))
       .sort((a, b) => a.name.localeCompare(b.name, "de")),
     members: memberChoices(s),
-    parents,
-    scopes: scopeChoices(s),
-  }
-}
+    parents: s.accounts
+      .filter(
+        (a) => can(s, a, "portal.parent") || s.guardianships.some((g) => g.accountId === a.id)
+      )
+      .map((a) => ({
+        account: { id: a.id, name: accountName(s, a), username: a.username },
+        initials: initials(personOf(s, a.personId)!),
+        children: s.guardianships
+          .filter((g) => g.accountId === a.id)
+          .map((g) => {
+            const child = personOf(s, g.childId)!
 
-export function getRole(ctx: Context, roleId: Uuid | null) {
-  const { state: s, viewer } = ctx
-
-  if (!can(s, viewer, "access.manage")) {
-    notFound()
-  }
-
-  const role = roleId ? s.roles.find((r) => r.id === roleId) : undefined
-
-  if (roleId && !role) {
-    notFound()
-  }
-
-  return {
-    role: role
-      ? {
-          id: role.id,
-          name: role.name,
-          permissions: role.permissions,
-          protected: role.protected,
-          holders: s.assignments
-            .filter((a) => a.roleId === role.id)
-            .map((a) => ({
-              id: a.id,
-              name: accountName(s, accountOf(s, a.accountId)!),
-              where: scopeLabel(s, a.scope),
-            })),
-        }
-      : null,
-    catalog: PERMISSIONS,
+            return {
+              id: g.id,
+              child: personRef(child),
+              groups: currentUnitsOfPerson(s, child.id, date).map((u) => unitLabel(s, u)),
+              otherGuardians: s.guardianships
+                .filter((x) => x.childId === child.id && x.accountId !== a.id)
+                .map((x) => accountName(s, accountOf(s, x.accountId)!)),
+            }
+          }),
+      }))
+      .sort((a, b) => a.account.name.localeCompare(b.account.name, "de")),
   }
 }
 
 export function getDataRequests(ctx: Context) {
   const { state: s, viewer } = ctx
 
-  if (!can(s, viewer, "data.manage")) {
+  if (!can(s, viewer, "dataRequest.read")) {
     notFound()
   }
 
@@ -377,7 +291,7 @@ export function getDataRequest(ctx: Context, requestId: Uuid) {
   const { state: s, viewer } = ctx
   const request = s.dataRequests.find((r) => r.id === requestId)
 
-  if (!request || !can(s, viewer, "data.manage")) {
+  if (!request || !can(s, viewer, "dataRequest.read")) {
     notFound()
   }
 

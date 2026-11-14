@@ -1,3 +1,5 @@
+import type { Permission, ResourceRef, ResourceType } from "./resources"
+
 export type Uuid = string
 export type LocalDate = string
 export type LocalTime = string
@@ -80,53 +82,67 @@ export type Guardianship = {
   createdBy: Uuid | null
 }
 
-export const CHURCH_PERMISSIONS = [
-  "accounts.manage",
-  "access.manage",
-  "guardians.manage",
-  "data.manage",
-  "services.manage",
-] as const
+export { CHURCH, type Permission, type ResourceRef, type ResourceType } from "./resources"
 
-export const UNIT_PERMISSIONS = [
-  "services.view",
-  "stages.manage",
-  "schedule.manage",
-  "attendance.record",
-  "attendance.correct",
-  "lessons.prepare",
-  "lessons.manage",
-  "lessons.publish",
-  "tasks.manage",
-] as const
+/** Holders of the role may give and remove `roleId`, on resources of these types in their area. */
+export type DelegationRule = { roleId: Uuid; at: ResourceType[] }
 
-export const PORTAL_PERMISSIONS = ["portal.parent", "portal.member"] as const
-
-export type ChurchPermission = (typeof CHURCH_PERMISSIONS)[number]
-export type UnitPermission = (typeof UNIT_PERMISSIONS)[number]
-export type PortalPermission = (typeof PORTAL_PERMISSIONS)[number]
-export type Permission = ChurchPermission | UnitPermission | PortalPermission
-
+/**
+ * A named set of permissions. It includes the roles it inherits from (their permissions and
+ * delegation rules), may be assigned only on the listed scope types, and lists which roles its
+ * holders may give and remove (only with access.assign / access.revoke). The protected role
+ * (Administrator) holds everything, assigns every role and can't be weakened or deleted.
+ */
 export type Role = {
   id: Uuid
   name: string
+  description: string | null
+  inherits: Uuid[]
   permissions: Permission[]
+  assignableAt: ResourceType[]
+  delegation: DelegationRule[]
   protected: boolean
   createdAt: Instant
+  updatedAt: Instant
 }
 
-export type Scope =
-  | { type: "church" }
-  | { type: "service"; serviceId: Uuid }
-  | { type: "stage"; serviceId: Uuid; stageId: Uuid }
-
+/**
+ * One role for one account on one resource, which it applies to with everything below it. Created
+ * by someone allowed to delegate it ("granted"), or by the ownership policy when the account
+ * created the resource ("owner").
+ */
 export type RoleAssignment = {
   id: Uuid
   accountId: Uuid
   roleId: Uuid
-  scope: Scope
+  resource: ResourceRef
+  origin: "granted" | "owner"
   createdAt: Instant
   createdBy: Uuid | null
+}
+
+/** The audit trail of Access: every role given and removed, by whom and when. */
+export type AccessEvent = {
+  id: Uuid
+  at: Instant
+  actorId: Uuid | null
+  kind: "granted" | "revoked"
+  accountId: Uuid
+  roleId: Uuid
+  roleName: string
+  resource: ResourceRef
+}
+
+/**
+ * A fictional resource type that exists only to show that a new type plugs into authorization
+ * through the registry: it has no screens of its own.
+ */
+export type ChurchEvent = {
+  id: Uuid
+  name: string
+  serviceId: Uuid | null
+  date: LocalDate
+  createdAt: Instant
 }
 
 export type Schedule = {
@@ -189,18 +205,6 @@ export type Session = {
   closedAt: Instant | null
   closedBy: Uuid | null
   createdAt: Instant
-}
-
-export type SessionEventType =
-  "created" | "opened" | "closed" | "reopened" | "canceled" | "restored" | "rescheduled"
-
-export type SessionEvent = {
-  id: Uuid
-  sessionId: Uuid
-  type: SessionEventType
-  occurredAt: Instant
-  actorId: Uuid | null
-  note: string | null
 }
 
 export type Attendance = {

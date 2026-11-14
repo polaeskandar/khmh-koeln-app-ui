@@ -10,6 +10,7 @@ import { uuidv7 } from "../ids"
 import { serviceOf, stageOf, stagesOf } from "../selectors"
 import type { State } from "../state"
 
+import { removeOrphanedAssignments } from "./access"
 import type { Actor } from "./accounts"
 
 export type StageInput = { name: string; description: string | null }
@@ -80,7 +81,7 @@ export function createService(
     stages: StageInput[]
   }
 ) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.create")
   const v = new Violations()
   const name = checkServiceName(s, v, input.name, null)
   const description = v.optionalText("description", input.description, 500)
@@ -124,7 +125,7 @@ export function updateService(
   serviceId: Uuid,
   input: { name: string; description: string | null }
 ) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update", { type: "service", id: serviceId })
   const service = found(serviceOf(s, serviceId), "service")
   const v = new Violations()
   const name = checkServiceName(s, v, input.name, service.id)
@@ -148,7 +149,7 @@ export function changeStructure(
   structure: ServiceStructure,
   firstStage: StageInput | null
 ) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update", { type: "service", id: serviceId })
   const service = found(serviceOf(s, serviceId), "service")
 
   if (service.structure === structure) {
@@ -166,6 +167,7 @@ export function changeStructure(
   s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
   s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
   s.stages = s.stages.filter((x) => x.serviceId !== service.id)
+  removeOrphanedAssignments(s)
   service.structure = structure
 
   if (structure === "single") {
@@ -188,7 +190,7 @@ export function setServiceArchived(
   serviceId: Uuid,
   archived: boolean
 ) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update", { type: "service", id: serviceId })
   const service = found(serviceOf(s, serviceId), "service")
 
   if (archived && s.sessions.some((x) => x.serviceId === service.id && x.status === "open")) {
@@ -199,7 +201,7 @@ export function setServiceArchived(
 }
 
 export function deleteService({ state: s, viewer }: Actor, serviceId: Uuid) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.delete", { type: "service", id: serviceId })
   const service = found(serviceOf(s, serviceId), "service")
 
   if (hasHistory(s, service.id)) {
@@ -208,6 +210,7 @@ export function deleteService({ state: s, viewer }: Actor, serviceId: Uuid) {
 
   s.services = s.services.filter((x) => x.id !== service.id)
   s.stages = s.stages.filter((x) => x.serviceId !== service.id)
+  removeOrphanedAssignments(s)
   s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
   s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
   s.daysOff = s.daysOff.filter((d) => d.serviceId !== service.id)
@@ -216,14 +219,14 @@ export function deleteService({ state: s, viewer }: Actor, serviceId: Uuid) {
 
 function managedStage({ state: s, viewer }: Actor, stageId: Uuid): Stage {
   const stage = found(stageOf(s, stageId), "stage")
-  requireIn(s, viewer, "stages.manage", { serviceId: stage.serviceId, stageId: null }, "stage")
+  requireIn(s, viewer, "stage.update", { serviceId: stage.serviceId, stageId: stage.id }, "stage")
 
   return stage
 }
 
 export function addStage({ state: s, viewer }: Actor, serviceId: Uuid, input: StageInput) {
   const service = found(serviceOf(s, serviceId), "service")
-  requireIn(s, viewer, "stages.manage", { serviceId: service.id, stageId: null })
+  requireIn(s, viewer, "stage.create", { serviceId: service.id, stageId: null })
 
   if (service.structure !== "stages") {
     throw ruleViolation(msg("errors.services.noStages"))

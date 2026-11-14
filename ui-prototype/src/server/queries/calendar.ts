@@ -36,7 +36,7 @@ export function getCalendar(ctx: Context, year: number) {
   return {
     year,
     years: planningYearOptions(),
-    canManage: can(s, viewer, "services.manage"),
+    canManage: can(s, viewer, "service.update"),
     today: today(),
     marks: Object.fromEntries(
       s.occasions
@@ -142,6 +142,7 @@ export function getDaysOff(ctx: Context, serviceId: Uuid, year: number) {
     ],
     unverified: s.occasions.some((o) => o.date.startsWith(`${year}-`) && o.verifiedAt === null),
     canManage:
-      can(s, viewer, "services.manage") || canInService(s, viewer, "schedule.manage", service.id),
+      can(s, viewer, "service.update", { type: "service", id: service.id }) ||
+      canInService(s, viewer, "schedule.plan", service.id),
   }
 }

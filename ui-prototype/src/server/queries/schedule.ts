@@ -67,8 +67,8 @@ export function getUnitSchedule(ctx: Context, unit: Unit, year: number) {
         }
       : null,
     sessions,
-    canManage: can(s, viewer, "schedule.manage", unit),
-    canRecord: can(s, viewer, "attendance.record", unit),
+    canManage: can(s, viewer, "schedule.plan", { type: "schedule", id: schedule.id }),
+    canRecord: can(s, viewer, "session.takeAttendance", { type: "schedule", id: schedule.id }),
   }
 }
 
@@ -87,11 +87,16 @@ const DEFAULT_RULE: PlanRule = {
 export function getPlanEditor(ctx: Context, unit: Unit, year: number) {
   const { state: s, viewer } = ctx
 
-  if (!planningYearOptions().includes(year) || !can(s, viewer, "schedule.manage", unit)) {
+  const schedule = scheduleFor(s, unit)
+
+  if (
+    !planningYearOptions().includes(year) ||
+    !schedule ||
+    !can(s, viewer, "schedule.plan", { type: "schedule", id: schedule.id })
+  ) {
     notFound()
   }
 
-  const schedule = scheduleFor(s, unit)!
   const plan = planOf(s, schedule.id, year)
 
   if (plan?.status === "confirmed") {
@@ -110,6 +115,6 @@ export function getPlanEditor(ctx: Context, unit: Unit, year: number) {
     decisions: plan?.decisions ?? {},
     hits: occasionHits(s, unit.serviceId, year),
     unverified: s.occasions.some((o) => o.date.startsWith(`${year}-`) && o.verifiedAt === null),
-    canKeepMandatory: can(s, viewer, "services.manage"),
+    canKeepMandatory: can(s, viewer, "service.update"),
   }
 }

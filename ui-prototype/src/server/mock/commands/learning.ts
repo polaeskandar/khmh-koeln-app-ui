@@ -4,20 +4,23 @@ import type {
   LessonStatus,
   LocalDate,
   Material,
+  Permission,
   Resource,
+  ResourceRef,
   Task,
   Unit,
   Uuid,
 } from "@/lib/domain/types"
-import { forbidden, ruleViolation } from "@/server/errors"
+import { forbidden, invalid, notFound, ruleViolation } from "@/server/errors"
 
-import { can, canOpenLesson, requireIn } from "../access"
+import { authorize, can, requireIn } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
-import { currentUnitsOfPerson, sameUnit, sessionOf } from "../selectors"
+import { accountOf, currentUnitsOfPerson, sameUnit, sessionOf } from "../selectors"
 import type { State } from "../state"
 
+import { grantOwner, removeOrphanedAssignments } from "./access"
 import type { Actor } from "./accounts"
 import { isGuardian } from "./guardians"
 
@@ -91,8 +94,11 @@ function cleanLesson(s: State, unit: Unit, input: LessonInput) {
   }
 }
 
+const lessonRef = (id: Uuid): ResourceRef => ({ type: "lesson", id })
+
 export function createLesson(actor: Actor, unit: Unit, input: LessonInput) {
-  requireIn(actor.state, actor.viewer, "lessons.prepare", unit, "stage")
+  const s = actor.state
+  requireIn(s, actor.viewer, "lesson.create", unit, "stage")
   const clean = cleanLesson(actor.state, unit, input)
   const lesson: Lesson = {
     id: uuidv7(nowMs()),
@@ -104,30 +110,41 @@ export function createLesson(actor: Actor, unit: Unit, input: LessonInput) {
     createdAt: now(),
     updatedAt: now(),
   }
-  actor.state.lessons.push(lesson)
+  s.lessons.push(lesson)
+  grantOwner(s, actor.viewer.id, { type: "lesson", id: lesson.id })
 
   return lesson
 }
 
-function lessonFor({ state: s, viewer }: Actor, lessonId: Uuid) {
-  return found(
-    s.lessons.find((l) => l.id === lessonId && canOpenLesson(s, viewer, l)),
+function lessonFor({ state: s, viewer }: Actor, lessonId: Uuid, permission: Permission) {
+  const lesson = found(
+    s.lessons.find((l) => l.id === lessonId),
     "lesson"
   )
+
+  if (!can(s, viewer, "lesson.read", lessonRef(lesson.id))) {
+    throw notFound("lesson")
+  }
+
+  if (!can(s, viewer, permission, lessonRef(lesson.id))) {
+    throw forbidden()
+  }
+
+  return lesson
 }
 
 export function updateLesson(actor: Actor, lessonId: Uuid, input: LessonInput) {
-  const lesson = lessonFor(actor, lessonId)
+  const lesson = lessonFor(actor, lessonId, "lesson.update")
   Object.assign(lesson, cleanLesson(actor.state, unitOf(lesson), input), { updatedAt: now() })
 
   return lesson
 }
 
 export function setLessonStatus(actor: Actor, lessonId: Uuid, status: LessonStatus) {
-  const lesson = lessonFor(actor, lessonId)
+  const lesson = lessonFor(actor, lessonId, "lesson.update")
 
   if (status === "published" || lesson.status === "published") {
-    requireIn(actor.state, actor.viewer, "lessons.publish", unitOf(lesson), "lesson")
+    lessonFor(actor, lessonId, "lesson.publish")
   }
 
   if (status === "published" && !lesson.summary) {
@@ -140,7 +157,7 @@ export function setLessonStatus(actor: Actor, lessonId: Uuid, status: LessonStat
 }
 
 export function deleteLesson(actor: Actor, lessonId: Uuid) {
-  const lesson = lessonFor(actor, lessonId)
+  const lesson = lessonFor(actor, lessonId, "lesson.delete")
 
   if (lesson.status === "published") {
     throw ruleViolation(msg("errors.learning.publishedLesson"))
@@ -151,6 +168,21 @@ export function deleteLesson(actor: Actor, lessonId: Uuid) {
   }
 
   actor.state.lessons.splice(actor.state.lessons.indexOf(lesson), 1)
+  removeOrphanedAssignments(actor.state)
+}
+
+export function setResponsible(actor: Actor, lessonId: Uuid, accountId: Uuid) {
+  const s = actor.state
+  const lesson = lessonFor(actor, lessonId, "lesson.update")
+
+  const account = found(accountOf(s, accountId), "account")
+
+  if (!can(s, account, "lesson.update", lessonRef(lesson.id))) {
+    throw invalid({ responsibleId: msg("errors.learning.responsibleCannotEdit") })
+  }
+
+  lesson.responsibleId = account.id
+  lesson.updatedAt = now()
 }
 
 export type TaskInput = {
@@ -182,8 +214,7 @@ function cleanTask(input: TaskInput) {
 }
 
 export function createTask(actor: Actor, lessonId: Uuid, input: TaskInput, publish: boolean) {
-  const lesson = lessonFor(actor, lessonId)
-  requireIn(actor.state, actor.viewer, "tasks.manage", unitOf(lesson), "lesson")
+  const lesson = lessonFor(actor, lessonId, "task.create")
   const task: Task = {
     id: uuidv7(nowMs()),
     lessonId: lesson.id,
@@ -200,31 +231,33 @@ export function createTask(actor: Actor, lessonId: Uuid, input: TaskInput, publi
   return task
 }
 
-function taskFor(actor: Actor, taskId: Uuid) {
-  const task = found(
-    actor.state.tasks.find(
-      (t) =>
-        t.id === taskId &&
-        actor.state.lessons.some(
-          (l) => l.id === t.lessonId && canOpenLesson(actor.state, actor.viewer, l)
-        )
-    ),
-    "task"
+function taskFor(
+  { state: s, viewer }: Actor,
+  taskId: Uuid,
+  permission: "task.update" | "task.delete"
+) {
+  const task = s.tasks.find(
+    (t) => t.id === taskId && can(s, viewer, "task.read", { type: "task", id: t.id })
   )
-  requireIn(actor.state, actor.viewer, "tasks.manage", unitOf(task), "task")
+
+  if (!task) {
+    throw notFound("task")
+  }
+
+  authorize(s, viewer, permission, { type: "task", id: task.id })
 
   return task
 }
 
 export function updateTask(actor: Actor, taskId: Uuid, input: TaskInput) {
-  const task = taskFor(actor, taskId)
+  const task = taskFor(actor, taskId, "task.update")
   Object.assign(task, cleanTask(input), { updatedAt: now() })
 
   return task
 }
 
 export function setTaskStatus(actor: Actor, taskId: Uuid, status: Task["status"]) {
-  const task = taskFor(actor, taskId)
+  const task = taskFor(actor, taskId, "task.update")
   const reported = actor.state.completions.some((c) => c.taskId === task.id && c.undoneAt === null)
 
   if (status === "draft" && reported) {
@@ -237,13 +270,14 @@ export function setTaskStatus(actor: Actor, taskId: Uuid, status: Task["status"]
 }
 
 export function deleteTask(actor: Actor, taskId: Uuid) {
-  const task = taskFor(actor, taskId)
+  const task = taskFor(actor, taskId, "task.delete")
 
   if (task.status !== "draft") {
     throw ruleViolation(msg("errors.learning.onlyDraftsDeleted"))
   }
 
   actor.state.tasks.splice(actor.state.tasks.indexOf(task), 1)
+  removeOrphanedAssignments(actor.state)
 }
 
 export function setTaskDone(

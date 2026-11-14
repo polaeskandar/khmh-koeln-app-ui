@@ -27,11 +27,10 @@ export async function closeSessionAction(sessionId: string) {
   return run((ctx) => closeSession(ctx, id), msg("toast.attendanceClosed"))
 }
 
-export async function reopenSessionAction(sessionId: string, reason: string) {
+export async function reopenSessionAction(sessionId: string) {
   const id = uuid.parse(sessionId)
-  const value = shortText.parse(reason)
 
-  return run((ctx) => reopenSession(ctx, id, value), msg("toast.attendanceReopened"))
+  return run((ctx) => reopenSession(ctx, id), msg("toast.attendanceReopened"))
 }
 
 export async function setPresentAction(sessionId: string, personId: string, present: boolean) {

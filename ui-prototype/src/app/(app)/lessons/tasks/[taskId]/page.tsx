@@ -37,16 +37,30 @@ export default async function TaskPage({ params }: PageProps<"/lessons/tasks/[ta
               <TaskStatusBadge status={task.status} />
             </>
           }
-          actions={<TaskActions taskId={task.id} status={task.status} />}
+          actions={
+            <TaskActions
+              taskId={task.id}
+              status={task.status}
+              canUpdate={data.can.update}
+              canDelete={data.can.delete}
+            />
+          }
         >
           <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <Link
-              href={`/lessons/${data.lesson.id}`}
-              className="inline-flex items-center gap-1.5 hover:underline"
-            >
-              <BookOpenText className="size-4" aria-hidden="true" />
-              {data.lesson.title}
-            </Link>
+            {data.lesson.canView ? (
+              <Link
+                href={`/lessons/${data.lesson.id}`}
+                className="inline-flex items-center gap-1.5 hover:underline"
+              >
+                <BookOpenText className="size-4" aria-hidden="true" />
+                {data.lesson.title}
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <BookOpenText className="size-4" aria-hidden="true" />
+                {data.lesson.title}
+              </span>
+            )}
             <span className="inline-flex items-center gap-1.5">
               <CalendarClock className="size-4" aria-hidden="true" />
               {task.dueDate ? t("due", { date: f.mediumDate(task.dueDate) }) : t("noDue")}

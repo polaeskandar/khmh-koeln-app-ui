@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest"
 
-import { DEFAULT_ROLES, ROLE_IDS } from "@/lib/domain/policy"
+import { ROLE_IDS } from "@/lib/domain/policy"
+import { CHURCH } from "@/lib/domain/types"
 import { ProblemError } from "@/server/errors"
 import { accountNamed, contextFor } from "@/test/context"
 
-import { assignRole, createRole, removeAssignment, updateRole } from "./commands/access"
+import { can } from "./access"
+import { assignRole, deleteRole, removeAssignment } from "./commands/access"
 import {
   authenticate,
   changeOwnPassword,
@@ -51,7 +53,7 @@ const servantFor = (s: ReturnType<typeof seed>) => {
   return [
     {
       roleId: ROLE_IDS.servant,
-      scope: { type: "stage" as const, serviceId: second.serviceId, stageId: second.id },
+      resource: { type: "stage" as const, id: second.id },
     },
   ]
 }
@@ -132,7 +134,7 @@ describe("accounts created by the office", () => {
       statusOf(() =>
         createAccount(sara, {
           ...input,
-          roles: [{ roleId: ROLE_IDS.member, scope: { type: "church" } }],
+          roles: [{ roleId: ROLE_IDS.member, resource: CHURCH }],
         })
       )
     ).toBe("ok")
@@ -193,52 +195,51 @@ describe("accounts created by the office", () => {
 })
 
 describe("roles and where they apply", () => {
-  test("nobody changes their own roles and nobody gives more than they have", () => {
+  test("nobody changes their own roles, and the church office gives only its approved roles", () => {
     const s = seed("church")
     const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
     const sara = contextFor(s, accountNamed(s, "sara.wissa"))
 
-    expect(
-      statusOf(() => assignRole(mariam, mariam.viewer.id, ROLE_IDS.parent, { type: "church" }))
-    ).toBe(403)
+    expect(statusOf(() => assignRole(mariam, mariam.viewer.id, ROLE_IDS.parent, CHURCH))).toBe(403)
     expect(
       statusOf(() =>
-        assignRole(sara, accountNamed(s, "hoda.farag").id, ROLE_IDS.administrator, {
-          type: "church",
-        })
+        assignRole(sara, accountNamed(s, "hoda.farag").id, ROLE_IDS.administrator, CHURCH)
       )
     ).toBe(403)
   })
 
-  test("a role with administration permissions is given only for the whole church", () => {
+  test("a role holding administration permissions fits only the whole church", () => {
     const s = seed("church")
     const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
-    const youth = s.services.find((x) => x.name === "Youth Gathering")!
+    const mark = accountNamed(s, "mark.shenouda")
+    const youth = {
+      type: "service" as const,
+      id: s.services.find((x) => x.name === "Youth Gathering")!.id,
+    }
 
-    expect(
-      statusOf(() =>
-        assignRole(mariam, accountNamed(s, "mark.shenouda").id, ROLE_IDS.administrator, {
-          type: "service",
-          serviceId: youth.id,
-        })
-      )
-    ).toBe(422)
+    expect(statusOf(() => assignRole(mariam, mark.id, ROLE_IDS.administrator, youth))).toBe(422)
+    expect(can(s, mark, "service.read", youth)).toBe(true)
+    expect(can(s, mark, "account.read")).toBe(false)
   })
 
-  test("the last person who manages access keeps that permission", () => {
+  test("someone always keeps the Administrator role for the whole church", () => {
     const s = seed("church")
     const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
-    const everything = DEFAULT_ROLES.find((r) => r.id === ROLE_IDS.administrator)!.permissions
-    const team = createRole(mariam, "Office lead", everything)
-    assignRole(mariam, christine.viewer.id, team.id, { type: "church" })
-    const administrator = s.assignments.find(
+    assignRole(mariam, christine.viewer.id, ROLE_IDS.administrator, CHURCH)
+    const mariams = s.assignments.find(
       (a) => a.accountId === mariam.viewer.id && a.roleId === ROLE_IDS.administrator
     )!
-    removeAssignment(christine, administrator.id)
+    removeAssignment(christine, mariams.id)
+    const christines = s.assignments.find(
+      (a) => a.accountId === christine.viewer.id && a.roleId === ROLE_IDS.administrator
+    )!
 
-    expect(
-      problemOf(() => updateRole(christine, team.id, "Office lead", ["accounts.manage"]))
-    ).toBe("errors.access.lastAccessManager")
+    expect(problemOf(() => removeAssignment(christine, christines.id))).toBe(
+      "errors.access.ownAssignments"
+    )
+    expect(problemOf(() => deleteRole(christine, ROLE_IDS.administrator))).toBe(
+      "errors.roles.protected"
+    )
   })
 })

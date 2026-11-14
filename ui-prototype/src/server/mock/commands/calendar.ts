@@ -21,7 +21,7 @@ export function addChurchEvent(
   { state: s, viewer }: Actor,
   input: { date: string; name: string; mode: OccasionMode; serviceIds: Uuid[] }
 ) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update")
   const v = new Violations()
   const date = v.date("date", input.date)
   const name = v.name("name", input.name, 120, msg("errors.calendar.nameRequired"))
@@ -50,7 +50,7 @@ export function addChurchEvent(
 }
 
 export function removeChurchEvent({ state: s, viewer }: Actor, occasionId: Uuid) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update")
   const occasion = found(
     s.occasions.find((o) => o.id === occasionId),
     "occasion"
@@ -64,7 +64,7 @@ export function removeChurchEvent({ state: s, viewer }: Actor, occasionId: Uuid)
 }
 
 export function verifyYear({ state: s, viewer }: Actor, year: number) {
-  authorize(s, viewer, "services.manage")
+  authorize(s, viewer, "service.update")
 
   for (const o of s.occasions) {
     if (o.date.startsWith(`${year}-`) && o.verifiedAt === null) {
@@ -78,8 +78,8 @@ function requireDaysOffManager({ state: s, viewer }: Actor, serviceId: Uuid) {
   found(serviceOf(s, serviceId), "service")
 
   if (
-    !can(s, viewer, "services.manage") &&
-    !canInService(s, viewer, "schedule.manage", serviceId)
+    !can(s, viewer, "service.update", { type: "service", id: serviceId }) &&
+    !canInService(s, viewer, "schedule.plan", serviceId)
   ) {
     throw forbidden()
   }

@@ -11,13 +11,27 @@ import { useServerAction } from "@/hooks/use-server-action"
 import type { TaskStatus } from "@/lib/domain/types"
 import { deleteTaskAction, setTaskStatusAction } from "@/server/actions/learning"
 
-export function TaskActions({ taskId, status }: { taskId: string; status: TaskStatus }) {
+export function TaskActions({
+  taskId,
+  status,
+  canUpdate,
+  canDelete,
+}: {
+  taskId: string
+  status: TaskStatus
+  canUpdate: boolean
+  canDelete: boolean
+}) {
   const t = useTranslations("tasks.actions")
   const router = useRouter()
   const setStatus = useServerAction(setTaskStatusAction)
   const remove = useServerAction(deleteTaskAction, {
     onSuccess: () => router.push("/lessons/tasks"),
   })
+
+  if (!canUpdate) {
+    return null
+  }
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -36,19 +50,21 @@ export function TaskActions({ taskId, status }: { taskId: string; status: TaskSt
             <Megaphone data-icon="inline-start" />
             {t("publish")}
           </Button>
-          <ConfirmDialog
-            trigger={
-              <Button variant="ghost" className="text-destructive">
-                <Trash2 data-icon="inline-start" />
-                {t("delete")}
-              </Button>
-            }
-            title={t("deleteTitle")}
-            description={t("deleteHint")}
-            confirmLabel={t("delete")}
-            tone="destructive"
-            onConfirm={async () => (await remove.execute(taskId)).ok}
-          />
+          {canDelete ? (
+            <ConfirmDialog
+              trigger={
+                <Button variant="ghost" className="text-destructive">
+                  <Trash2 data-icon="inline-start" />
+                  {t("delete")}
+                </Button>
+              }
+              title={t("deleteTitle")}
+              description={t("deleteHint")}
+              confirmLabel={t("delete")}
+              tone="destructive"
+              onConfirm={async () => (await remove.execute(taskId)).ok}
+            />
+          ) : null}
         </>
       ) : null}
       {status === "published" ? (

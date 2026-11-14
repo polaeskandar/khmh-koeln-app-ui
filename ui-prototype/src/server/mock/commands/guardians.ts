@@ -12,7 +12,7 @@ import type { State } from "../state"
 import type { Actor } from "./accounts"
 
 export function linkChild({ state: s, viewer }: Actor, accountId: Uuid, memberId: Uuid) {
-  authorize(s, viewer, "guardians.manage")
+  authorize(s, viewer, "guardianship.create")
   const parent = found(accountOf(s, accountId), "account")
   const member = found(personOf(s, memberId), "person")
   const memberAccount = s.accounts.find((a) => a.personId === member.id)
@@ -43,7 +43,7 @@ export function linkChild({ state: s, viewer }: Actor, accountId: Uuid, memberId
 }
 
 export function unlinkChild({ state: s, viewer }: Actor, guardianshipId: Uuid) {
-  authorize(s, viewer, "guardians.manage")
+  authorize(s, viewer, "guardianship.delete")
   const link = found(
     s.guardianships.find((g) => g.id === guardianshipId),
     "guardianship"

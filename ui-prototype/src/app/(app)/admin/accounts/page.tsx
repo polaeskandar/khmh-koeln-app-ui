@@ -105,7 +105,7 @@ export default async function AccountsPage({ searchParams }: PageProps<"/admin/a
                   </TableCell>
                   <TableCell className="hidden max-w-md md:table-cell">
                     <span className="line-clamp-2 text-sm text-muted-foreground">
-                      {r.roles.map((x) => (x.where ? `${x.role} · ${x.where}` : x.role)).join(", ")}
+                      {r.roles.map((x) => `${x.role} · ${x.scope}`).join(", ")}
                     </span>
                   </TableCell>
                   <TableCell>

@@ -42,27 +42,6 @@
   "accounts.roleRequired": [],
   "accounts.notYourOwn": [],
   "accounts.morePowerful": [],
-  "access.ownAssignments": [],
-  "access.cannotGive": [
-    "role"
-  ],
-  "access.roleNeedsChurch": [
-    "role"
-  ],
-  "access.unknownScope": [],
-  "access.alreadyAssigned": [],
-  "access.lastAccessManager": [],
-  "roles.nameRequired": [],
-  "roles.nameTaken": [],
-  "roles.permissionRequired": [],
-  "roles.protected": [
-    "role"
-  ],
-  "roles.protectedKeepsAccess": [
-    "role"
-  ],
-  "roles.hasGroupAssignments": [],
-  "roles.inUse": [],
   "guardians.notParent": [],
   "guardians.self": [],
   "guardians.alreadyLinked": [],
@@ -101,7 +80,6 @@
   "attendance.notToday": [],
   "attendance.notOpen": [],
   "attendance.notClosed": [],
-  "attendance.reasonRequired": [],
   "learning.titleRequired": [],
   "learning.instructionsRequired": [],
   "learning.labelRequired": [],
@@ -120,5 +98,50 @@
   "privacy.wrongKind": [],
   "privacy.ownErasure": [],
   "calendar.nameRequired": [],
-  "calendar.computed": []
+  "calendar.computed": [],
+  "learning.responsibleCannotEdit": [],
+  "access.ownAssignments": [],
+  "access.notHere": [],
+  "access.protectedRole": [
+    "role"
+  ],
+  "access.notDelegated": [
+    "role"
+  ],
+  "access.notDelegatedHere": [
+    "role"
+  ],
+  "access.wrongPlace": [
+    "role"
+  ],
+  "access.exceedsOwn": [
+    "role"
+  ],
+  "access.alreadyAssigned": [],
+  "access.alreadyCovered": [
+    "role"
+  ],
+  "access.unknownPlace": [],
+  "access.archivedPlace": [],
+  "access.lastAdministrator": [],
+  "roles.nameRequired": [],
+  "roles.nameTaken": [],
+  "roles.permissionRequired": [],
+  "roles.protected": [
+    "role"
+  ],
+  "roles.inUse": [],
+  "roles.included": [
+    "roles"
+  ],
+  "roles.cannotInherit": [],
+  "roles.loop": [
+    "path"
+  ],
+  "roles.scopeRequired": [],
+  "roles.scopeUnused": [],
+  "roles.cannotDelegate": [],
+  "roles.delegationScope": [
+    "role"
+  ]
 }

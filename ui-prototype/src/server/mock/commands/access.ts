@@ -1,237 +1,303 @@
 import { msg } from "@/i18n/message"
 import { cleanName, nameKey } from "@/lib/domain/names"
+import { OWNERSHIP } from "@/lib/domain/policy"
 import {
-  inCatalogOrder,
+  isAccessPermission,
   isPermission,
-  isPortalPermission,
-  needsChurchScope,
-} from "@/lib/domain/policy"
-import type { Account, Permission, Role, Scope, Uuid } from "@/lib/domain/types"
-import { forbidden, invalid, ruleViolation } from "@/server/errors"
+  isResourceType,
+  possibleScopes,
+  type ResourceRef,
+  type ResourceType,
+  sameRef,
+  scopeTypes,
+} from "@/lib/domain/resources"
+import {
+  cleanDelegation,
+  effectivePermissions,
+  includingRoles,
+  inheritanceLoop,
+} from "@/lib/domain/roles"
+import type { DelegationRule, Role, RoleAssignment, Uuid } from "@/lib/domain/types"
+import { ruleViolation } from "@/server/errors"
 
-import { can, holdsChurchWide } from "../access"
+import { authorize, roleOf } from "../access"
 import { now, nowMs } from "../clock"
+import { checkGrant, checkRevoke } from "../delegation"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
-import { accountOf, serviceOf, stageOf } from "../selectors"
+import { exists } from "../resources"
+import { accountOf } from "../selectors"
 import type { State } from "../state"
 
 import type { Actor } from "./accounts"
 
-type Change = {
-  removedAccountId?: Uuid
-  removedAssignmentId?: Uuid
-  role?: { id: Uuid; permissions: Permission[] }
-}
-
-export function ensureAccessManagerRemains(s: State, change: Change): void {
-  const permissionsOf = (roleId: Uuid) =>
-    change.role?.id === roleId
-      ? change.role.permissions
-      : (s.roles.find((r) => r.id === roleId)?.permissions ?? [])
-
-  const remains = s.assignments.some((a) => {
-    const account = accountOf(s, a.accountId)
-
-    return (
+/** Someone always keeps a protected role for the whole church. */
+export function ensureAdministratorRemains(
+  s: State,
+  change: { removedAssignmentId?: Uuid; removedAccountId?: Uuid }
+): void {
+  const remains = s.assignments.some(
+    (a) =>
       a.id !== change.removedAssignmentId &&
-      a.scope.type === "church" &&
-      account !== undefined &&
-      account.id !== change.removedAccountId &&
-      permissionsOf(a.roleId).includes("access.manage")
-    )
-  })
+      a.accountId !== change.removedAccountId &&
+      a.resource.type === "church" &&
+      accountOf(s, a.accountId) !== undefined &&
+      roleOf(s, a.roleId)?.protected === true
+  )
 
   if (!remains) {
-    throw ruleViolation(msg("errors.access.lastAccessManager"))
+    throw ruleViolation(msg("errors.access.lastAdministrator"))
   }
 }
 
-export function canGiveRole(s: State, viewer: Account, role: Role): boolean {
-  if (role.permissions.every(isPortalPermission)) {
-    return can(s, viewer, "accounts.manage") || can(s, viewer, "access.manage")
-  }
-
-  return (
-    holdsChurchWide(s, viewer, "access.manage") &&
-    role.permissions.every((p) => isPortalPermission(p) || holdsChurchWide(s, viewer, p))
-  )
-}
-
-function checkScope(s: State, scope: Scope) {
-  if (scope.type === "church") {
-    return
-  }
-
-  const service = found(serviceOf(s, scope.serviceId), "service")
-
-  if (scope.type === "stage") {
-    const stage = found(stageOf(s, scope.stageId), "stage")
-
-    if (stage.serviceId !== service.id) {
-      throw invalid({ scope: msg("errors.access.unknownScope") })
-    }
-  }
-}
-
-export function checkAssignable(
+function record(
   s: State,
-  viewer: Account,
-  roleId: Uuid,
-  scope: Scope,
-  accountId: Uuid | null
-): Role {
-  const role = found(
-    s.roles.find((r) => r.id === roleId),
-    "role"
-  )
-
-  if (accountId === viewer.id) {
-    throw forbidden(msg("errors.access.ownAssignments"))
-  }
-
-  if (!canGiveRole(s, viewer, role)) {
-    throw forbidden(msg("errors.access.cannotGive", { role: role.name }))
-  }
-
-  checkScope(s, scope)
-
-  if (needsChurchScope(role.permissions) && scope.type !== "church") {
-    throw invalid({ scope: msg("errors.access.roleNeedsChurch", { role: role.name }) })
-  }
-
-  return role
+  kind: "granted" | "revoked",
+  assignment: RoleAssignment,
+  actorId: Uuid | null
+) {
+  s.accessEvents.push({
+    id: uuidv7(nowMs()),
+    at: now(),
+    actorId,
+    kind,
+    accountId: assignment.accountId,
+    roleId: assignment.roleId,
+    roleName: roleOf(s, assignment.roleId)?.name ?? "",
+    resource: assignment.resource,
+  })
 }
 
-function sameScope(a: Scope, b: Scope): boolean {
-  if (a.type !== b.type) {
-    return false
+export function addAssignment(
+  s: State,
+  input: {
+    accountId: Uuid
+    role: Role
+    resource: ResourceRef
+    by: Uuid | null
+    origin: RoleAssignment["origin"]
+  }
+): RoleAssignment {
+  if (
+    s.assignments.some(
+      (a) =>
+        a.accountId === input.accountId &&
+        a.roleId === input.role.id &&
+        sameRef(a.resource, input.resource)
+    )
+  ) {
+    throw ruleViolation(msg("errors.access.alreadyAssigned"))
   }
 
-  if (a.type === "service" && b.type === "service") {
-    return a.serviceId === b.serviceId
+  const assignment: RoleAssignment = {
+    id: uuidv7(nowMs()),
+    accountId: input.accountId,
+    roleId: input.role.id,
+    resource: input.resource,
+    origin: input.origin,
+    createdAt: now(),
+    createdBy: input.by,
   }
+  s.assignments.push(assignment)
+  record(s, "granted", assignment, input.by)
 
-  return a.type !== "stage" || (b.type === "stage" && a.stageId === b.stageId)
+  return assignment
+}
+
+/** The ownership policy: the creator of a resource of an owned type gets its role for it. */
+export function grantOwner(s: State, accountId: Uuid, resource: ResourceRef): void {
+  const role = roleOf(s, OWNERSHIP[resource.type] ?? "")
+
+  if (role) {
+    addAssignment(s, { accountId, role, resource, by: accountId, origin: "owner" })
+  }
+}
+
+/** Deleted resources take their assignments with them; call after deleting anything. */
+export function removeOrphanedAssignments(s: State): void {
+  s.assignments = s.assignments.filter((a) => exists(s, a.resource))
 }
 
 export function assignRole(
   { state: s, viewer }: Actor,
   accountId: Uuid,
   roleId: Uuid,
-  scope: Scope
-) {
-  const account = found(accountOf(s, accountId), "account")
-  const role = checkAssignable(s, viewer, roleId, scope, account.id)
+  resource: ResourceRef
+): RoleAssignment {
+  const role = found(roleOf(s, roleId), "role")
+  checkGrant(s, viewer, accountId, role, resource)
 
-  if (
-    s.assignments.some(
-      (a) => a.accountId === account.id && a.roleId === role.id && sameScope(a.scope, scope)
-    )
-  ) {
-    throw ruleViolation(msg("errors.access.alreadyAssigned"))
-  }
-
-  const assignment = {
-    id: uuidv7(nowMs()),
-    accountId: account.id,
-    roleId: role.id,
-    scope,
-    createdAt: now(),
-    createdBy: viewer.id,
-  }
-  s.assignments.push(assignment)
-
-  return assignment
+  return addAssignment(s, { accountId, role, resource, by: viewer.id, origin: "granted" })
 }
 
-export function removeAssignment({ state: s, viewer }: Actor, assignmentId: Uuid) {
+export function removeAssignment({ state: s, viewer }: Actor, assignmentId: Uuid): void {
   const assignment = found(
     s.assignments.find((a) => a.id === assignmentId),
     "assignment"
   )
-  checkAssignable(s, viewer, assignment.roleId, assignment.scope, assignment.accountId)
-  ensureAccessManagerRemains(s, { removedAssignmentId: assignment.id })
+  checkRevoke(s, viewer, assignment)
+  ensureAdministratorRemains(s, { removedAssignmentId: assignment.id })
   s.assignments.splice(s.assignments.indexOf(assignment), 1)
+  record(s, "revoked", assignment, viewer.id)
 }
 
-function checkRole(
-  s: State,
-  v: Violations,
-  name: string,
-  permissions: string[],
-  except: Uuid | null
-) {
-  const clean = v.name("name", name, 80, msg("errors.roles.nameRequired"))
+export type RoleInput = {
+  name: string
+  description: string
+  inherits: string[]
+  permissions: string[]
+  assignableAt: string[]
+  delegation: { roleId: string; at: string[] }[]
+}
 
-  if (s.roles.some((r) => r.id !== except && nameKey(r.name) === nameKey(clean))) {
+type CleanRole = Pick<
+  Role,
+  "name" | "description" | "inherits" | "permissions" | "assignableAt" | "delegation"
+>
+
+/** Validates a role definition against the others; field errors like the API's 422. */
+export function checkRole(s: State, input: RoleInput, current: Role | null): CleanRole {
+  const v = new Violations()
+  const name = v.name("name", input.name, 80, msg("errors.roles.nameRequired"))
+  const description = v.optionalText("description", input.description, 240)
+
+  if (s.roles.some((r) => r.id !== current?.id && nameKey(r.name) === nameKey(name))) {
     v.add("name", msg("errors.roles.nameTaken"))
   }
 
-  const valid = permissions.filter(isPermission)
+  const inherits = [...new Set(input.inherits)]
+  const parents = inherits.map((id) => roleOf(s, id))
 
-  if (valid.length === 0) {
+  if (parents.some((r) => r === undefined || r.protected || r.id === current?.id)) {
+    v.add("inherits", msg("errors.roles.cannotInherit"))
+  }
+
+  const loop = inheritanceLoop(s.roles, current?.id ?? null, inherits)
+
+  if (loop) {
+    v.add(
+      "inherits",
+      msg("errors.roles.loop", { path: loop.map((id) => roleOf(s, id)?.name ?? "?").join(" → ") })
+    )
+  }
+
+  const permissions = input.permissions.filter(isPermission)
+  const draft: Role = {
+    id: current?.id ?? "draft",
+    name,
+    description,
+    inherits: loop ? [] : inherits,
+    permissions,
+    assignableAt: [],
+    delegation: [],
+    protected: false,
+    createdAt: now(),
+    updatedAt: now(),
+  }
+  const others = s.roles.filter((r) => r.id !== draft.id)
+  const effective = effectivePermissions([...others, draft], draft.id)
+
+  if (effective.length === 0) {
     v.add("permissions", msg("errors.roles.permissionRequired"))
   }
 
-  return { name: cleanName(clean), permissions: inCatalogOrder(valid) }
-}
+  const allowedScopes = possibleScopes(effective)
+  const assignableAt = scopeTypes().filter((t) => input.assignableAt.includes(t))
 
-function requireAccessManager({ state: s, viewer }: Actor) {
-  if (!holdsChurchWide(s, viewer, "access.manage")) {
-    throw forbidden()
+  if (assignableAt.length === 0) {
+    v.add("assignableAt", msg("errors.roles.scopeRequired"))
+  } else if (assignableAt.some((t) => !allowedScopes.includes(t))) {
+    v.add("assignableAt", msg("errors.roles.scopeUnused"))
+  }
+
+  const delegates = effective.some(isAccessPermission)
+  const delegation: DelegationRule[] = delegates
+    ? cleanDelegation(
+        input.delegation.map((rule) => ({
+          roleId: rule.roleId,
+          at: rule.at.filter(isResourceType) as ResourceType[],
+        }))
+      )
+    : []
+
+  for (const rule of delegation) {
+    const target = roleOf(s, rule.roleId) ?? (rule.roleId === draft.id ? draft : undefined)
+
+    if (!target || target.protected) {
+      v.add("delegation", msg("errors.roles.cannotDelegate"))
+    } else if (
+      rule.at.some(
+        (t) => !(rule.roleId === draft.id ? assignableAt : target.assignableAt).includes(t)
+      )
+    ) {
+      v.add("delegation", msg("errors.roles.delegationScope", { role: target.name }))
+    }
+  }
+
+  v.throwIfAny()
+
+  return {
+    name: cleanName(name),
+    description,
+    inherits,
+    permissions: permissions.filter((p, i) => permissions.indexOf(p) === i),
+    assignableAt,
+    delegation,
   }
 }
 
-export function createRole(actor: Actor, name: string, permissions: string[]) {
-  requireAccessManager(actor)
-  const v = new Violations()
-  const clean = checkRole(actor.state, v, name, permissions, null)
-  v.throwIfAny()
-  const role: Role = { id: uuidv7(nowMs()), ...clean, protected: false, createdAt: now() }
+function touch(s: State) {
+  s.rolesVersion += 1
+}
+
+export function createRole(actor: Actor, input: RoleInput): Role {
+  authorize(actor.state, actor.viewer, "role.create")
+  const role: Role = {
+    id: uuidv7(nowMs()),
+    ...checkRole(actor.state, input, null),
+    protected: false,
+    createdAt: now(),
+    updatedAt: now(),
+  }
   actor.state.roles.push(role)
+  touch(actor.state)
 
   return role
 }
 
-export function updateRole(actor: Actor, roleId: Uuid, name: string, permissions: string[]) {
-  requireAccessManager(actor)
+export function updateRole(actor: Actor, roleId: Uuid, input: RoleInput): Role {
+  authorize(actor.state, actor.viewer, "role.update")
   const s = actor.state
-  const role = found(
-    s.roles.find((r) => r.id === roleId),
-    "role"
-  )
-  const v = new Violations()
-  const clean = checkRole(s, v, name, permissions, role.id)
-  v.throwIfAny()
-
-  if (role.protected && !clean.permissions.includes("access.manage")) {
-    throw ruleViolation(msg("errors.roles.protectedKeepsAccess", { role: role.name }))
-  }
-
-  if (
-    needsChurchScope(clean.permissions) &&
-    s.assignments.some((a) => a.roleId === role.id && a.scope.type !== "church")
-  ) {
-    throw ruleViolation(msg("errors.roles.hasGroupAssignments"))
-  }
-
-  ensureAccessManagerRemains(s, { role: { id: role.id, permissions: clean.permissions } })
-  role.name = clean.name
-  role.permissions = clean.permissions
-
-  return role
-}
-
-export function deleteRole(actor: Actor, roleId: Uuid) {
-  requireAccessManager(actor)
-  const s = actor.state
-  const role = found(
-    s.roles.find((r) => r.id === roleId),
-    "role"
-  )
+  const role = found(roleOf(s, roleId), "role")
 
   if (role.protected) {
+    const v = new Violations()
+    const name = v.name("name", input.name, 80, msg("errors.roles.nameRequired"))
+    const description = v.optionalText("description", input.description, 240)
+
+    if (s.roles.some((r) => r.id !== role.id && nameKey(r.name) === nameKey(name))) {
+      v.add("name", msg("errors.roles.nameTaken"))
+    }
+
+    v.throwIfAny()
+    Object.assign(role, { name: cleanName(name), description, updatedAt: now() })
+    touch(s)
+
+    return role
+  }
+
+  Object.assign(role, checkRole(s, input, role), { updatedAt: now() })
+  touch(s)
+
+  return role
+}
+
+export function deleteRole(actor: Actor, roleId: Uuid): void {
+  authorize(actor.state, actor.viewer, "role.delete")
+  const s = actor.state
+  const role = found(roleOf(s, roleId), "role")
+
+  if (role.protected || Object.values(OWNERSHIP).includes(role.id)) {
     throw ruleViolation(msg("errors.roles.protected", { role: role.name }))
   }
 
@@ -239,5 +305,18 @@ export function deleteRole(actor: Actor, roleId: Uuid) {
     throw ruleViolation(msg("errors.roles.inUse"))
   }
 
+  const including = includingRoles(s.roles, role.id).filter((r) => r.inherits.includes(role.id))
+
+  if (including.length > 0) {
+    throw ruleViolation(
+      msg("errors.roles.included", { roles: including.map((r) => r.name).join(", ") })
+    )
+  }
+
+  for (const other of s.roles) {
+    other.delegation = other.delegation.filter((rule) => rule.roleId !== role.id)
+  }
+
   s.roles.splice(s.roles.indexOf(role), 1)
+  touch(s)
 }

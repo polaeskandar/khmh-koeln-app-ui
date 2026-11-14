@@ -1,213 +1,123 @@
-import Link from "next/link"
-import { Lock, Plus, UsersRound } from "lucide-react"
+import { notFound } from "next/navigation"
+import { MapPinOff } from "lucide-react"
 import { getTranslations } from "next-intl/server"
 
 import { PageBody, Topbar } from "@/components/app-shell/topbar"
 import { LinkTabs } from "@/components/link-tabs"
-import { PageHeader, Section } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
+import { PageHeader } from "@/components/page-header"
+import { ExplorerSheet } from "@/features/access/explorer-sheet"
+import { ParentalAccess } from "@/features/access/parental-access"
+import { ResourceExplorer } from "@/features/access/resource-explorer"
+import { ResourcePanel } from "@/features/access/resource-panel"
+import { RoleDetailView, RoleList } from "@/features/access/roles-view"
+import { parseRefKey } from "@/lib/domain/resources"
 import {
-  AssignmentChip,
-  AssignRoleDialog,
-  ChildChip,
-  LinkChildDialog,
-} from "@/features/access/access-dialogs"
-import { PERMISSION_GROUPS, permissionKey } from "@/lib/domain/policy"
-import { getAccess } from "@/server/queries/admin"
+  accessTabs,
+  explorerStart,
+  getResourceAccess,
+  getRoles,
+  managedPlaces,
+} from "@/server/queries/access"
+import { getParentalAccess } from "@/server/queries/admin"
 import { getStaffContext } from "@/server/request"
+import type { Context } from "@/server/viewer"
 
-type Tab = "roles" | "assignments" | "parents"
+type Tab = "resources" | "roles" | "parents"
 
 export async function generateMetadata() {
   return { title: (await getTranslations("nav"))("access") }
 }
 
+async function Resources({ ctx, r }: { ctx: Context; r: unknown }) {
+  const t = await getTranslations("access")
+  const asked = parseRefKey(r)
+  const access = asked ? getResourceAccess(ctx, asked) : null
+  const start = explorerStart(ctx, access ? asked : null)
+  const focus = access ? asked : parseRefKey(start.focus)
+  const data = access ?? (asked ? null : focus ? getResourceAccess(ctx, focus) : null)
+  const places = managedPlaces(ctx)
+  const explorer = {
+    root: start.root,
+    pages: start.pages,
+    expanded: start.expanded,
+    selected: data ? start.focus : null,
+  }
+
+  return (
+    <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,21rem)_minmax(0,1fr)] lg:gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+      <aside className="flex flex-col gap-3 lg:sticky lg:top-20">
+        <ExplorerSheet {...explorer} />
+        <ResourceExplorer {...explorer} className="hidden lg:flex" />
+        {places ? (
+          <p className="hidden text-xs text-muted-foreground lg:block">
+            {t("explorer.boundary", { places })}
+          </p>
+        ) : null}
+      </aside>
+      {data ? (
+        <ResourcePanel data={data} />
+      ) : (
+        <div className="flex flex-col items-center gap-3 border border-dashed bg-card p-10 text-center">
+          <MapPinOff className="size-6 text-muted-foreground" aria-hidden="true" />
+          <p className="font-medium">{t("panel.outside")}</p>
+          {places ? (
+            <p className="max-w-[48ch] text-sm text-muted-foreground">
+              {t("panel.outsideHint", { places })}
+            </p>
+          ) : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default async function AccessPage({ searchParams }: PageProps<"/admin/access">) {
   const query = await searchParams
-  const data = getAccess(await getStaffContext())
-  const tabs: Tab[] = data.can.access ? ["roles", "assignments", "parents"] : ["parents"]
+  const ctx = await getStaffContext()
+  const can = accessTabs(ctx.state, ctx.viewer)
+  const tabs: Tab[] = [
+    ...(can.resources ? (["resources"] as const) : []),
+    ...(can.roles ? (["roles"] as const) : []),
+    ...(can.guardians ? (["parents"] as const) : []),
+  ]
+
+  if (tabs.length === 0) {
+    notFound()
+  }
+
   const tab: Tab = tabs.includes(query.tab as Tab) ? (query.tab as Tab) : tabs[0]
   const t = await getTranslations("access")
-  const tp = await getTranslations("permissions")
   const tn = await getTranslations("nav")
-  const filter = typeof query.q === "string" ? query.q.toLowerCase() : ""
+  const roles = tab === "roles" ? getRoles(ctx, query.role as string | undefined) : null
 
   return (
     <>
       <Topbar crumbs={[{ label: tn("administration") }, { label: t("title") }]} />
       <PageBody>
-        <PageHeader title={t("title")} description={t("description")} />
-        <LinkTabs
-          label={t("title")}
-          active={tab}
-          items={tabs.map((x) => ({
-            key: x,
-            href: `/admin/access?tab=${x}`,
-            label: t(`tabs.${x}`),
-          }))}
-        />
-        {tab === "roles" ? (
-          <Section
-            title={t("tabs.roles")}
-            description={t("roles.hint")}
-            actions={
-              <Button asChild>
-                <Link href="/admin/access/roles/new">
-                  <Plus data-icon="inline-start" />
-                  {t("roles.new")}
-                </Link>
-              </Button>
-            }
-          >
-            <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {data.roles.map((r) => (
-                <li key={r.id}>
-                  <Link
-                    href={`/admin/access/roles/${r.id}`}
-                    className="flex h-full flex-col gap-3 border bg-card p-5 hover:bg-muted/30 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                  >
-                    <span className="flex items-start justify-between gap-2">
-                      <span className="flex items-center gap-2 font-heading text-lg font-semibold">
-                        {r.name}
-                        {r.protected ? (
-                          <Lock
-                            className="size-4 text-muted-foreground"
-                            aria-label={t("roles.protected")}
-                          />
-                        ) : null}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                        <UsersRound className="size-3.5" aria-hidden="true" />
-                        {t("roles.holders", { count: r.holders })}
-                      </span>
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {r.churchOnly ? t("roles.churchWide") : t("roles.inGroups")}
-                    </span>
-                    <dl className="flex flex-col gap-1.5 border-t pt-3 text-sm">
-                      {PERMISSION_GROUPS.filter((g) =>
-                        g.permissions.some((p) => r.permissions.includes(p))
-                      ).map((g) => (
-                        <div key={g.group} className="flex flex-col">
-                          <dt className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                            {tp(`groups.${g.group}`)}
-                          </dt>
-                          <dd>
-                            {g.permissions
-                              .filter((p) => r.permissions.includes(p))
-                              .map((p) => tp(`labels.${permissionKey(p)}`))
-                              .join(" · ")}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Section>
+        <PageHeader title={t("title")} description={t(`tabHints.${tab}`)} />
+        {tabs.length > 1 ? (
+          <LinkTabs
+            label={t("title")}
+            active={tab}
+            items={tabs.map((x) => ({
+              key: x,
+              href: `/admin/access?tab=${x}`,
+              label: t(`tabs.${x}`),
+            }))}
+          />
         ) : null}
-        {tab === "assignments" ? (
-          <Section
-            title={t("tabs.assignments")}
-            description={t("assignments.hint")}
-            actions={
-              <AssignRoleDialog accounts={data.accounts} roles={data.roles} scopes={data.scopes} />
-            }
-          >
-            <form className="max-w-sm" role="search">
-              <input type="hidden" name="tab" value="assignments" />
-              <input
-                name="q"
-                defaultValue={filter}
-                placeholder={t("assignments.search")}
-                aria-label={t("assignments.search")}
-                className="h-10 w-full border bg-transparent px-3 text-sm"
-              />
-            </form>
-            <ul className="divide-y border">
-              {data.assignments
-                .filter(
-                  (a) =>
-                    !filter ||
-                    `${a.account.name} ${a.account.username}`.toLowerCase().includes(filter)
-                )
-                .filter((a) => filter || a.items.some((x) => !x.portal))
-                .map((a) => (
-                  <li
-                    key={a.account.id}
-                    className="flex flex-col gap-2 p-4 md:flex-row md:items-start"
-                  >
-                    <Link
-                      href={`/admin/accounts/${a.account.id}`}
-                      className="flex w-56 shrink-0 flex-col hover:underline"
-                    >
-                      <span className="font-medium">{a.account.name}</span>
-                      <span className="text-xs text-muted-foreground" dir="ltr">
-                        {a.account.username}
-                      </span>
-                    </Link>
-                    <ul className="flex flex-1 flex-wrap gap-2">
-                      {a.items.map((x) => (
-                        <AssignmentChip
-                          key={x.id}
-                          id={x.id}
-                          role={x.role}
-                          where={x.where}
-                          removable={x.giveable && !a.self}
-                        />
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-            </ul>
-            {filter ? null : (
-              <p className="text-xs text-muted-foreground">{t("assignments.portalHidden")}</p>
-            )}
-          </Section>
+        {tab === "resources" ? <Resources ctx={ctx} r={query.r} /> : null}
+        {roles ? (
+          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-6">
+            <RoleList
+              roles={roles.roles}
+              selectedId={roles.selected?.id ?? null}
+              canCreate={roles.canCreate}
+            />
+            {roles.selected ? <RoleDetailView role={roles.selected} /> : null}
+          </div>
         ) : null}
-        {tab === "parents" ? (
-          <Section
-            title={t("tabs.parents")}
-            description={t("parents.hint")}
-            actions={<LinkChildDialog parents={data.parentAccounts} candidates={data.members} />}
-          >
-            <ul className="divide-y border">
-              {data.parents.map((p) => (
-                <li
-                  key={p.account.id}
-                  className="flex flex-col gap-2 p-4 md:flex-row md:items-start"
-                >
-                  <span className="flex w-56 shrink-0 flex-col">
-                    <span className="font-medium">{p.account.name}</span>
-                    <span className="text-xs text-muted-foreground" dir="ltr">
-                      {p.account.username}
-                    </span>
-                  </span>
-                  {p.children.length === 0 ? (
-                    <span className="text-sm text-muted-foreground">{t("parents.noChildren")}</span>
-                  ) : (
-                    <ul className="flex flex-1 flex-wrap gap-2">
-                      {p.children.map((c) => (
-                        <ChildChip
-                          key={c.id}
-                          guardianshipId={c.id}
-                          name={c.child.name}
-                          groups={[
-                            ...c.groups,
-                            ...(c.otherGuardians.length > 0
-                              ? [t("parents.alsoWith", { names: c.otherGuardians.join(", ") })]
-                              : []),
-                          ]}
-                        />
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </Section>
-        ) : null}
+        {tab === "parents" ? <ParentalAccess data={getParentalAccess(ctx)} /> : null}
       </PageBody>
     </>
   )

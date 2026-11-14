@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 
 import type { PlanStatus, Service, Uuid } from "@/lib/domain/types"
 import { can, canInService, canSeeService, canSeeUnit } from "@/server/mock/access"
+import { scheduleRef } from "@/server/mock/resources"
 import { today } from "@/server/mock/clock"
 import {
   planOf,
@@ -49,7 +50,7 @@ export function getServices(ctx: Context, archived: boolean) {
   const all = s.services.filter((x) => canSeeService(s, viewer, x.id))
 
   return {
-    canCreate: can(s, viewer, "services.manage"),
+    canCreate: can(s, viewer, "service.create"),
     archivedCount: all.filter((x) => x.archivedAt !== null).length,
     services: all
       .filter((x) => (x.archivedAt !== null) === archived)
@@ -110,9 +111,9 @@ export function getService(ctx: Context, serviceId: Uuid) {
     tone: s.serviceTones[service.id] ?? 1,
     hasHistory,
     can: {
-      manage: can(s, viewer, "services.manage"),
-      stages: can(s, viewer, "stages.manage", { serviceId: service.id, stageId: null }),
-      schedule: canInService(s, viewer, "schedule.manage", service.id),
+      manage: can(s, viewer, "service.update", { type: "service", id: service.id }),
+      stages: can(s, viewer, "stage.create", { serviceId: service.id, stageId: null }),
+      schedule: canInService(s, viewer, "schedule.plan", service.id),
     },
     stages: stagesOf(s, service.id, true)
       .filter((st) => canSeeUnit(s, viewer, { serviceId: service.id, stageId: st.id }))
@@ -151,7 +152,7 @@ export function getScheduleOverview(ctx: Context, serviceId: Uuid, year: number)
         rule: plan?.rule ?? null,
         sessions: sessions.filter((x) => x.status !== "canceled").length,
         canceled: sessions.filter((x) => x.status === "canceled").length,
-        canManage: can(s, viewer, "schedule.manage", u),
+        canManage: can(s, viewer, "schedule.plan", scheduleRef(s, u)),
       }
     })
 }

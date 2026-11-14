@@ -13,7 +13,7 @@ export async function GET(_: Request, { params }: RouteContext<"/admin/data/[req
     !request ||
     !request.personId ||
     request.kind !== "copy" ||
-    !can(state, viewer, "data.manage")
+    !can(state, viewer, "dataRequest.read")
   ) {
     notFound()
   }

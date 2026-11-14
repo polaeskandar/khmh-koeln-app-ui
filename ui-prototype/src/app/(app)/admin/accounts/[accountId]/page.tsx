@@ -11,17 +11,16 @@ import {
   GroupsEditor,
   ResetPasswordButton,
 } from "@/features/accounts/account-actions"
-import { AssignmentChip, AssignRoleDialog } from "@/features/access/access-dialogs"
+import { AssignmentChip } from "@/features/access/assignment-chip"
 import { getFormat } from "@/i18n/server"
 import { today } from "@/server/mock/clock"
-import { getAccess, getAccount } from "@/server/queries/admin"
+import { getAccount } from "@/server/queries/admin"
 import { getStaffContext } from "@/server/request"
 
 export default async function AccountPage({ params }: PageProps<"/admin/accounts/[accountId]">) {
   const { accountId } = await params
   const ctx = await getStaffContext()
   const a = getAccount(ctx, accountId)
-  const access = a.can.access ? getAccess(ctx) : null
   const t = await getTranslations("accounts")
   const tn = await getTranslations("nav")
   const f = await getFormat()
@@ -76,38 +75,21 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
             </li>
           </ul>
         </Section>
-        <Section
-          title={t("roles.title")}
-          description={t("roles.hint")}
-          actions={
-            access && !a.self ? (
-              <AssignRoleDialog
-                accounts={access.accounts}
-                roles={access.roles}
-                scopes={access.scopes}
-                fixedAccount={{ id: a.id, name: a.name, username: a.username }}
-              />
-            ) : null
-          }
-        >
+        <Section title={t("roles.title")} description={t("roles.hint")}>
           <ul className="flex flex-wrap gap-2">
             {a.roles.map((r) => (
-              <AssignmentChip
-                key={r.id}
-                id={r.id}
-                role={r.role}
-                where={r.where}
-                removable={!!access && !a.self}
-              />
+              <AssignmentChip key={r.id} role={r.role} scope={r.scope} href={r.href} />
             ))}
           </ul>
-          <Link
-            href="/admin/access?tab=assignments"
-            className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
-          >
-            {t("roles.manage")}
-            <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-          </Link>
+          {a.can.access ? (
+            <Link
+              href="/admin/access"
+              className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
+            >
+              {t("roles.manage")}
+              <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
+            </Link>
+          ) : null}
         </Section>
         {a.kinds.member || a.groups.length > 0 ? (
           <Section title={t("groups.title")} description={t("groups.hint")}>

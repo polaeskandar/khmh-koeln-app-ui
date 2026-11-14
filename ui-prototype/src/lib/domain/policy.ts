@@ -1,96 +1,5 @@
-import {
-  CHURCH_PERMISSIONS,
-  type Permission,
-  PORTAL_PERMISSIONS,
-  type Scope,
-  type Unit,
-  UNIT_PERMISSIONS,
-  type Uuid,
-} from "./types"
-
-export type PermissionGroup =
-  "organization" | "schedule" | "attendance" | "learning" | "administration" | "portals"
-
-export const PERMISSION_GROUPS: { group: PermissionGroup; permissions: Permission[] }[] = [
-  { group: "organization", permissions: ["services.view", "services.manage", "stages.manage"] },
-  { group: "schedule", permissions: ["schedule.manage"] },
-  { group: "attendance", permissions: ["attendance.record", "attendance.correct"] },
-  {
-    group: "learning",
-    permissions: ["lessons.prepare", "lessons.manage", "lessons.publish", "tasks.manage"],
-  },
-  {
-    group: "administration",
-    permissions: ["accounts.manage", "access.manage", "guardians.manage", "data.manage"],
-  },
-  { group: "portals", permissions: ["portal.parent", "portal.member"] },
-]
-
-export const PERMISSIONS: Permission[] = PERMISSION_GROUPS.flatMap((g) => g.permissions)
-
-const CHURCH = new Set<string>(CHURCH_PERMISSIONS)
-const UNIT = new Set<string>(UNIT_PERMISSIONS)
-const PORTAL = new Set<string>(PORTAL_PERMISSIONS)
-
-export function isPermission(value: string): value is Permission {
-  return CHURCH.has(value) || UNIT.has(value) || PORTAL.has(value)
-}
-
-export function isUnitPermission(permission: Permission): boolean {
-  return UNIT.has(permission)
-}
-
-export function isPortalPermission(permission: Permission): boolean {
-  return PORTAL.has(permission)
-}
-
-export function inCatalogOrder(permissions: Iterable<Permission>): Permission[] {
-  const set = new Set(permissions)
-
-  return PERMISSIONS.filter((p) => set.has(p))
-}
-
-export function needsChurchScope(permissions: Permission[]): boolean {
-  return permissions.some((p) => !isUnitPermission(p))
-}
-
-export function covers(scope: Scope, unit: Unit): boolean {
-  if (scope.type === "church") {
-    return true
-  }
-
-  if (scope.type === "service") {
-    return scope.serviceId === unit.serviceId
-  }
-
-  return scope.stageId === unit.stageId
-}
-
-export function coversService(scope: Scope, serviceId: Uuid): boolean {
-  return scope.type === "church" || scope.serviceId === serviceId
-}
-
-export type Grant = { permissions: Permission[]; scope: Scope }
-
-export function allows(grants: Grant[], permission: Permission, unit?: Unit): boolean {
-  return grants.some((grant) => {
-    if (!grant.permissions.includes(permission)) {
-      return false
-    }
-
-    if (grant.scope.type === "church") {
-      return true
-    }
-
-    return isUnitPermission(permission) && (unit === undefined || covers(grant.scope, unit))
-  })
-}
-
-export function allowsInService(grants: Grant[], permission: Permission, serviceId: Uuid) {
-  return grants.some(
-    (grant) => grant.permissions.includes(permission) && coversService(grant.scope, serviceId)
-  )
-}
+import type { Permission, ResourceType } from "./resources"
+import type { Role } from "./types"
 
 export const ROLE_IDS = {
   administrator: "019a3f00-0000-7000-8000-000000000001",
@@ -98,56 +7,120 @@ export const ROLE_IDS = {
   servant: "019a3f00-0000-7000-8000-000000000003",
   parent: "019a3f00-0000-7000-8000-000000000004",
   member: "019a3f00-0000-7000-8000-000000000005",
+  lessonEditor: "019a3f00-0000-7000-8000-000000000006",
+  sessionHelper: "019a3f00-0000-7000-8000-000000000007",
+  churchOffice: "019a3f00-0000-7000-8000-000000000008",
+  eventCoordinator: "019a3f00-0000-7000-8000-000000000009",
 } as const
 
-export const DEFAULT_ROLES: {
-  id: Uuid
-  name: string
-  permissions: Permission[]
-  protected: boolean
-}[] = [
+/**
+ * Ownership policy (board decision: a servant edits only the lessons they write): whoever creates
+ * a resource of these types gets this role for it, as an ordinary, removable assignment.
+ */
+export const OWNERSHIP: Partial<Record<ResourceType, string>> = {
+  lesson: ROLE_IDS.lessonEditor,
+}
+
+const crud = (type: ResourceType): Permission[] =>
+  (["create", "read", "update", "delete"] as const).map((a) => `${type}.${a}` as Permission)
+
+export type RoleSeed = Omit<Role, "createdAt" | "updatedAt">
+
+/**
+ * The roles a church starts with. They are data: administrators change them, or add their own, in
+ * Roles & permissions. Nothing in the app checks a role by its name or id, except the ownership
+ * policy above.
+ */
+export const DEFAULT_ROLES: RoleSeed[] = [
   {
     id: ROLE_IDS.administrator,
     name: "Administrator",
+    description: "Runs the app for the whole church. Can do everything and give every role.",
     protected: true,
-    permissions: inCatalogOrder([...CHURCH_PERMISSIONS, ...UNIT_PERMISSIONS]),
+    inherits: [],
+    permissions: [],
+    assignableAt: ["church"],
+    delegation: [],
   },
   {
-    id: ROLE_IDS.serviceLeader,
-    name: "Service leader",
+    id: ROLE_IDS.sessionHelper,
+    name: "Session helper",
+    description: "Helps at sessions and takes attendance.",
     protected: false,
-    permissions: inCatalogOrder([
-      "services.view",
-      "stages.manage",
-      "schedule.manage",
-      "attendance.record",
-      "attendance.correct",
-      "lessons.prepare",
-      "lessons.manage",
-      "lessons.publish",
-      "tasks.manage",
-    ]),
+    inherits: [],
+    permissions: ["session.read", "session.takeAttendance"],
+    assignableAt: ["schedule", "session"],
+    delegation: [],
   },
   {
     id: ROLE_IDS.servant,
     name: "Servant",
+    description:
+      "Serves in a class or service: sees its schedule, takes attendance, writes lessons.",
     protected: false,
-    permissions: inCatalogOrder([
-      "services.view",
-      "attendance.record",
-      "lessons.prepare",
-      "lessons.publish",
-      "tasks.manage",
-    ]),
+    inherits: [ROLE_IDS.sessionHelper],
+    permissions: ["service.read", "stage.read", "schedule.read", "lesson.create"],
+    assignableAt: ["service", "stage"],
+    delegation: [],
   },
-  { id: ROLE_IDS.parent, name: "Parent", protected: false, permissions: ["portal.parent"] },
-  { id: ROLE_IDS.member, name: "Member", protected: false, permissions: ["portal.member"] },
+  {
+    id: ROLE_IDS.lessonEditor,
+    name: "Lesson editor",
+    description: "Prepares, changes and publishes lessons and their tasks.",
+    protected: false,
+    inherits: [],
+    permissions: [
+      "lesson.read",
+      "lesson.update",
+      "lesson.delete",
+      "lesson.publish",
+      ...crud("task"),
+    ],
+    assignableAt: ["lesson", "stage", "service"],
+    delegation: [],
+  },
+  {
+    id: ROLE_IDS.serviceLeader,
+    name: "Service leader",
+    description: "Leads a service: its classes, plans, sessions and lessons, and who serves there.",
+    protected: false,
+    inherits: [ROLE_IDS.servant, ROLE_IDS.lessonEditor],
+    permissions: [
+      ...crud("stage"),
+      "schedule.plan",
+      "schedule.confirm",
+      "session.create",
+      "session.update",
+      "session.delete",
+      "session.correctAttendance",
+      "access.assign",
+      "access.revoke",
+    ],
+    assignableAt: ["service"],
+    delegation: [
+      { roleId: ROLE_IDS.servant, at: ["service", "stage"] },
+      { roleId: ROLE_IDS.lessonEditor, at: ["lesson"] },
+      { roleId: ROLE_IDS.sessionHelper, at: ["schedule", "session"] },
+    ],
+  },
+  {
+    id: ROLE_IDS.parent,
+    name: "Parent",
+    description: "Opens the parent portal. Which children they see comes from Parental access.",
+    protected: false,
+    inherits: [],
+    permissions: ["portal.parent"],
+    assignableAt: ["church"],
+    delegation: [],
+  },
+  {
+    id: ROLE_IDS.member,
+    name: "Member",
+    description: "Opens the member portal: their own groups, lessons and tasks.",
+    protected: false,
+    inherits: [],
+    permissions: ["portal.member"],
+    assignableAt: ["church"],
+    delegation: [],
+  },
 ]
-
-export type PermissionKey = {
-  [P in Permission]: P extends `${infer A}.${infer B}` ? `${A}_${B}` : never
-}[Permission]
-
-export function permissionKey(permission: Permission): PermissionKey {
-  return permission.replace(".", "_") as PermissionKey
-}

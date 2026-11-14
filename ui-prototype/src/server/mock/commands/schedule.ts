@@ -4,6 +4,7 @@ import { addDays, compareTime, isValidLocalDate, isValidLocalTime } from "@/lib/
 import type {
   AnnualPlan,
   LocalDate,
+  Permission,
   LocalTime,
   PlanDecision,
   PlanRule,
@@ -11,9 +12,9 @@ import type {
   Session,
   Uuid,
 } from "@/lib/domain/types"
-import { forbidden, invalid, ruleViolation } from "@/server/errors"
+import { forbidden, invalid, notFound, ruleViolation } from "@/server/errors"
 
-import { can, requireIn } from "../access"
+import { authorize, can, canSeeSession, requireUnit, sessionRef } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
@@ -21,6 +22,7 @@ import { materialize, newSession, occasionHits } from "../scheduling"
 import { hasAttendance, planOf, scheduleOf, sessionOf } from "../selectors"
 import type { State } from "../state"
 
+import { removeOrphanedAssignments } from "./access"
 import type { Actor } from "./accounts"
 
 const unitOf = (x: { serviceId: Uuid; stageId: Uuid | null }) => ({
@@ -28,9 +30,14 @@ const unitOf = (x: { serviceId: Uuid; stageId: Uuid | null }) => ({
   stageId: x.stageId,
 })
 
-function managedSchedule({ state: s, viewer }: Actor, scheduleId: Uuid): Schedule {
+function managedSchedule(
+  { state: s, viewer }: Actor,
+  scheduleId: Uuid,
+  permission: Permission = "schedule.plan"
+): Schedule {
   const schedule = found(scheduleOf(s, scheduleId), "schedule")
-  requireIn(s, viewer, "schedule.manage", unitOf(schedule), "schedule")
+  requireUnit(s, viewer, unitOf(schedule), "schedule")
+  authorize(s, viewer, permission, { type: "schedule", id: schedule.id })
 
   return schedule
 }
@@ -65,7 +72,7 @@ function checkDecisions(
     ([date, decision]) => decision === "keep" && hits[date]?.some((h) => h.mode === "mandatory")
   )
 
-  if (keepsMandatory && !can(s, viewer, "services.manage")) {
+  if (keepsMandatory && !can(s, viewer, "service.update")) {
     throw forbidden(msg("errors.plans.mandatoryException"))
   }
 }
@@ -81,7 +88,11 @@ export type PlanInput = {
 
 export function savePlan(actor: Actor, input: PlanInput) {
   const s = actor.state
-  const schedule = managedSchedule(actor, input.scheduleId)
+  const schedule = managedSchedule(
+    actor,
+    input.scheduleId,
+    input.confirm ? "schedule.confirm" : "schedule.plan"
+  )
 
   if (input.year < Number(today().slice(0, 4)) || input.year > Number(today().slice(0, 4)) + 2) {
     throw ruleViolation(msg("errors.plans.year"))
@@ -168,7 +179,7 @@ export function changePlan(
   }
 ): ChangeOutcome {
   const s = actor.state
-  const schedule = managedSchedule(actor, input.scheduleId)
+  const schedule = managedSchedule(actor, input.scheduleId, "schedule.confirm")
   const plan = found(planOf(s, schedule.id, input.year), "plan")
 
   if (plan.status !== "confirmed") {
@@ -202,6 +213,7 @@ export function changePlan(
 
   const removed = new Set(replaced.map((x) => x.id))
   s.sessions = s.sessions.filter((x) => !removed.has(x.id))
+  removeOrphanedAssignments(s)
   s.lessons.forEach((lesson) => {
     if (lesson.sessionId && removed.has(lesson.sessionId)) {
       lesson.sessionId = null
@@ -218,26 +230,14 @@ export function changePlan(
 
 function managedSession(actor: Actor, sessionId: Uuid): Session {
   const session = found(sessionOf(actor.state, sessionId), "session")
-  requireIn(actor.state, actor.viewer, "schedule.manage", unitOf(session), "session")
+
+  if (!canSeeSession(actor.state, actor.viewer, session)) {
+    throw notFound("session")
+  }
+
+  authorize(actor.state, actor.viewer, "session.update", sessionRef(session.id))
 
   return session
-}
-
-function event(
-  s: State,
-  session: Session,
-  type: "canceled" | "restored" | "rescheduled" | "created",
-  actorId: Uuid,
-  note: string | null
-) {
-  s.events.push({
-    id: uuidv7(nowMs()),
-    sessionId: session.id,
-    type,
-    occurredAt: now(),
-    actorId,
-    note,
-  })
 }
 
 export function cancelSession(actor: Actor, sessionId: Uuid, reason: string | null) {
@@ -257,7 +257,6 @@ export function cancelSession(actor: Actor, sessionId: Uuid, reason: string | nu
   session.status = "canceled"
   session.cancelReason = clean
   session.changedByHand = true
-  event(actor.state, session, "canceled", actor.viewer.id, clean)
 }
 
 function conflict(
@@ -297,7 +296,6 @@ export function restoreSession(actor: Actor, sessionId: Uuid) {
   session.cancelReason = null
   session.occasionId = null
   session.changedByHand = true
-  event(actor.state, session, "restored", actor.viewer.id, null)
 }
 
 export type SessionTimes = {
@@ -350,20 +348,18 @@ export function rescheduleSession(actor: Actor, sessionId: Uuid, input: SessionT
     throw ruleViolation(msg("errors.sessions.conflict"))
   }
 
-  const before = `${session.date} ${session.startTime}`
   session.originalDate ??= session.date
   session.date = times.date
   session.startTime = times.startTime
   session.endTime = times.endTime
   session.location = times.location
   session.changedByHand = true
-  event(actor.state, session, "rescheduled", actor.viewer.id, before)
 
   return session
 }
 
 export function addOneOffSession(actor: Actor, scheduleId: Uuid, input: SessionTimes) {
-  const schedule = managedSchedule(actor, scheduleId)
+  const schedule = managedSchedule(actor, scheduleId, "session.create")
   const times = checkTimes(input)
 
   if (conflict(actor.state, schedule, times.date, times.startTime, null)) {
@@ -377,7 +373,6 @@ export function addOneOffSession(actor: Actor, scheduleId: Uuid, input: SessionT
     now()
   )
   actor.state.sessions.push(session)
-  event(actor.state, session, "created", actor.viewer.id, null)
 
   return session
 }

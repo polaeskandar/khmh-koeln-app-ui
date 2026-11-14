@@ -96,7 +96,8 @@ describe("who opens a lesson", () => {
     expect(status(() => deleteLesson(rebecca, animals.id))).toBe(404)
     expect(titles(rebecca)).not.toContain("God made the animals")
     expect(titles(george)).toContain("God made the animals")
-    expect(status(() => getLesson(george, animals.id))).toBe("ok")
+    expect(getLesson(george, animals.id).can.edit).toBe(true)
+    expect(status(() => setLessonStatus(george, animals.id, "ready"))).toBe("ok")
   })
 
   test("a service leader manages every lesson of the service", () => {
@@ -104,7 +105,7 @@ describe("who opens a lesson", () => {
     const christine = contextFor(s, accountNamed(s, "christine.adel"))
     const animals = lessonNamed(s, "God made the animals")
 
-    expect(status(() => getLesson(christine, animals.id))).toBe("ok")
+    expect(getLesson(christine, animals.id).can.edit).toBe(true)
     expect(status(() => setLessonStatus(christine, animals.id, "ready"))).toBe("ok")
     expect(
       getPreparation(christine)
