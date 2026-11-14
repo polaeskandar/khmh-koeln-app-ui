@@ -27,12 +27,12 @@ Node.js 22 or newer and pnpm 12 (`brew install pnpm`). `pnpm screenshots` needs 
 | Data | In memory in the Next.js server, built from a fixed seed. The account menu has "Reset demo data" and "Start with an empty church" (only the administrator, the roles and the church calendar). |
 | Accounts | Created only by the church office (Administration › Accounts): an existing person or a new one, roles and where they apply, groups for members, the members a parent follows, a username and a temporary password that is shown once. No registration, no email, no password links. Accounts are deleted, never deactivated; a deleted account's records stay without it. |
 | Sign-in | Username and password (case-insensitive usernames, `a–z 0–9 . _ -`, 3–32 characters, ASCII only so look-alike letters can't be used). One answer for every failure. An account with a temporary password reaches nothing but `/change-password`: the server actions and pages refuse everything else, not only the navigation. |
-| Roles | A permission is an action on a part of the work (`schedule.manage`, `lessons.publish`, …; `PERMISSION_GROUPS` in `src/lib/domain/policy.ts`). A role is a name and permissions. A role is given to an account for the whole church, one service (and all its stages) or one stage. Administration permissions and the portals are given only church-wide. Nobody changes their own roles, nobody gives a role that allows more than their own, and someone active always keeps "Manage roles and assignments". |
+| Roles and access | One hierarchical, resource-based model (`../docs/authorization.md`). Resource types are registered once in `src/lib/domain/resources.ts` (church › service › stage › schedule › session; stage or service › lesson › task; a fictional event type), each with its actions (CRUD plus publish, take or correct attendance, plan or confirm a year). Roles build on other roles (Service leader includes Servant and Lesson editor; Servant includes Session helper), are given for one place and apply to everything in it, never to a sibling. Giving roles is explicit: a role lists which roles its holders may give and where, and nobody gives more than they hold there, gives to themselves, or touches the protected Administrator. Creators of lessons get Lesson editor for them. Administration › Access is a resource explorer (who has access here, from where, and what it allows), a role hierarchy editor, and parental access. |
 | Members and children | A child is just a member: a person with a member account and groups. Parents are linked to members in Access › Parental access, and may report tasks for them. |
 | Schedules | One schedule per stage, or per service when it has no stages, and each is planned on its own, a year at a time: weekday, start, optional end, optional first and last date, place. The preview marks the service's days without sessions; nothing exists until the plan is confirmed, which creates all sessions of the year. A confirmed plan changes only from a date on, and never touches past sessions, sessions with attendance or sessions changed by hand. Single sessions are canceled, restored, rescheduled, and one-off sessions added. |
 | Calendar | Coptic feasts are calculated (Coptic date or Julian Easter, `src/lib/domain/calendar.ts`, checked against copticchurch.net for 2026–2028) and only used once the church marked the year as checked. Each service has, per year, days without sessions: chosen by the system (major feasts of the Lord and Holy Week) or marked by hand on a year calendar. Church events can cancel sessions everywhere. |
 | Session names | Never typed: `Service` or `Service - Stage`, from the current names. |
-| Lessons and tasks | Lessons are drafts, ready or published. A servant sees, edits and deletes only their own lessons; `lessons.manage` (service leaders) covers every lesson of the group. Parents and members see only published lessons, and only the summary, objectives, teaching points and shared materials, never the preparation notes or internal materials. Tasks (formerly homework) are published to a group; members and linked parents mark them done. |
+| Lessons and tasks | Lessons are drafts, ready or published. A servant sees, changes and deletes only the lessons and tasks they created or were added to as Editor (the role given to creators of lessons and tasks); service leaders see and change every lesson of their service. Whether servants also read colleagues' lessons is one permission of the Servant role (lesson read). Parents and members see only published lessons, and only the summary, objectives, teaching points and shared materials, never the preparation notes or internal materials. Tasks (formerly homework) are published to a group; members and linked parents mark them done. |
 | Data protection | Administration › Data records requests to see or erase personal data; a copy is a download, an erasure keeps attendance totals as numbers. Everyone downloads their own data and asks for deletion in Settings. |
 | Clock | Starts at Sunday 8 November 2026, 12:08 in Cologne. `KHMK_DEMO_CLOCK=frozen` keeps it there (screenshots, tests). |
 
@@ -43,9 +43,11 @@ All use the password `khmk-demo`; `/sign-in/demo` signs in with one click.
 | Username | Who | Good for |
 | --- | --- | --- |
 | `mariam.fahmy` | Administrator | Accounts, Access, Data, services, the church calendar |
-| `sara.wissa` | Church office (a role of the church's own) | Accounts for parents and members, parental access, data requests |
-| `christine.adel` | Service leader for Sunday School | Planning 2027, days without sessions, one-off sessions, attendance |
-| `daniel.michael` | Servant in Sunday School › 1st and 3rd Class and in Youth Gathering | Today's sessions, attendance, lesson preparation, tasks |
+| `sara.wissa` | Church office (a role of the church's own); Event coordinator for the parish picnic | Accounts for parents and members, parental access, data requests |
+| `christine.adel` | Service leader for Sunday School | Planning 2027, days without sessions, one-off sessions, attendance, Access for Sunday School |
+| `daniel.michael` | Servant in Sunday School › 1st Class and in Youth Gathering (Christine adds 3rd Class in the scenarios) | Today's sessions, attendance, lesson preparation, tasks |
+| `youssef.kamel` | Servant in Sunday School › 3rd Class | A colleague whose lessons Daniel doesn't see |
+| `maria.hanna` | Member of University Students, no staff role yet | Getting Lesson editor for one lesson |
 | `mark.shenouda` | Service leader for Youth Gathering | A 2027 draft plan |
 | `irene.wahba` | Service leader for the Coptic Language Course | A year already confirmed for 2027 |
 | `rebecca.habib` | Servant who hasn't signed in yet | The mandatory password change |
@@ -69,11 +71,19 @@ or a check doesn't work, and writes the pictures:
   the other classes stay unplanned until each gets its own plan.
 - **E** Christine adds a one-off session to 3rd Class, opens its attendance page, reschedules a session and checks a change
   of the plan from a date.
-- **F** Mariam gives Daniel "Service leader" for Sunday School; he can now plan Sunday School, but not Youth Gathering.
-- **G** Daniel prepares and publishes "The Ten Commandments".
-- **H** Daniel publishes a task for "Noah's ark"; Hoda opens the lesson for Mimi (no servants' notes), marks the task done;
+- **Access A, E, I** Mariam sees the whole church in Resource management, gives Mark "Event coordinator" for the Summer
+  camp (an event type added through the registry), opens Service leader in Roles & permissions (built on Servant and
+  Lesson editor, inherited permissions marked), sees that Session helper can't build on Service leader (a loop), starts
+  a new role built on Servant, and opens Parental access.
+- **Access B, D, G, H** Christine sees only Sunday School; she gives Daniel Servant for 3rd Class in four steps (person,
+  role with the reasons other roles aren't offered, where, review), can't open Youth Gathering, gives Maria Lesson editor
+  for "The Good Samaritan" (Maria edits it and sees no other lesson), gives Daniel Servant for all of Sunday School (the
+  review names his narrower roles), and removes it again: his 1st and 3rd Class roles stay.
+- **Access C** Daniel sees only his stages and plans nothing; Christine plans 3rd Class.
+- **H** Daniel prepares and publishes "The Ten Commandments".
+- **I** Daniel publishes a task for "Noah's ark"; Hoda opens the lesson for Mimi (no servants' notes), marks the task done;
   Daniel sees it.
-- **I** Nevine reads a lesson of her group as a member (no notes, no internal materials) and marks its task done.
+- **J** Nevine reads a lesson of her group as a member (no notes, no internal materials) and marks its task done.
 
 Then attendance, settings, the screens in German and Arabic, and some in dark mode. Desktop pictures are 1440 px wide
 at 2×, phone pictures 390 × 844 at 3×.
@@ -99,7 +109,7 @@ The prototype assumes these; they are recorded in polaeskandar/khmh-koeln-app-ba
 | `src/components/` | Shared parts: app shell, portal frame, session card, year calendar, status badges, dialogs, form fields; `ui/` holds the shadcn/ui components of preset `b3a10z1gt0`. |
 | `src/server/actions/` | Server actions: validate input with zod, run a command, return a result or a problem. |
 | `src/server/queries/` | Read models for the pages, with permissions resolved for the signed-in account. |
-| `src/server/mock/` | The in-memory "backend": seed, access checks, commands with their rules, annual planning. |
-| `src/lib/domain/` | Types, permissions, usernames, annual planning, the Coptic calendar, dates and times. |
+| `src/server/mock/` | The in-memory "backend": seed, the authorization evaluator (`access.ts`), delegation (`delegation.ts`), resource adapters (`resources.ts`), commands with their rules, annual planning. `authorization.test.ts` plays the access scenarios. |
+| `src/lib/domain/` | Types, the resource registry (`resources.ts`), the role hierarchy (`roles.ts`), default roles (`policy.ts`), usernames, annual planning, the Coptic calendar, dates and times. |
 | `messages/` | English (`en.json`, the reference the code is type-checked against), German and Arabic. Tests check that they match. `src/i18n/api-codes.json` lists the error codes proposed for the API. |
 | `scripts/screenshots.mjs` | The scenarios and the screenshots. |

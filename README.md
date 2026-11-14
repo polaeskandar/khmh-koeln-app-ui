@@ -13,8 +13,12 @@ behaviour.
 
 The church office creates every account (members, servants, parents) with a username and a temporary password, which
 is changed at the first sign-in; there is no registration and the app sends no email. What an account may do comes from
-roles, given for the whole church, one service or one stage. The sidebar is Home, Administration (Accounts, Access,
-Data), Organization (Services), Lessons (Preparation, Tasks) and Attendance, with Settings at the bottom.
+roles given for a place in the church: roles build on other roles, places sit inside places (church › service › stage ›
+schedule, lessons, sessions, tasks), and a role given for a place applies to everything in it. Roles are given and
+removed only in Administration › Access, by administrators and by people whose role explicitly lets them give certain
+roles within their own place, never more than they hold; [`docs/authorization.md`](docs/authorization.md) describes the
+model. The sidebar is Home, Administration (Accounts, Access, Data), Organization (Services), Lessons (Preparation,
+Tasks) and Attendance, with Settings at the bottom.
 
 Services have stages or not. Each stage, or each service without stages, has one schedule, planned a whole year at a
 time: the preview suggests canceling the service's days without sessions (Coptic feasts chosen by the system or days
