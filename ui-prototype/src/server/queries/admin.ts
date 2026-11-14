@@ -3,9 +3,8 @@ import "server-only"
 import { notFound } from "next/navigation"
 
 import { fullName, initials, matchesQuery } from "@/lib/domain/names"
-import { CHURCH, isPortalPermission, type ResourceRef } from "@/lib/domain/resources"
 import type { Account, Uuid } from "@/lib/domain/types"
-import { can, effectiveOf, heldBy } from "@/server/mock/access"
+import { isAdministrator, isMember, isParent, isStaff } from "@/server/mock/access"
 import { today } from "@/server/mock/clock"
 import { erasureImpact } from "@/server/mock/commands/privacy"
 import {
@@ -17,12 +16,11 @@ import {
   stagesOf,
   unitLabel,
 } from "@/server/mock/selectors"
-import { resourcesUnder } from "@/server/mock/resources"
 import type { State } from "@/server/mock/state"
 import type { Context } from "@/server/viewer"
 
+import { accessSummary } from "./access"
 import { accountName, personRef, unitRef } from "./present"
-import { assignmentsOf, opensAccess, roleOptions } from "./access"
 
 export type AccountStatus = "active" | "mustChange"
 export type AccountFilter = "all" | "staff" | "parents" | "members"
@@ -31,28 +29,25 @@ export function statusOf(a: Account): AccountStatus {
   return a.mustChangePassword ? "mustChange" : "active"
 }
 
-/** Where onboarding may give first roles: the whole church, and each service and stage. */
-function onboardingScopes(s: State): ResourceRef[] {
-  const date = today()
-  const services = resourcesUnder(s, CHURCH, "service", date)
-
-  return [CHURCH, ...services.flatMap((svc) => [svc, ...resourcesUnder(s, svc, "stage", date)])]
+/** Accounts, data requests and parental links are for administrators. */
+function requireAdministrator(ctx: Context) {
+  if (!isAdministrator(ctx.state, ctx.viewer)) {
+    notFound()
+  }
 }
 
-function kinds(s: State, accountId: Uuid) {
-  const permissions = heldBy(s, accountId).flatMap((h) => [...effectiveOf(s, h.role.id)])
-
+function kinds(s: State, account: Account) {
   return {
-    staff: permissions.some((p) => !isPortalPermission(p)),
-    parent: permissions.includes("portal.parent"),
-    member: permissions.includes("portal.member"),
+    staff: isStaff(s, account),
+    parent: isParent(s, account),
+    member: isMember(s, account),
   }
 }
 
 const FILTERS = ["all", "staff", "parents", "members"] as const
 
 function inFilter(
-  r: { status: AccountStatus; kinds: { staff: boolean; parent: boolean; member: boolean } },
+  r: { kinds: { staff: boolean; parent: boolean; member: boolean } },
   filter: AccountFilter
 ): boolean {
   switch (filter) {
@@ -68,12 +63,8 @@ function inFilter(
 }
 
 export function getAccounts(ctx: Context, query: string, filter: AccountFilter) {
-  const { state: s, viewer } = ctx
-
-  if (!can(s, viewer, "account.read")) {
-    notFound()
-  }
-
+  requireAdministrator(ctx)
+  const { state: s } = ctx
   const rows = s.accounts.map((a) => {
     const person = personOf(s, a.personId)!
 
@@ -83,10 +74,9 @@ export function getAccounts(ctx: Context, query: string, filter: AccountFilter) 
       person,
       username: a.username,
       status: statusOf(a),
-      kinds: kinds(s, a.id),
-      roles: assignmentsOf(ctx, a.id),
+      kinds: kinds(s, a),
+      access: accessSummary(ctx, a.id),
       lastSignInAt: a.lastSignInAt,
-      createdAt: a.createdAt,
     }
   })
   const matches = (r: (typeof rows)[number]) =>
@@ -114,15 +104,15 @@ export function getAccounts(ctx: Context, query: string, filter: AccountFilter) 
         username: r.username,
         status: r.status,
         kinds: r.kinds,
-        roles: r.roles,
+        access: r.access,
         lastSignInAt: r.lastSignInAt,
       })),
   }
 }
 
-export function memberChoices(s: State) {
+/** People with an account, who can be linked to a parent as a child. */
+export function childChoices(s: State) {
   return s.accounts
-    .filter((a) => can(s, a, "portal.member"))
     .map((a) => {
       const p = personOf(s, a.personId)!
 
@@ -132,6 +122,7 @@ export function memberChoices(s: State) {
         groups: currentUnitsOfPerson(s, p.id, today()).map((u) => unitLabel(s, u)),
       }
     })
+    .filter((c) => c.groups.length > 0)
     .sort((a, b) => a.name.localeCompare(b.name, "de"))
 }
 
@@ -148,12 +139,8 @@ export function scopeChoices(s: State) {
 }
 
 export function getAccountForm(ctx: Context) {
-  const { state: s, viewer } = ctx
-
-  if (!can(s, viewer, "account.create")) {
-    notFound()
-  }
-
+  requireAdministrator(ctx)
+  const { state: s } = ctx
   const withAccount = new Set(s.accounts.map((a) => a.personId))
   const date = today()
 
@@ -165,19 +152,18 @@ export function getAccountForm(ctx: Context) {
         firstName: p.firstName,
         groups: currentUnitsOfPerson(s, p.id, date).map((u) => unitLabel(s, u)),
       })),
-    members: memberChoices(s),
+    children: childChoices(s),
     existingNames: s.persons.map((p) => fullName(p).toLowerCase()),
-    roles: roleOptions(ctx, onboardingScopes(s)),
     scopes: scopeChoices(s),
-    canLinkChildren: can(s, viewer, "guardianship.create"),
   }
 }
 
 export function getAccount(ctx: Context, accountId: Uuid) {
+  requireAdministrator(ctx)
   const { state: s, viewer } = ctx
   const account = accountOf(s, accountId)
 
-  if (!account || !can(s, viewer, "account.read")) {
+  if (!account) {
     notFound()
   }
 
@@ -190,14 +176,14 @@ export function getAccount(ctx: Context, accountId: Uuid) {
     person: personRef(person),
     username: account.username,
     status: statusOf(account),
-    kinds: kinds(s, account.id),
+    kinds: kinds(s, account),
     createdAt: account.createdAt,
     createdBy: account.createdBy
       ? accountName(s, accountOf(s, account.createdBy) ?? account)
       : null,
     lastSignInAt: account.lastSignInAt,
     passwordChangedAt: account.passwordChangedAt,
-    roles: assignmentsOf(ctx, account.id),
+    access: accessSummary(ctx, account.id),
     groups: s.memberships
       .filter((m) => m.personId === person.id && isCurrentOn(m, date))
       .map((m) => ({ id: m.id, unit: unitRef(s, m) })),
@@ -212,64 +198,19 @@ export function getAccount(ctx: Context, accountId: Uuid) {
           groups: currentUnitsOfPerson(s, child.id, date).map((u) => unitLabel(s, u)),
         }
       }),
+    childChoices: childChoices(s).filter(
+      (c) =>
+        c.id !== person.id &&
+        !s.guardianships.some((g) => g.accountId === account.id && g.childId === c.id)
+    ),
     self: account.id === viewer.id,
-    can: {
-      guardians: can(s, viewer, "guardianship.create"),
-      access: opensAccess(s, viewer),
-    },
     scopes: scopeChoices(s),
   }
 }
 
-export function getParentalAccess(ctx: Context) {
-  const { state: s, viewer } = ctx
-
-  if (!can(s, viewer, "guardianship.read")) {
-    notFound()
-  }
-
-  const date = today()
-
-  return {
-    canLink: can(s, viewer, "guardianship.create"),
-    canUnlink: can(s, viewer, "guardianship.delete"),
-    parentAccounts: s.accounts
-      .filter((a) => can(s, a, "portal.parent"))
-      .map((a) => ({ id: a.id, name: accountName(s, a), username: a.username }))
-      .sort((a, b) => a.name.localeCompare(b.name, "de")),
-    members: memberChoices(s),
-    parents: s.accounts
-      .filter(
-        (a) => can(s, a, "portal.parent") || s.guardianships.some((g) => g.accountId === a.id)
-      )
-      .map((a) => ({
-        account: { id: a.id, name: accountName(s, a), username: a.username },
-        initials: initials(personOf(s, a.personId)!),
-        children: s.guardianships
-          .filter((g) => g.accountId === a.id)
-          .map((g) => {
-            const child = personOf(s, g.childId)!
-
-            return {
-              id: g.id,
-              child: personRef(child),
-              groups: currentUnitsOfPerson(s, child.id, date).map((u) => unitLabel(s, u)),
-              otherGuardians: s.guardianships
-                .filter((x) => x.childId === child.id && x.accountId !== a.id)
-                .map((x) => accountName(s, accountOf(s, x.accountId)!)),
-            }
-          }),
-      }))
-      .sort((a, b) => a.account.name.localeCompare(b.account.name, "de")),
-  }
-}
-
 export function getDataRequests(ctx: Context) {
-  const { state: s, viewer } = ctx
-
-  if (!can(s, viewer, "dataRequest.read")) {
-    notFound()
-  }
+  requireAdministrator(ctx)
+  const { state: s } = ctx
 
   const rows = [...s.dataRequests].sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
 
@@ -291,7 +232,7 @@ export function getDataRequest(ctx: Context, requestId: Uuid) {
   const { state: s, viewer } = ctx
   const request = s.dataRequests.find((r) => r.id === requestId)
 
-  if (!request || !can(s, viewer, "dataRequest.read")) {
+  if (!request || !isAdministrator(s, viewer)) {
     notFound()
   }
 

@@ -2,9 +2,9 @@ import { msg } from "@/i18n/message"
 import { fullName } from "@/lib/domain/names"
 import { oneMonthAfter } from "@/lib/domain/privacy"
 import type { DataRequest, DataRequestChannel, Uuid } from "@/lib/domain/types"
-import { ruleViolation } from "@/server/errors"
+import { forbidden, ruleViolation } from "@/server/errors"
 
-import { authorize } from "../access"
+import { isAdministrator } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
@@ -13,6 +13,13 @@ import type { State } from "../state"
 
 import { type Actor, forgetAccount } from "./accounts"
 import { ensureAdministratorRemains } from "./access"
+
+/** Data protection requests are handled by administrators. */
+function administrator(s: State, viewer: Actor["viewer"]) {
+  if (!isAdministrator(s, viewer)) {
+    throw forbidden()
+  }
+}
 
 export function recordRequest(
   { state: s, viewer }: Actor,
@@ -24,7 +31,7 @@ export function recordRequest(
     note: string | null
   }
 ) {
-  authorize(s, viewer, "dataRequest.create")
+  administrator(s, viewer)
   const person = found(personOf(s, input.personId), "person")
   const v = new Violations()
   const requestedBy = v.name(
@@ -85,7 +92,7 @@ export function requestOwnErasure({ state: s, viewer }: Actor) {
 }
 
 function openRequest({ state: s, viewer }: Actor, requestId: Uuid) {
-  authorize(s, viewer, "dataRequest.update")
+  administrator(s, viewer)
   const request = found(
     s.dataRequests.find((r) => r.id === requestId),
     "request"
@@ -134,7 +141,7 @@ export function erasureImpact(s: State, personId: Uuid) {
     guardianships: s.guardianships.filter(
       (g) => g.childId === personId || g.accountId === account?.id
     ).length,
-    assignments: account ? s.assignments.filter((a) => a.accountId === account.id).length : 0,
+    assignments: account ? s.grants.filter((g) => g.accountId === account.id).length : 0,
   }
 }
 

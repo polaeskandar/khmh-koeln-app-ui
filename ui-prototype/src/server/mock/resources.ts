@@ -7,7 +7,7 @@ import {
 } from "@/lib/domain/resources"
 import type { LocalDate, LocalTime, Session, Unit, Uuid } from "@/lib/domain/types"
 
-import { scheduleFor, scheduleOf, serviceOf, sessionOf, stageOf, stagesOf } from "./selectors"
+import { serviceOf, sessionOf, stageOf, stagesOf } from "./selectors"
 import type { State } from "./state"
 
 export type ResourceDetails = {
@@ -17,10 +17,9 @@ export type ResourceDetails = {
 }
 
 /**
- * How the server reads resources of one type, for authorization and the explorer: a resource's
- * authorization parent (null for the church, undefined when it doesn't exist), whether it is
- * archived, the resources of this type directly under a parent in the order people look for them,
- * and what a person needs to recognize one. The evaluator uses only this table.
+ * How one type of resource is read from the app's data: its parent (null for the church,
+ * undefined when it doesn't exist), whether it is archived, the resources of this type directly
+ * under a parent in the order people look for them, and what people need to recognize one.
  */
 export type Adapter = {
   parent: (s: State, id: Uuid) => ResourceRef | null | undefined
@@ -31,13 +30,13 @@ export type Adapter = {
 
 const MAX_DEPTH = 10
 
+/** A stage, or a service without stages: where sessions and lessons sit. */
 export function unitScope(unit: Unit): ResourceRef {
   return unit.stageId === null
     ? { type: "service", id: unit.serviceId }
     : { type: "stage", id: unit.stageId }
 }
 
-/** The unit (stage, or service without stages) a stage or service resource stands for. */
 function unitOfRef(s: State, ref: ResourceRef): Unit | null {
   if (ref.type === "stage") {
     const stage = stageOf(s, ref.id)
@@ -54,16 +53,8 @@ function unitOfRef(s: State, ref: ResourceRef): Unit | null {
   return null
 }
 
-export function scheduleRef(s: State, unit: Unit): ResourceRef {
-  const schedule = scheduleFor(s, unit)
-
-  return schedule ? { type: "schedule", id: schedule.id } : unitScope(unit)
-}
-
-const named = (name: string | null | undefined): ResourceDetails | null =>
-  name === undefined || name === null ? null : { name, date: null, time: null }
-
-const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name)
+const named = (name: string | undefined): ResourceDetails | null =>
+  name === undefined ? null : { name, date: null, time: null }
 
 /** Sessions: the coming ones first, then the past ones from the most recent. */
 function sessionOrder(list: Session[], today: LocalDate): Session[] {
@@ -89,7 +80,7 @@ const ADAPTERS: Partial<Record<ResourceType, Adapter>> = {
       parent.type === "church"
         ? s.services
             .filter((x) => x.archivedAt === null)
-            .sort(byName)
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map((x) => x.id)
         : [],
     details: (s, id) => named(serviceOf(s, id)?.name),
@@ -105,33 +96,27 @@ const ADAPTERS: Partial<Record<ResourceType, Adapter>> = {
       parent.type === "service" ? stagesOf(s, parent.id).map((x) => x.id) : [],
     details: (s, id) => named(stageOf(s, id)?.name),
   },
-  schedule: {
-    parent: (s, id) => {
-      const schedule = scheduleOf(s, id)
-
-      return schedule ? unitScope(schedule) : undefined
-    },
-    under: (s, parent) => {
-      const unit = unitOfRef(s, parent)
-      const schedule = unit ? scheduleFor(s, unit) : undefined
-
-      return schedule ? [schedule.id] : []
-    },
-    details: (s, id) => (scheduleOf(s, id) ? { name: null, date: null, time: null } : null),
-  },
   session: {
     parent: (s, id) => {
       const session = sessionOf(s, id)
 
-      return session ? { type: "schedule", id: session.scheduleId } : undefined
+      return session ? unitScope(session) : undefined
     },
-    under: (s, parent, today) =>
-      parent.type === "schedule"
+    under: (s, parent, today) => {
+      const unit = unitOfRef(s, parent)
+
+      return unit
         ? sessionOrder(
-            s.sessions.filter((x) => x.scheduleId === parent.id && x.status !== "canceled"),
+            s.sessions.filter(
+              (x) =>
+                x.serviceId === unit.serviceId &&
+                x.stageId === unit.stageId &&
+                x.status !== "canceled"
+            ),
             today
           ).map((x) => x.id)
-        : [],
+        : []
+    },
     details: (s, id) => {
       const session = sessionOf(s, id)
 
@@ -179,37 +164,9 @@ const ADAPTERS: Partial<Record<ResourceType, Adapter>> = {
       return task ? { name: task.title, date: task.dueDate, time: null } : null
     },
   },
-  event: {
-    parent: (s, id) => {
-      const event = s.events.find((e) => e.id === id)
-
-      if (!event) {
-        return undefined
-      }
-
-      return event.serviceId ? { type: "service", id: event.serviceId } : CHURCH
-    },
-    under: (s, parent) => {
-      if (parent.type !== "church" && parent.type !== "service") {
-        return []
-      }
-
-      const serviceId = parent.type === "church" ? null : parent.id
-
-      return s.events
-        .filter((e) => e.serviceId === serviceId)
-        .sort((a, b) => a.date.localeCompare(b.date))
-        .map((e) => e.id)
-    },
-    details: (s, id) => {
-      const event = s.events.find((e) => e.id === id)
-
-      return event ? { name: event.name, date: event.date, time: null } : null
-    },
-  },
 }
 
-/** Registers the adapter of a resource type registered at runtime (see registerResourceType). */
+/** Adds how a new type is read (with registerResourceType), e.g. in a test. */
 export function registerAdapter(type: string, adapter: Adapter): void {
   ADAPTERS[type as ResourceType] = adapter
 }
@@ -218,14 +175,9 @@ export function unregisterAdapter(type: string): void {
   delete ADAPTERS[type as ResourceType]
 }
 
-export function hasAdapter(type: ResourceType): boolean {
-  return ADAPTERS[type] !== undefined
-}
-
 /**
- * The resource and its authorization parents up to the church, read from storage. Null when the
- * resource or a parent doesn't exist, the type has no adapter, or the data loops: an unknown
- * resource never grants anything.
+ * The resource and its parents up to the church, read from the data. Null when the resource or a
+ * parent doesn't exist, or the data loops: an unknown resource never gives access.
  */
 export function ancestry(s: State, resource: ResourceRef): ResourceRef[] | null {
   const chain: ResourceRef[] = []
@@ -256,7 +208,7 @@ export function exists(s: State, resource: ResourceRef): boolean {
   return ancestry(s, resource) !== null
 }
 
-/** Archived services and stages, and everything in them, are read-only. */
+/** Whether one of these resources is an archived service or stage: everything in it is read-only. */
 export function isArchived(s: State, chain: ResourceRef[]): boolean {
   return chain.some((r) => ADAPTERS[r.type]?.archived?.(s, r.id) === true)
 }
@@ -275,29 +227,7 @@ export function resourcesUnder(
   return (ADAPTERS[type]?.under(s, parent, today) ?? []).map((id) => ({ type, id }))
 }
 
-/** The types with resources directly under this one, in registry order. */
+/** The types with at least one resource directly under this one. */
 export function childTypesOf(s: State, parent: ResourceRef, today: LocalDate): ResourceType[] {
-  return childTypes(parent.type).filter(
-    (t) => hasAdapter(t) && resourcesUnder(s, parent, t, today).length > 0
-  )
-}
-
-/** Every resource below `root`, breadth first. */
-export function* descendants(
-  s: State,
-  root: ResourceRef,
-  today: LocalDate
-): Generator<ResourceRef> {
-  const queue = [root]
-
-  while (queue.length > 0) {
-    const current = queue.shift()!
-
-    for (const type of childTypes(current.type)) {
-      for (const child of resourcesUnder(s, current, type, today)) {
-        yield child
-        queue.push(child)
-      }
-    }
-  }
+  return childTypes(parent.type).filter((t) => resourcesUnder(s, parent, t, today).length > 0)
 }

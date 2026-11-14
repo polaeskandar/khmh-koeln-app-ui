@@ -57,6 +57,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useDirection, useInlineEnd } from "@/i18n/direction"
+import { describeAccess } from "@/lib/access-summary"
 import type { ViewerInfo } from "@/lib/view-models"
 import { signOutAction } from "@/server/actions/auth"
 import { resetDemoDataAction, switchPersonaAction } from "@/server/actions/prototype"
@@ -345,12 +346,29 @@ export function SidebarNav({ nav }: { nav: Shell["nav"] }) {
   )
 }
 
+/** One line about a person's access, in the reader's language. */
+export function useDescribeAccess() {
+  const t = useTranslations("access.summary")
+
+  return (p: ViewerInfo) =>
+    describeAccess(p, {
+      administrator: t("administrator"),
+      parent: t("parent"),
+      member: t("member"),
+      none: t("none"),
+    })
+}
+
 export function homeOfPersona(p: ViewerInfo) {
   if (p.areas.staff) {
     return "/"
   }
 
-  return p.areas.parent ? "/parent" : "/member"
+  if (p.areas.parent) {
+    return "/parent"
+  }
+
+  return p.areas.member ? "/member" : "/no-access"
 }
 
 export function PersonaMenuContent({
@@ -363,6 +381,7 @@ export function PersonaMenuContent({
   settingsHref: string
 }) {
   const t = useTranslations("shell")
+  const describe = useDescribeAccess()
   const [, startTransition] = useTransition()
   const router = useRouter()
   const pathname = usePathname() ?? ""
@@ -436,7 +455,7 @@ export function PersonaMenuContent({
             <DropdownMenuRadioItem key={p.id} value={p.id} className="py-1.5">
               <div className="grid leading-tight">
                 <span className="truncate">{p.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{p.roleSummary}</span>
+                <span className="truncate text-xs text-muted-foreground">{describe(p)}</span>
               </div>
             </DropdownMenuRadioItem>
           ))}
@@ -474,6 +493,7 @@ export function PersonaMenuContent({
 export function NavUser({ viewer, personas }: { viewer: ViewerInfo; personas: ViewerInfo[] }) {
   const side = useInlineEnd()
   const t = useTranslations("shell")
+  const describe = useDescribeAccess()
 
   return (
     <SidebarMenu>
@@ -488,7 +508,7 @@ export function NavUser({ viewer, personas }: { viewer: ViewerInfo; personas: Vi
               <MemberAvatar name={viewer.name} initials={viewer.initials} seed={viewer.id} />
               <div className="grid flex-1 text-start text-sm leading-tight">
                 <span className="truncate font-medium">{viewer.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{viewer.roleSummary}</span>
+                <span className="truncate text-xs text-muted-foreground">{describe(viewer)}</span>
               </div>
               <ChevronsUpDown className="ms-auto size-4" />
             </SidebarMenuButton>

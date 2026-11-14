@@ -2,17 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpenText,
-  HandHeart,
-  Plus,
-  Search,
-  UserPlus,
-  UserRound,
-  UsersRound,
-} from "lucide-react"
+import { ArrowLeft, ArrowRight, Plus, Search, UserPlus, UserRound } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "cn"
 
@@ -27,16 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { FieldError } from "@/components/ui/field"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { useServerAction } from "@/hooks/use-server-action"
 import { fold } from "@/lib/domain/names"
-import { ROLE_IDS } from "@/lib/domain/policy"
 import type { Unit } from "@/lib/domain/types"
 import { suggestUsername } from "@/lib/domain/username"
-import { refKey } from "@/lib/domain/resources"
-import type { ResourceLabel } from "@/lib/view-models"
 import { createAccountAction } from "@/server/actions/accounts"
 import type { getAccountForm } from "@/server/queries/admin"
 
@@ -49,13 +35,6 @@ import {
 import { UnitPicker } from "./scope-picker"
 
 type Form = ReturnType<typeof getAccountForm>
-type Chosen = { roleId: string; resource: ResourceLabel }
-
-const PRESETS = [
-  { key: "servant", roleId: ROLE_IDS.servant, icon: HandHeart },
-  { key: "parent", roleId: ROLE_IDS.parent, icon: UsersRound },
-  { key: "member", roleId: ROLE_IDS.member, icon: BookOpenText },
-] as const
 
 function PeoplePicker({
   people,
@@ -124,7 +103,6 @@ export function NewAccountDialog({ form }: { form: Form }) {
   const [personId, setPersonId] = useState<string | null>(null)
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
-  const [roles, setRoles] = useState<Chosen[]>([])
   const [groups, setGroups] = useState<Unit[]>([])
   const [childIds, setChildIds] = useState<string[]>([])
   const [username, setUsername] = useState("")
@@ -143,15 +121,13 @@ export function NewAccountDialog({ form }: { form: Form }) {
   const person = form.people.find((p) => p.id === personId)
   const name = mode === "existing" ? (person?.name ?? "") : `${firstName} ${lastName}`.trim()
   const duplicate = mode === "new" && name !== "" && form.existingNames.includes(name.toLowerCase())
-  const giveable = form.roles.map((o) => o.role)
-  const hasRole = (roleId: string) => roles.some((r) => r.roleId === roleId)
   const [childQuery, setChildQuery] = useState("")
   const children = useMemo(
     () =>
-      form.members
+      form.children
         .filter((c) => fold(c.name).includes(fold(childQuery)) && c.id !== personId)
         .slice(0, 6),
-    [form.members, childQuery, personId]
+    [form.children, childQuery, personId]
   )
 
   const restart = () => {
@@ -160,25 +136,12 @@ export function NewAccountDialog({ form }: { form: Form }) {
     setPersonId(null)
     setFirstName("")
     setLastName("")
-    setRoles([])
     setGroups([])
     setChildIds([])
     setUsername("")
     setPassword(generatePassword())
     setLocalError(null)
     reset()
-  }
-
-  const toggleRole = (roleId: string) => {
-    const option = form.roles.find((o) => o.role.id === roleId)!
-
-    if (hasRole(roleId)) {
-      setRoles(roles.filter((r) => r.roleId !== roleId))
-
-      return
-    }
-
-    setRoles([...roles, { roleId, resource: option.resources[0] }])
   }
 
   const next = () => {
@@ -192,12 +155,6 @@ export function NewAccountDialog({ form }: { form: Form }) {
       }
 
       setStep(2)
-
-      return
-    }
-
-    if (roles.length === 0) {
-      setLocalError(t("chooseRole"))
 
       return
     }
@@ -290,79 +247,11 @@ export function NewAccountDialog({ form }: { form: Form }) {
           ) : null}
           {step === 2 ? (
             <div className="flex flex-col gap-5">
-              <div className="grid grid-cols-3 gap-2">
-                {PRESETS.filter((p) => giveable.some((r) => r.id === p.roleId)).map((p) => (
-                  <button
-                    key={p.key}
-                    type="button"
-                    aria-pressed={hasRole(p.roleId)}
-                    onClick={() => toggleRole(p.roleId)}
-                    className={cn(
-                      "flex flex-col items-start gap-1.5 border p-3 text-start text-sm hover:bg-muted/50",
-                      hasRole(p.roleId) && "border-primary bg-primary/5 ring-1 ring-primary"
-                    )}
-                  >
-                    <p.icon className="size-4 text-primary" aria-hidden="true" />
-                    <span className="font-medium">{t(`preset.${p.key}`)}</span>
-                  </button>
-                ))}
+              <div className="flex flex-col gap-2">
+                <span className="text-sm font-medium">{t("groups")}</span>
+                <UnitPicker scopes={form.scopes} value={groups} onChange={setGroups} />
               </div>
-              <details
-                className="border px-3 py-2"
-                open={roles.some((r) => !PRESETS.some((p) => p.roleId === r.roleId))}
-              >
-                <summary className="cursor-pointer text-sm font-medium">{t("otherRoles")}</summary>
-                <ul className="mt-2 flex flex-col gap-2">
-                  {giveable
-                    .filter((r) => !PRESETS.some((p) => p.roleId === r.id))
-                    .map((r) => (
-                      <li key={r.id}>
-                        <label className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={hasRole(r.id)}
-                            onCheckedChange={() => toggleRole(r.id)}
-                          />
-                          {r.name}
-                        </label>
-                      </li>
-                    ))}
-                </ul>
-              </details>
-              {roles.map((chosen) => {
-                const option = form.roles.find((o) => o.role.id === chosen.roleId)!
-
-                return option.resources.length < 2 ? null : (
-                  <Field key={chosen.roleId}>
-                    <FieldLabel htmlFor={`where-${chosen.roleId}`}>
-                      {t("where", { role: option.role.name })}
-                    </FieldLabel>
-                    <NativeSelect
-                      id={`where-${chosen.roleId}`}
-                      className="w-full"
-                      value={refKey(chosen.resource)}
-                      onChange={(e) => {
-                        const resource = option.resources.find((p) => refKey(p) === e.target.value)!
-                        setRoles(
-                          roles.map((r) => (r.roleId === chosen.roleId ? { ...r, resource } : r))
-                        )
-                      }}
-                    >
-                      {option.resources.map((p) => (
-                        <NativeSelectOption key={refKey(p)} value={refKey(p)}>
-                          {p.name}
-                        </NativeSelectOption>
-                      ))}
-                    </NativeSelect>
-                  </Field>
-                )
-              })}
-              {hasRole(ROLE_IDS.member) ? (
-                <div className="flex flex-col gap-2">
-                  <span className="text-sm font-medium">{t("groups")}</span>
-                  <UnitPicker scopes={form.scopes} value={groups} onChange={setGroups} />
-                </div>
-              ) : null}
-              {hasRole(ROLE_IDS.parent) && form.canLinkChildren ? (
+              {form.children.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   <span className="text-sm font-medium">{t("children")}</span>
                   <InputGroup>
@@ -396,11 +285,7 @@ export function NewAccountDialog({ form }: { form: Form }) {
                       </li>
                     ))}
                   </ul>
-                  <p className="text-xs text-muted-foreground">{t("childrenLater")}</p>
                 </div>
-              ) : null}
-              {fieldErrors.roles || fieldErrors.resource ? (
-                <FieldError>{fieldErrors.roles ?? fieldErrors.resource}</FieldError>
               ) : null}
             </div>
           ) : null}
@@ -446,12 +331,6 @@ export function NewAccountDialog({ form }: { form: Form }) {
                     lastName,
                     username,
                     temporaryPassword: password,
-                    roles: roles.map((r) => ({
-                      roleId: r.roleId,
-                      resource: { type: r.resource.type, id: r.resource.id } as Parameters<
-                        typeof createAccountAction
-                      >[0]["roles"][number]["resource"],
-                    })),
                     groups,
                     childIds,
                   })

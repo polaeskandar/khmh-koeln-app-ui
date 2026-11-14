@@ -3,7 +3,8 @@ import "server-only"
 import { fullName, initials, unitName } from "@/lib/domain/names"
 import type { Account, Person, Session, Unit, Uuid } from "@/lib/domain/types"
 import type { AccountRef, PersonRef, SessionCard, UnitRef, ViewerInfo } from "@/lib/view-models"
-import { can, isStaff, sessionRef } from "@/server/mock/access"
+import { can, isAdministrator, isMember, isParent, isStaff, sessionRef } from "@/server/mock/access"
+import { ancestry, resourceDetails } from "@/server/mock/resources"
 import {
   accountOf,
   personOf,
@@ -75,7 +76,7 @@ export function sessionCard({ state: s, viewer }: Context, x: Session): SessionC
     originalDate: x.originalDate,
     present: presentIds(s, x.id).size + anonymous,
     roster: rosterOf(s, unit, x.date).length,
-    canRecord: can(s, viewer, "session.takeAttendance", sessionRef(x.id)),
+    canRecord: can(s, viewer, "session.update", sessionRef(x.id)),
     canManage: can(s, viewer, "session.update", sessionRef(x.id)),
   }
 }
@@ -84,17 +85,20 @@ export function bySessionTime(a: Session, b: Session) {
   return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
 }
 
-export function roleSummary(s: State, account: Account): string {
-  const names = [
-    ...new Set(
-      s.assignments
-        .filter((a) => a.accountId === account.id)
-        .map((a) => s.roles.find((r) => r.id === a.roleId)?.name)
-        .filter((n): n is string => !!n)
-    ),
-  ]
+/** Where the account has access, by service and stage: "Sunday School › 1st Class". */
+export function accessPlaces(s: State, account: Account): string[] {
+  const places = [...s.managers, ...s.grants]
+    .filter((x) => x.accountId === account.id && x.resource.type !== "church")
+    .map((x) =>
+      (ancestry(s, x.resource) ?? [])
+        .filter((r) => r.type === "service" || r.type === "stage")
+        .reverse()
+        .map((r) => resourceDetails(s, r)?.name ?? "")
+        .join(" › ")
+    )
+    .filter((p) => p !== "")
 
-  return names.join(", ")
+  return [...new Set(places)].sort((a, b) => a.localeCompare(b))
 }
 
 export function viewerInfo(s: State, account: Account): ViewerInfo {
@@ -106,11 +110,11 @@ export function viewerInfo(s: State, account: Account): ViewerInfo {
     firstName: person?.firstName ?? account.username,
     initials: person ? initials(person) : account.username.slice(0, 2).toUpperCase(),
     username: account.username,
-    roleSummary: roleSummary(s, account),
+    access: { administrator: isAdministrator(s, account), places: accessPlaces(s, account) },
     areas: {
       staff: isStaff(s, account),
-      parent: can(s, account, "portal.parent"),
-      member: can(s, account, "portal.member"),
+      parent: isParent(s, account),
+      member: isMember(s, account),
     },
   }
 }

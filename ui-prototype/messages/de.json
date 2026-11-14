@@ -101,7 +101,7 @@
     "demoData": "Demodaten",
     "demoDataHint": "Prototyp mit erfundenen Demodaten, die im Speicher des Servers liegen. Änderungen gehen beim Neustart verloren. Nichts wird im Backend gespeichert.",
     "demoDataReset": "Demodaten auf Sonntag, 8. November, 12:08 zurückgesetzt.",
-    "emptyChurchStarted": "Leere Gemeinde gestartet: nur der Administrator, die Rollen und der Kirchenkalender.",
+    "emptyChurchStarted": "Leere Gemeinde gestartet: nur der Administrator und der Kirchenkalender.",
     "nowViewingAs": "Sie sehen die App jetzt als {name}.",
     "openStaffApp": "Mitarbeiter-App öffnen",
     "openParentPortal": "Elternbereich öffnen",
@@ -137,7 +137,7 @@
       "conflict": "Gerade nicht möglich",
       "invalid": "Einige Felder sind nicht in Ordnung"
     },
-    "forbidden": "Ihre Rollen erlauben das hier nicht.",
+    "forbidden": "Sie haben hier keine Berechtigung dafür.",
     "checkFields": "Prüfen Sie die markierten Felder.",
     "invalidRequest": "Die Anfrage war ungültig.",
     "notFound": {
@@ -150,11 +150,10 @@
       "lesson": "Diese Lektion gibt es nicht, oder Sie dürfen sie nicht sehen.",
       "task": "Diese Aufgabe gibt es nicht, oder Sie dürfen sie nicht sehen.",
       "account": "Dieses Konto gibt es nicht.",
-      "role": "Diese Rolle gibt es nicht.",
-      "assignment": "Diese Rollenzuweisung gibt es nicht.",
       "guardianship": "Diese Elternverknüpfung gibt es nicht.",
       "request": "Diese Anfrage gibt es nicht.",
-      "occasion": "Diesen Kalendereintrag gibt es nicht."
+      "occasion": "Diesen Kalendereintrag gibt es nicht.",
+      "grant": "Diesen Zugriff gibt es nicht mehr."
     },
     "validation": {
       "chooseDate": "Wählen Sie ein Datum.",
@@ -182,40 +181,20 @@
     },
     "accounts": {
       "personHasAccount": "Diese Person hat schon ein Konto.",
-      "roleRequired": "Wählen Sie mindestens eine Rolle.",
-      "notYourOwn": "Bitten Sie einen anderen Administrator, Ihr eigenes Konto zu ändern.",
-      "morePowerful": "Dieses Konto darf mehr als Sie. Fragen Sie einen Administrator."
+      "notYourOwn": "Bitten Sie einen anderen Administrator, Ihr eigenes Konto zu ändern."
     },
     "access": {
-      "ownAssignments": "Niemand kann den eigenen Zugriff ändern. Fragen Sie jemand anderen.",
+      "ownAccess": "Niemand kann den eigenen Zugriff ändern. Fragen Sie jemand anderen.",
       "notHere": "Sie verwalten den Zugriff hier nicht.",
-      "protectedRole": "Nur Administratoren können {role} vergeben oder entziehen.",
-      "notDelegated": "Ihre Rolle erlaubt nicht, {role} zu vergeben oder zu entziehen.",
-      "notDelegatedHere": "Sie können {role} auf dieser Ebene nicht vergeben.",
-      "wrongPlace": "{role} kann auf dieser Ebene nicht vergeben werden.",
-      "exceedsOwn": "{role} erlaubt mehr, als Sie hier dürfen, deshalb können Sie sie nicht vergeben.",
-      "alreadyAssigned": "Diese Person hat diese Rolle hier schon.",
-      "alreadyCovered": "Diese Person hat {role} schon für einen übergeordneten Ort, der diesen einschließt.",
+      "chooseActions": "Wählen Sie mindestens eine Berechtigung, die hier passt.",
+      "beyondOwn": "Sie können nur Berechtigungen geben, die Sie selbst haben.",
+      "administratorsOnly": "Nur Administratoren legen fest, wer den Zugriff verwaltet.",
+      "alreadyManages": "Diese Person verwaltet den Zugriff hier schon.",
       "unknownPlace": "Wählen Sie etwas, das es gibt.",
       "archivedPlace": "Das ist archiviert. Stellen Sie es zuerst wieder her.",
-      "lastAdministrator": "Jemand muss eine geschützte Rolle wie Administrator für die ganze Gemeinde behalten. Geben Sie sie zuerst einer anderen Person."
-    },
-    "roles": {
-      "nameRequired": "Geben Sie einen Namen für die Rolle ein.",
-      "nameTaken": "Eine andere Rolle hat schon diesen Namen.",
-      "permissionRequired": "Wählen Sie mindestens eine Berechtigung oder eine Rolle, auf der sie aufbaut.",
-      "protected": "{role} ist geschützt und kann nicht gelöscht werden.",
-      "inUse": "Entfernen Sie diese Rolle zuerst bei allen, die sie haben.",
-      "included": "{roles} baut auf dieser Rolle auf. Entfernen Sie sie dort zuerst.",
-      "cannotInherit": "Eine Rolle kann nicht auf sich selbst oder auf einer geschützten Rolle aufbauen.",
-      "loop": "Das ergäbe einen Kreis: {path}.",
-      "scopeRequired": "Wählen Sie, wofür die Rolle vergeben werden kann.",
-      "scopeUnused": "Wählen Sie nur Orte, an denen ihre Berechtigungen gelten.",
-      "cannotDelegate": "Eine geschützte Rolle kann nicht von anderen vergeben werden.",
-      "delegationScope": "{role} kann nur dort vergeben werden, wo {role} selbst vergeben werden kann."
+      "lastAdministrator": "Jemand muss Administrator bleiben. Machen Sie zuerst eine andere Person zum Administrator."
     },
     "guardians": {
-      "notParent": "Geben Sie diesem Konto zuerst die Rolle Elternteil.",
       "self": "Ein Konto kann nicht mit sich selbst verknüpft werden.",
       "alreadyLinked": "Dieses Mitglied ist schon mit diesem Elternteil verknüpft.",
       "notMember": "Nur Mitglieder können mit einem Elternteil verknüpft werden. Legen Sie zuerst ein Mitgliedskonto an."
@@ -300,11 +279,6 @@
     "groupRemoved": "Gruppe entfernt.",
     "childLinked": "Das Mitglied ist mit dem Elternteil verknüpft.",
     "childUnlinked": "Die Verknüpfung ist entfernt.",
-    "roleCreated": "Rolle angelegt.",
-    "roleSaved": "Rolle gespeichert.",
-    "roleDeleted": "Rolle gelöscht.",
-    "roleAssigned": "Rolle vergeben.",
-    "assignmentRemoved": "Rolle entfernt.",
     "serviceCreated": "{name} ist angelegt.",
     "serviceSaved": "Dienst gespeichert.",
     "structureChanged": "Die Struktur ist geändert.",
@@ -354,7 +328,9 @@
     "accountDeleted": "Das Konto ist gelöscht.",
     "daysOffCustom": "Die Tage werden jetzt von Hand markiert.",
     "daysOffAutomatic": "Das System wählt die Tage wieder selbst.",
-    "responsibleChanged": "Verantwortung geändert."
+    "responsibleChanged": "Verantwortung geändert.",
+    "accessSaved": "Zugriff gespeichert.",
+    "accessRemoved": "Zugriff entfernt."
   },
   "home": {
     "greeting": {
@@ -712,7 +688,7 @@
     "preparation": "Vorbereitung",
     "preparationHint": "Ihre Lektionen, die nächste Stunde zuerst. Dienstleitungen sehen alle Lektionen ihrer Gruppen.",
     "noGroups": "Keine Gruppen zum Vorbereiten",
-    "noGroupsHint": "Hier erscheinen Lektionen für die Stufen, für die Ihre Rollen das Vorbereiten erlauben.",
+    "noGroupsHint": "Hier erscheinen Lektionen für die Stufen, in denen Sie Lektionen erstellen oder lesen dürfen.",
     "new": "Neue Lektion",
     "newTitle": "Neue Lektion",
     "edit": "Bearbeiten",
@@ -783,7 +759,7 @@
     "title": "Aufgaben",
     "description": "Was Kinder und Mitglieder zu Hause tun sollen, nach Gruppen.",
     "noGroups": "Keine Gruppen mit Aufgaben",
-    "noGroupsHint": "Hier erscheinen Aufgaben für die Stufen, in denen Ihre Rollen das Geben von Aufgaben erlauben.",
+    "noGroupsHint": "Hier erscheinen Aufgaben für die Stufen, in denen Sie Aufgaben geben oder lesen dürfen.",
     "none": "Noch keine Aufgaben. Fügen Sie eine über eine Lektion hinzu.",
     "archivedCount": "{count, plural, one {# archivierte Aufgabe} other {# archivierte Aufgaben}}",
     "forLesson": "Zu: {lesson}",
@@ -838,7 +814,7 @@
     },
     "columns": {
       "person": "Person",
-      "roles": "Rollen",
+      "access": "Zugriff",
       "status": "Status",
       "lastSignIn": "Letzte Anmeldung"
     },
@@ -860,10 +836,12 @@
       "unknown": "Nicht festgelegt",
       "lastSignIn": "Letzte Anmeldung"
     },
-    "roles": {
-      "title": "Rollen und wo sie gelten",
-      "hint": "Was diese Person tun darf und wo. Rollen werden unter Zugriff vergeben und entzogen.",
-      "manage": "Zugriff öffnen"
+    "access": {
+      "title": "Zugriff",
+      "hint": "Was diese Person wo darf. Zugriff wird unter Verwaltung › Zugriff gegeben und entfernt.",
+      "manage": "Zugriff öffnen",
+      "administrator": "Administrator: darf alles und verwaltet den Zugriff überall.",
+      "none": "Noch kein Zugriff."
     },
     "groups": {
       "title": "Gruppen",
@@ -877,8 +855,16 @@
     "children": {
       "title": "Kinder",
       "hint": "Die Mitglieder, die dieser Elternteil im Elternbereich begleiten darf.",
-      "none": "Noch kein Mitglied verknüpft.",
-      "manage": "Unter Elternzugang verwalten"
+      "none": "Noch kein Kind verknüpft.",
+      "link": "Kind verknüpfen",
+      "linkTitle": "Ein Kind mit {name} verknüpfen",
+      "linkHint": "{name} kann dann die Lektionen und Aufgaben des Kindes verfolgen und Aufgaben als erledigt markieren.",
+      "search": "Mitglied suchen",
+      "noChoices": "Kein Mitglied gefunden.",
+      "unlink": "Verknüpfung mit {name} entfernen",
+      "unlinkTitle": "Verknüpfung mit {name} entfernen?",
+      "unlinkHint": "Der Elternteil sieht dieses Kind nicht mehr. Konto und Einträge des Kindes bleiben erhalten.",
+      "unlinkConfirm": "Verknüpfung entfernen"
     },
     "credentials": {
       "username": "Benutzername",
@@ -902,8 +888,8 @@
       "step": "Schritt {step, number} von 3",
       "title1": "Für wen ist das Konto?",
       "hint1": "Wählen Sie jemanden, den die Gemeinde schon kennt, damit niemand doppelt erfasst wird.",
-      "title2": "Was darf {name} tun?",
-      "hint2": "Wählen Sie eine oder mehrere Rollen. Rollen für Diener gelten nur dort, wo Sie es festlegen.",
+      "title2": "Gruppen und Kinder von {name}",
+      "hint2": "Beides optional. Gruppen machen die Person zum Mitglied; Kinder kann ein Elternteil begleiten. Was die Person in der App darf, wird danach unter Verwaltung › Zugriff gegeben.",
       "title3": "Anmeldung für {name}",
       "hint3": "Wählen Sie den Benutzernamen und ein vorläufiges Passwort zum Übergeben.",
       "mode": {
@@ -923,18 +909,9 @@
       "noGroups": "In keiner Gruppe",
       "choosePerson": "Wählen Sie die Person.",
       "enterName": "Geben Sie Vor- und Nachnamen ein.",
-      "preset": {
-        "servant": "Diener",
-        "parent": "Elternteil",
-        "member": "Mitglied"
-      },
-      "otherRoles": "Weitere Rollen",
-      "where": "Wo {role} gilt",
       "groups": "Gruppen",
-      "children": "Mitglieder, die dieser Elternteil begleiten darf",
+      "children": "Kinder, die diese Person als Elternteil begleiten darf",
       "searchChildren": "Mitglied suchen",
-      "childrenLater": "Mitglieder können auch später unter Zugriff › Elternzugang verknüpft werden.",
-      "chooseRole": "Wählen Sie mindestens eine Rolle.",
       "next": "Weiter",
       "create": "Konto anlegen"
     },
@@ -953,23 +930,15 @@
       "open": "Konto löschen",
       "title": "Konto von {name} löschen?",
       "hint": "Eine Anmeldung ist dann nicht mehr möglich. Das kann nicht rückgängig gemacht werden.",
-      "removes": "Die Anmeldung, die Rollen und die Elternverknüpfungen werden gelöscht.",
+      "removes": "Die Anmeldung, der Zugriff und die Elternverknüpfungen werden gelöscht.",
       "keeps": "Die Einträge der Person in der Gemeinde, ihre Anwesenheit und was sie vorbereitet hat, bleiben erhalten, ohne das Konto.",
       "confirm": "Konto löschen"
     }
   },
   "access": {
     "title": "Zugriff",
-    "tabs": {
-      "resources": "Ressourcenverwaltung",
-      "roles": "Rollen und Berechtigungen",
-      "parents": "Elternzugang"
-    },
-    "tabHints": {
-      "resources": "Wählen Sie einen Ort in der Gemeinde, um zu sehen, wer dort Zugriff hat, was er tun darf und woher das kommt.",
-      "roles": "Rollen sind benannte Sammlungen von Berechtigungen. Eine Rolle kann auf anderen aufbauen und wird für einen Ort vergeben.",
-      "parents": "Welche Kinder jeder Elternteil im Elternportal verfolgt."
-    },
+    "description": "Wählen Sie einen Ort in der Gemeinde, um zu sehen, wer dort Zugriff hat und was er tun darf.",
+    "church": "Ganze Gemeinde",
     "types": {
       "church": {
         "one": "Gemeinde",
@@ -983,10 +952,6 @@
         "one": "Stufe",
         "other": "Stufen"
       },
-      "schedule": {
-        "one": "Zeitplan",
-        "other": "Zeitpläne"
-      },
       "session": {
         "one": "Treffen",
         "other": "Treffen"
@@ -998,230 +963,74 @@
       "task": {
         "one": "Aufgabe",
         "other": "Aufgaben"
-      },
-      "event": {
-        "one": "Veranstaltung",
-        "other": "Veranstaltungen"
-      },
-      "account": {
-        "one": "Konto",
-        "other": "Konten"
-      },
-      "role": {
-        "one": "Rolle",
-        "other": "Rollen"
-      },
-      "guardianship": {
-        "one": "Elternverknüpfung",
-        "other": "Elternverknüpfungen"
-      },
-      "dataRequest": {
-        "one": "Datenschutzanfrage",
-        "other": "Datenschutzanfragen"
-      },
-      "access": {
-        "one": "Zugriff",
-        "other": "Zugriff verwalten"
-      },
-      "portal": {
-        "one": "Portal",
-        "other": "Portale"
       }
     },
-    "explorer": {
-      "label": "Ressourcen",
-      "church": "Ganze Gemeinde",
-      "schedule": "Zeitplan",
-      "search": "Dienst, Stufe, Lektion oder Datum suchen",
-      "searchLabel": "Ressourcen durchsuchen",
-      "noMatch": "Nichts, was Sie verwalten, passt zu „{query}“.",
-      "results": "{count, plural, one {# Treffer} other {# Treffer}}",
+    "actions": {
+      "create": "Erstellen",
+      "read": "Lesen",
+      "update": "Bearbeiten",
+      "delete": "Löschen"
+    },
+    "tree": {
+      "label": "Orte in der Gemeinde",
       "showMore": "Mehr anzeigen",
       "loading": "Wird geladen …",
       "error": "Dieser Teil konnte nicht geladen werden.",
-      "context": "Sie verwalten den Zugriff weiter unten",
-      "direct": "{count, plural, one {# Rolle hier vergeben} other {# Rollen hier vergeben}}",
-      "browse": "Ressourcen durchsuchen",
-      "sheetHint": "Öffnen Sie einen Ort, um zu sehen, wer dort Zugriff hat.",
+      "notYours": "Sie verwalten den Zugriff weiter unten",
+      "browse": "Ort wählen",
+      "browseHint": "Wählen Sie, wo Sie den Zugriff sehen und ändern möchten.",
       "boundary": "Sie verwalten den Zugriff in {places}."
     },
     "panel": {
       "path": "Wo es liegt",
       "open": "Öffnen",
-      "people": "{count, plural, =0 {Hier hat noch niemand Zugriff} one {# Person hat hier Zugriff} other {# Personen haben hier Zugriff}}",
-      "archived": "Archiviert: nur lesbar, hier können keine Rollen vergeben werden.",
-      "noAssign": "Sie sehen, wer hier Zugriff hat, können hier aber keine Rolle vergeben.",
-      "direct": "Hier vergeben",
-      "directHint": "Rollen, die genau für diesen Ort vergeben wurden.",
-      "noDirect": "Niemand hat eine Rolle genau für diesen Ort.",
-      "inherited": "Über einen übergeordneten Ort",
-      "inheritedHint": "Rollen für einen übergeordneten Ort gelten auch hier. Sie lassen sich nur dort ändern, wo sie vergeben wurden.",
-      "inheritedLock": "Vergeben für {place}. Dort ändern.",
+      "who": "Wer Zugriff hat",
+      "nobody": "Hier hat noch niemand Zugriff.",
+      "here": "Hier gegeben",
       "from": "Aus {place}",
-      "manageThere": "In {place} verwalten",
-      "canHere": "Was diese Rolle hier erlaubt",
-      "showAll": "Alle {count, number} anzeigen",
-      "showLess": "Weniger anzeigen",
-      "filter": "Personen filtern",
-      "createdIt": "Hat es angelegt",
-      "givenBy": "Vergeben von {name} am {date}",
-      "givenOn": "Vergeben am {date}",
-      "protected": "Geschützte Rolle",
+      "manages": "Verwaltet hier den Zugriff",
+      "administrator": "Administrator",
+      "administratorHint": "Darf alles und verwaltet den Zugriff überall.",
+      "archived": "Archiviert: hier ist nur Lesen möglich.",
       "outside": "Dieser Ort liegt außerhalb des Bereichs, in dem Sie den Zugriff verwalten.",
-      "outsideHint": "Sie verwalten den Zugriff in {places}. Für alles andere fragen Sie einen Administrator."
+      "outsideHint": "Sie verwalten den Zugriff in {places}. Für alles andere fragen Sie einen Administrator.",
+      "change": "Ändern",
+      "remove": "Entfernen",
+      "add": "Zugriff geben",
+      "changeLabel": "Zugriff von {name} auf {type} ändern",
+      "removeLabel": "Zugriff von {name} auf {type} entfernen",
+      "removeTitle": "Zugriff von {name} entfernen?",
+      "removeHint": "{name} verliert diesen Zugriff hier. Anderswo gegebener Zugriff bleibt.",
+      "removeManagerLabel": "{name} verwaltet den Zugriff hier nicht mehr",
+      "removeManagerTitle": "{name} soll den Zugriff hier nicht mehr verwalten?",
+      "removeManagerHint": "Eigene Berechtigungen bleiben, aber hier können keine Berechtigungen mehr gegeben oder entfernt werden.",
+      "removeConfirm": "Entfernen"
     },
-    "assign": {
-      "open": "Rolle vergeben",
-      "title": "Rolle vergeben",
-      "for": "Für {place}",
-      "stepOf": "Schritt {step, number} von 4",
-      "steps": {
-        "person": "Person",
-        "role": "Rolle",
-        "scope": "Wo",
-        "review": "Prüfen"
-      },
-      "person": "Wer soll Zugriff bekommen?",
-      "personHint": "Nur Personen mit Konto können gewählt werden. Konten legt das Gemeindebüro an.",
+    "dialog": {
+      "addTitle": "Zugriff geben",
+      "changeTitle": "Zugriff ändern",
+      "for": "In {place}",
+      "person": "Person",
       "searchPerson": "Nach Name oder Benutzername suchen",
       "noPeople": "Kein Konto passt.",
-      "role": "Welche Rolle?",
-      "roleHint": "Es stehen nur die Rollen zur Wahl, die Sie hier vergeben dürfen.",
-      "includes": "Enthält {roles}",
-      "why": "Warum kann ich keine anderen Rollen vergeben?",
-      "scope": "Wo soll sie gelten?",
-      "scopeHint": "Die Rolle gilt für den gewählten Ort und alles darin.",
-      "here": "{place}, wie ausgewählt",
-      "all": "Alles in {place}",
-      "allows": "{role} erlaubt hier",
-      "checking": "Wird geprüft …",
-      "summary": "{name} bekommt die Rolle {role} für {place}.",
-      "gains": "Neu für {name}",
-      "already": "{name} kann schon",
-      "nothingNew": "{name} kann hier schon alles davon.",
-      "overlapAbove": "Hat auch {role} für {place}.",
-      "overlapBelow": "Hat auch {role} für {place}; das bleibt bestehen.",
-      "delegates": "Kann dann {role} vergeben: {places}",
-      "next": "Weiter",
-      "back": "Zurück",
-      "confirm": "Rolle vergeben"
-    },
-    "revoke": {
-      "action": "{role} von {name} entfernen",
-      "title": "{role} von {name} entfernen?",
-      "description": "Vergeben für {place}.",
-      "loses": "{name} kann dann nicht mehr",
-      "losesNothing": "{name} behält hier denselben Zugriff über andere Rollen.",
-      "keeps": "Bleibt bestehen",
-      "keep": {
-        "above": "{role} für {place}, das diesen Ort einschließt",
-        "here": "{role} für {place}",
-        "below": "{role} für {place}"
-      },
-      "locked": "Kann hier nicht entfernt werden",
-      "confirm": "Rolle entfernen"
-    },
-    "roles": {
-      "listLabel": "Rollen",
-      "new": "Neue Rolle",
-      "levels": {
-        "church": "Für die ganze Gemeinde",
-        "unit": "Für Dienste und Stufen",
-        "item": "Für einzelne Einträge"
-      },
-      "holders": "{count, plural, =0 {Niemand} one {# Person} other {# Personen}}",
-      "includes": "Enthält {roles}",
-      "protected": "Geschützt",
-      "protectedHint": "Diese Rolle ist geschützt: Sie hat jede Berechtigung, darf jede Rolle vergeben und kann weder eingeschränkt noch gelöscht werden. Jemand behält sie immer für die ganze Gemeinde.",
-      "edit": "Rolle bearbeiten",
-      "delete": "Rolle löschen",
-      "deleteTitle": "{name} löschen?",
-      "deleteHint": "Niemand hat diese Rolle. Das lässt sich nicht rückgängig machen.",
-      "count": "{count, plural, one {# Berechtigung} other {# Berechtigungen}}",
-      "updated": "geändert am {date}",
-      "hierarchy": "Baut auf",
-      "hierarchyHint": "{name} enthält alles, was die Rollen darunter erlauben, auch wenn sie sich ändern.",
-      "includesNothing": "Diese Rolle baut auf keiner anderen Rolle auf.",
-      "includedBy": "Enthalten in",
-      "repeated": "(oben gezeigt)",
-      "assignable": "Vergeben für",
-      "owner": "Eigentümerregel ({type}): Wer einen Eintrag anlegt, bekommt diese Rolle dafür.",
+      "accountsOnly": "Nur Personen mit Konto können gewählt werden. Konten legen Administratoren unter Konten an.",
+      "what": "Wofür",
       "permissions": "Berechtigungen",
-      "permissionsHint": "Volle Häkchen sind an dieser Rolle gesetzt. Gestrichelte kommen von den Rollen, auf denen sie aufbaut, und werden dort geändert.",
-      "everything": "Jede Berechtigung, auch die von später hinzugefügten Ressourcentypen.",
-      "showAll": "Auch zeigen, was sie nicht erlaubt",
-      "direct": "Eigene",
-      "inheritedFrom": "aus {roles}",
-      "delegation": "Darf vergeben",
-      "delegationHint": "Wer die Rolle hat, darf diese Rollen vergeben und entziehen, nur innerhalb des Ortes, für den er sie hat.",
-      "delegationAll": "Jede Rolle, überall.",
-      "delegationNone": "Wer die Rolle hat, kann keine Rollen vergeben.",
-      "delegationFrom": "über {role}",
-      "holdersTitle": "Wer sie hat",
-      "holdersMore": "und {count, number} weitere",
-      "openPlace": "{place} in der Ressourcenverwaltung öffnen"
+      "notYours": "Sie können nur geben, was Sie selbst dürfen.",
+      "manage": "Darf hier den Zugriff verwalten",
+      "manageHint": "Gibt und entfernt Berechtigungen hier und darunter. Das wählen nur Administratoren.",
+      "manageChurch": "Administrator",
+      "manageChurchHint": "Darf alles und verwaltet den Zugriff überall.",
+      "save": "Speichern",
+      "chooseSomething": "Wählen Sie eine Person und mindestens eine Berechtigung."
     },
-    "editor": {
-      "newTitle": "Neue Rolle",
-      "newHint": "Geben Sie ihr einen Namen, wählen Sie, worauf sie aufbaut, was sie erlaubt und wofür sie vergeben werden kann.",
-      "editTitle": "{name} bearbeiten",
-      "editHint": "Änderungen gelten sofort für alle mit dieser Rolle und für die Rollen, die auf ihr aufbauen.",
-      "basics": "Name und Zweck",
-      "name": "Name",
-      "description": "Wofür ist sie? (optional)",
-      "inherits": "Baut auf",
-      "inheritsHint": "Die Rolle enthält alles, was diese Rollen erlauben, jetzt und nach jeder Änderung.",
-      "loop": "{role} enthält diese Rolle schon.",
-      "protectedParent": "Geschützte Rollen können nicht enthalten sein.",
-      "permissions": "Berechtigungen",
-      "permissionsHint": "Haken Sie an, was diese Rolle erlaubt. Gestrichelte Haken kommen von den Rollen, auf denen sie aufbaut; ändern Sie sie dort.",
-      "inheritedFrom": "aus {roles}",
-      "groups": {
-        "work": "Gemeindearbeit",
-        "administration": "Verwaltung",
-        "access": "Zugriff verwalten",
-        "portals": "Portale"
-      },
-      "where": "Vergeben für",
-      "whereHint": "Wofür die Rolle vergeben werden kann. Eine Rolle für einen Dienst gilt für alles darin.",
-      "whereUnused": "Keine ihrer Berechtigungen gilt hier.",
-      "whereChurchOnly": "Ihre Verwaltungs- oder Portalberechtigungen gelten nur für die ganze Gemeinde.",
-      "delegation": "Darf vergeben",
-      "delegationHint": "Wer die Rolle hat, darf diese Rollen vergeben und entziehen, nur innerhalb des Ortes, für den er sie hat, und nie eine Rolle, die mehr erlaubt, als er selbst hat.",
-      "delegationNeeds": "Haken Sie zuerst unter „Zugriff verwalten“ „Rollen vergeben“ oder „Rollen entziehen“ an.",
-      "delegateAt": "Darf {role} für {place} vergeben",
-      "impact": "Auswirkung Ihrer Änderungen",
-      "effective": "{count, plural, one {# Berechtigung insgesamt} other {# Berechtigungen insgesamt}}",
-      "added": "{count, plural, one {+# Berechtigung} other {+# Berechtigungen}}",
-      "removed": "{count, plural, one {−# Berechtigung} other {−# Berechtigungen}}",
-      "holders": "{count, plural, =0 {Noch hat niemand diese Rolle.} one {Ändert, was # Person tun kann.} other {Ändert, was # Personen tun können.}}",
-      "alsoChanges": "Ändert auch {roles}, die auf dieser Rolle aufbauen.",
-      "delegators": "{roles} darf diese Rolle vergeben.",
-      "ceiling": "Wer {role} hat, kann diese Rolle dann nicht mehr vergeben: Sie würde mehr erlauben, als er selbst hat.",
-      "owner": "Eigentümerregel ({type}): Wer einen Eintrag anlegt, bekommt diese Rolle dafür.",
-      "protected": "Diese Rolle ist geschützt: Nur Name und Beschreibung lassen sich ändern.",
-      "create": "Rolle anlegen",
-      "save": "Rolle speichern",
-      "cancel": "Abbrechen"
-    },
-    "parents": {
-      "hint": "Eltern sehen nur die hier verknüpften Mitglieder, mit ihren Lektionen und Aufgaben. Die Verknüpfungen legt das Gemeindebüro direkt an.",
-      "noChildren": "Noch kein Mitglied verknüpft.",
-      "alsoWith": "auch {names}",
-      "link": "Mitglied verknüpfen",
-      "linkTitle": "Mitglied mit einem Elternteil verknüpfen",
-      "linkHint": "Der Elternteil kann die Lektionen und Aufgaben des Mitglieds verfolgen und Aufgaben als erledigt markieren.",
+    "summary": {
+      "administrator": "Administrator",
       "parent": "Elternteil",
-      "searchParent": "Elternteil suchen",
-      "unlink": "Verknüpfung mit {name} entfernen",
-      "unlinkTitle": "Verknüpfung mit {name} entfernen?",
-      "unlinkHint": "Der Elternteil sieht dieses Mitglied nicht mehr. Konto und Einträge des Mitglieds bleiben erhalten.",
-      "unlinkConfirm": "Verknüpfung entfernen",
       "member": "Mitglied",
-      "searchMember": "Mitglied suchen",
-      "membersOnly": "Kinder sind Mitglieder mit eigenem Konto. Legen Sie zuerst eines unter Konten an.",
-      "noGroup": "In keiner Gruppe",
-      "search": "Elternteil oder Kind suchen"
+      "none": "Noch kein Zugriff",
+      "manages": "Verwaltet den Zugriff in {place}",
+      "grant": "{place}: {type} – {actions}"
     },
     "lesson": {
       "title": "Zugriff",
@@ -1232,23 +1041,6 @@
       "responsibleDescription": "Nur Personen, die die Lektion bearbeiten können, können verantwortlich sein.",
       "save": "Speichern",
       "manage": "Zugriff verwalten"
-    }
-  },
-  "permissions": {
-    "actions": {
-      "create": "Anlegen",
-      "read": "Ansehen",
-      "update": "Ändern",
-      "delete": "Löschen",
-      "publish": "Veröffentlichen",
-      "takeAttendance": "Anwesenheit erfassen",
-      "correctAttendance": "Anwesenheit korrigieren",
-      "plan": "Jahr planen",
-      "confirm": "Jahr bestätigen",
-      "assign": "Rollen vergeben",
-      "revoke": "Rollen entziehen",
-      "parent": "Elternportal",
-      "member": "Mitgliederportal"
     }
   },
   "data": {
@@ -1290,7 +1082,7 @@
       "attendance": "{count, plural, one {# Anwesenheitseintrag} other {# Anwesenheitseinträge}}",
       "completions": "{count, plural, one {# erledigte Aufgabe} other {# erledigte Aufgaben}}",
       "guardianships": "{count, plural, one {# Elternverknüpfung} other {# Elternverknüpfungen}}",
-      "assignments": "{count, plural, one {# Rolle} other {# Rollen}}"
+      "assignments": "{count, plural, one {# Berechtigung} other {# Berechtigungen}}"
     },
     "record": {
       "open": "Anfrage erfassen",
@@ -1330,11 +1122,10 @@
     "description": "Ihr Konto, Sprache, Darstellung und Passwort.",
     "account": {
       "title": "Ihr Konto",
-      "hint": "Bitten Sie das Gemeindebüro, Ihren Namen, Ihren Benutzernamen oder Ihre Rollen zu ändern.",
+      "hint": "Bitten Sie einen Administrator, Ihren Namen oder Ihren Benutzernamen zu ändern.",
       "name": "Name",
       "username": "Benutzername",
-      "roles": "Rollen",
-      "noRoles": "Keine Rollen"
+      "access": "Zugriff"
     },
     "preferences": {
       "title": "Sprache und Darstellung",
@@ -1396,6 +1187,10 @@
     "footer": {
       "privacy": "Datenschutzhinweise",
       "prototype": "Prototyp mit erfundenen Demodaten."
+    },
+    "noAccess": {
+      "title": "Noch kein Zugriff",
+      "hint": "Willkommen, {name}. Ihr Konto ist angelegt, aber es wurde noch nichts für Sie freigegeben. Fragen Sie einen Administrator."
     }
   },
   "portal": {
@@ -1451,7 +1246,7 @@
     "data": {
       "title": "Was die App speichert",
       "items": {
-        "accounts": "Konten: Name, Benutzername, Passwort (nur in einer Form, die sich nicht zurücklesen lässt), Sprache, Rollen und wo sie gelten, und wer das Konto angelegt hat. Konten legt das Gemeindebüro an; es gibt keine Registrierung.",
+        "accounts": "Konten: Name, Benutzername, Passwort (nur in einer Form, die sich nicht zurücklesen lässt), Sprache, was das Konto wo darf, und wer das Konto angelegt hat. Konten legt das Gemeindebüro an; es gibt keine Registrierung.",
         "members": "Mitglieder: Vor- und Nachname, ein Rufname und die Dienste und Klassen, zu denen sie gehören, von wann bis wann.",
         "attendance": "Anwesenheit: wer bei welchem Treffen als anwesend markiert wurde und von wem. Die App erfasst nur Anwesenheit, nie Abwesenheit.",
         "links": "Elternzugang: welche Elternkonten welche Kinder sehen dürfen.",
@@ -1467,9 +1262,9 @@
     "who": {
       "title": "Wer sie sieht",
       "items": {
-        "servants": "Diener und Dienstleitungen sehen, was ihre Rollen erlauben, nur in den Diensten und Klassen, die das Gemeindebüro ihnen zuweist: zum Beispiel Anwesenheit, Lektionen und Aufgaben.",
-        "leaders": "Das Gemeindebüro legt fest, welche Rolle was erlaubt und wer welche Rolle hat, und beschränkt das auf das, was der jeweilige Dienst braucht.",
-        "admins": "Administratoren im Gemeindebüro verwalten Konten, Rollen und den Elternzugang.",
+        "servants": "Diener und Dienstleitungen sehen nur, wofür sie eine Berechtigung bekommen haben, in den betreffenden Diensten, Klassen oder einzelnen Lektionen: zum Beispiel Anwesenheit, Lektionen und Aufgaben.",
+        "leaders": "Administratoren im Gemeindebüro legen fest, wer was wo darf, und beschränken das auf das, was der jeweilige Dienst braucht.",
+        "admins": "Administratoren im Gemeindebüro verwalten Konten, Zugriff und Elternverknüpfungen.",
         "parents": "Eltern sehen nur die veröffentlichten Lektionen und Aufgaben ihrer eigenen Kinder: nie Anwesenheit, Vorbereitungsnotizen oder andere Familien.",
         "members": "Mitglieder sehen ihre eigenen Gruppen und Treffen und die veröffentlichten Lektionen und Aufgaben ihrer Gruppen: nie Anwesenheit, Vorbereitungsnotizen oder andere Mitglieder."
       },

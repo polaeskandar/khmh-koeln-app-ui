@@ -81,7 +81,7 @@ export default async function AccountsPage({ searchParams }: PageProps<"/admin/a
             <TableHeader>
               <TableRow>
                 <TableHead>{t("columns.person")}</TableHead>
-                <TableHead className="hidden md:table-cell">{t("columns.roles")}</TableHead>
+                <TableHead className="hidden md:table-cell">{t("columns.access")}</TableHead>
                 <TableHead>{t("columns.status")}</TableHead>
                 <TableHead className="hidden lg:table-cell">{t("columns.lastSignIn")}</TableHead>
               </TableRow>
@@ -105,7 +105,9 @@ export default async function AccountsPage({ searchParams }: PageProps<"/admin/a
                   </TableCell>
                   <TableCell className="hidden max-w-md md:table-cell">
                     <span className="line-clamp-2 text-sm text-muted-foreground">
-                      {r.roles.map((x) => `${x.role} · ${x.scope}`).join(", ")}
+                      {r.access.administrator
+                        ? t("access.administrator")
+                        : r.access.lines.map((x) => x.text).join(" · ")}
                     </span>
                   </TableCell>
                   <TableCell>

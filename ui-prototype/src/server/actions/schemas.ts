@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { type ResourceType, resourceTypes } from "@/lib/domain/resources"
+import type { ResourceType } from "@/lib/domain/resources"
 
 export const uuid = z.uuid()
 
@@ -8,9 +8,10 @@ export const uuid = z.uuid()
 export const resource = z.union([
   z.object({ type: z.literal("church"), id: z.literal("church") }),
   z.object({
-    type: z.enum(
-      resourceTypes().filter((t) => t !== "church") as [ResourceType, ...ResourceType[]]
-    ),
+    type: z.enum(["service", "stage", "session", "lesson", "task"] as [
+      ResourceType,
+      ...ResourceType[],
+    ]),
     id: z.uuid(),
   }),
 ])

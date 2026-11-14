@@ -11,8 +11,6 @@
   "notFound.lesson": [],
   "notFound.task": [],
   "notFound.account": [],
-  "notFound.role": [],
-  "notFound.assignment": [],
   "notFound.guardianship": [],
   "notFound.request": [],
   "notFound.occasion": [],
@@ -39,10 +37,7 @@
   "password.sameAsBefore": [],
   "password.mismatch": [],
   "accounts.personHasAccount": [],
-  "accounts.roleRequired": [],
   "accounts.notYourOwn": [],
-  "accounts.morePowerful": [],
-  "guardians.notParent": [],
   "guardians.self": [],
   "guardians.alreadyLinked": [],
   "guardians.notMember": [],
@@ -100,48 +95,14 @@
   "calendar.nameRequired": [],
   "calendar.computed": [],
   "learning.responsibleCannotEdit": [],
-  "access.ownAssignments": [],
+  "access.ownAccess": [],
   "access.notHere": [],
-  "access.protectedRole": [
-    "role"
-  ],
-  "access.notDelegated": [
-    "role"
-  ],
-  "access.notDelegatedHere": [
-    "role"
-  ],
-  "access.wrongPlace": [
-    "role"
-  ],
-  "access.exceedsOwn": [
-    "role"
-  ],
-  "access.alreadyAssigned": [],
-  "access.alreadyCovered": [
-    "role"
-  ],
+  "access.chooseActions": [],
+  "access.beyondOwn": [],
+  "access.administratorsOnly": [],
+  "access.alreadyManages": [],
   "access.unknownPlace": [],
   "access.archivedPlace": [],
   "access.lastAdministrator": [],
-  "roles.nameRequired": [],
-  "roles.nameTaken": [],
-  "roles.permissionRequired": [],
-  "roles.protected": [
-    "role"
-  ],
-  "roles.inUse": [],
-  "roles.included": [
-    "roles"
-  ],
-  "roles.cannotInherit": [],
-  "roles.loop": [
-    "path"
-  ],
-  "roles.scopeRequired": [],
-  "roles.scopeUnused": [],
-  "roles.cannotDelegate": [],
-  "roles.delegationScope": [
-    "role"
-  ]
+  "notFound.grant": []
 }

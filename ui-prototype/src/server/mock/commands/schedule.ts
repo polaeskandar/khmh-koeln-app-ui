@@ -4,7 +4,6 @@ import { addDays, compareTime, isValidLocalDate, isValidLocalTime } from "@/lib/
 import type {
   AnnualPlan,
   LocalDate,
-  Permission,
   LocalTime,
   PlanDecision,
   PlanRule,
@@ -14,7 +13,7 @@ import type {
 } from "@/lib/domain/types"
 import { forbidden, invalid, notFound, ruleViolation } from "@/server/errors"
 
-import { authorize, can, canSeeSession, requireUnit, sessionRef } from "../access"
+import { authorize, can, canSeeSession, requireIn, sessionRef } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
@@ -22,7 +21,7 @@ import { materialize, newSession, occasionHits } from "../scheduling"
 import { hasAttendance, planOf, scheduleOf, sessionOf } from "../selectors"
 import type { State } from "../state"
 
-import { removeOrphanedAssignments } from "./access"
+import { removeOrphanedAccess } from "./access"
 import type { Actor } from "./accounts"
 
 const unitOf = (x: { serviceId: Uuid; stageId: Uuid | null }) => ({
@@ -30,14 +29,10 @@ const unitOf = (x: { serviceId: Uuid; stageId: Uuid | null }) => ({
   stageId: x.stageId,
 })
 
-function managedSchedule(
-  { state: s, viewer }: Actor,
-  scheduleId: Uuid,
-  permission: Permission = "schedule.plan"
-): Schedule {
+/** Planning a year, confirming it and adding one-off sessions all create sessions in the group. */
+function managedSchedule({ state: s, viewer }: Actor, scheduleId: Uuid): Schedule {
   const schedule = found(scheduleOf(s, scheduleId), "schedule")
-  requireUnit(s, viewer, unitOf(schedule), "schedule")
-  authorize(s, viewer, permission, { type: "schedule", id: schedule.id })
+  requireIn(s, viewer, "session.create", unitOf(schedule), "schedule")
 
   return schedule
 }
@@ -88,11 +83,7 @@ export type PlanInput = {
 
 export function savePlan(actor: Actor, input: PlanInput) {
   const s = actor.state
-  const schedule = managedSchedule(
-    actor,
-    input.scheduleId,
-    input.confirm ? "schedule.confirm" : "schedule.plan"
-  )
+  const schedule = managedSchedule(actor, input.scheduleId)
 
   if (input.year < Number(today().slice(0, 4)) || input.year > Number(today().slice(0, 4)) + 2) {
     throw ruleViolation(msg("errors.plans.year"))
@@ -179,7 +170,7 @@ export function changePlan(
   }
 ): ChangeOutcome {
   const s = actor.state
-  const schedule = managedSchedule(actor, input.scheduleId, "schedule.confirm")
+  const schedule = managedSchedule(actor, input.scheduleId)
   const plan = found(planOf(s, schedule.id, input.year), "plan")
 
   if (plan.status !== "confirmed") {
@@ -213,7 +204,7 @@ export function changePlan(
 
   const removed = new Set(replaced.map((x) => x.id))
   s.sessions = s.sessions.filter((x) => !removed.has(x.id))
-  removeOrphanedAssignments(s)
+  removeOrphanedAccess(s)
   s.lessons.forEach((lesson) => {
     if (lesson.sessionId && removed.has(lesson.sessionId)) {
       lesson.sessionId = null
@@ -359,7 +350,7 @@ export function rescheduleSession(actor: Actor, sessionId: Uuid, input: SessionT
 }
 
 export function addOneOffSession(actor: Actor, scheduleId: Uuid, input: SessionTimes) {
-  const schedule = managedSchedule(actor, scheduleId, "session.create")
+  const schedule = managedSchedule(actor, scheduleId)
   const times = checkTimes(input)
 
   if (conflict(actor.state, schedule, times.date, times.startTime, null)) {

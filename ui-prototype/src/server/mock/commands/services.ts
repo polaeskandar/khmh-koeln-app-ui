@@ -10,7 +10,7 @@ import { uuidv7 } from "../ids"
 import { serviceOf, stageOf, stagesOf } from "../selectors"
 import type { State } from "../state"
 
-import { removeOrphanedAssignments } from "./access"
+import { removeOrphanedAccess } from "./access"
 import type { Actor } from "./accounts"
 
 export type StageInput = { name: string; description: string | null }
@@ -167,7 +167,7 @@ export function changeStructure(
   s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
   s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
   s.stages = s.stages.filter((x) => x.serviceId !== service.id)
-  removeOrphanedAssignments(s)
+  removeOrphanedAccess(s)
   service.structure = structure
 
   if (structure === "single") {
@@ -210,7 +210,7 @@ export function deleteService({ state: s, viewer }: Actor, serviceId: Uuid) {
 
   s.services = s.services.filter((x) => x.id !== service.id)
   s.stages = s.stages.filter((x) => x.serviceId !== service.id)
-  removeOrphanedAssignments(s)
+  removeOrphanedAccess(s)
   s.schedules = s.schedules.filter((x) => x.serviceId !== service.id)
   s.plans = s.plans.filter((p) => s.schedules.some((x) => x.id === p.scheduleId))
   s.daysOff = s.daysOff.filter((d) => d.serviceId !== service.id)

@@ -6,13 +6,15 @@ import { PreferencesFields } from "@/components/preferences-menu"
 import { Button } from "@/components/ui/button"
 import { ChangePasswordForm } from "@/features/auth/change-password-form"
 import { getFormat } from "@/i18n/server"
-import { roleSummary, accountName } from "@/server/queries/present"
+import { describeAccess } from "@/lib/access-summary"
+import { accountName, viewerInfo } from "@/server/queries/present"
 import type { Context } from "@/server/viewer"
 
 import { DeletionRequest } from "./deletion-request"
 
 export async function PersonalSettings({ ctx, dataHref }: { ctx: Context; dataHref: string }) {
   const t = await getTranslations("settings")
+  const ts = await getTranslations("access.summary")
   const f = await getFormat()
   const { state: s, viewer } = ctx
   const pending = s.dataRequests.find(
@@ -34,8 +36,15 @@ export async function PersonalSettings({ ctx, dataHref }: { ctx: Context; dataHr
             </span>
           </li>
           <li className="flex flex-col gap-0.5 p-4">
-            <span className="text-xs text-muted-foreground">{t("account.roles")}</span>
-            <span className="text-sm">{roleSummary(s, viewer) || t("account.noRoles")}</span>
+            <span className="text-xs text-muted-foreground">{t("account.access")}</span>
+            <span className="text-sm">
+              {describeAccess(viewerInfo(s, viewer), {
+                administrator: ts("administrator"),
+                parent: ts("parent"),
+                member: ts("member"),
+                none: ts("none"),
+              })}
+            </span>
           </li>
         </ul>
       </Section>

@@ -10,11 +10,7 @@ import { personOf, sessionOf } from "../selectors"
 
 import type { Actor } from "./accounts"
 
-function sessionFor(
-  actor: Actor,
-  sessionId: Uuid,
-  permission: "session.takeAttendance" | "session.correctAttendance"
-) {
+function sessionFor(actor: Actor, sessionId: Uuid, permission: "session.update") {
   const session = found(sessionOf(actor.state, sessionId), "session")
 
   if (!canSeeSession(actor.state, actor.viewer, session)) {
@@ -27,7 +23,7 @@ function sessionFor(
 }
 
 export function openSession(actor: Actor, sessionId: Uuid) {
-  const session = sessionFor(actor, sessionId, "session.takeAttendance")
+  const session = sessionFor(actor, sessionId, "session.update")
 
   if (session.status !== "scheduled") {
     throw ruleViolation(msg("errors.attendance.notScheduled"))
@@ -42,7 +38,7 @@ export function openSession(actor: Actor, sessionId: Uuid) {
 }
 
 export function closeSession(actor: Actor, sessionId: Uuid) {
-  const session = sessionFor(actor, sessionId, "session.takeAttendance")
+  const session = sessionFor(actor, sessionId, "session.update")
 
   if (session.status !== "open") {
     throw ruleViolation(msg("errors.attendance.notOpen"))
@@ -54,7 +50,7 @@ export function closeSession(actor: Actor, sessionId: Uuid) {
 }
 
 export function reopenSession(actor: Actor, sessionId: Uuid) {
-  const session = sessionFor(actor, sessionId, "session.correctAttendance")
+  const session = sessionFor(actor, sessionId, "session.update")
 
   if (session.status !== "closed") {
     throw ruleViolation(msg("errors.attendance.notClosed"))
@@ -66,7 +62,7 @@ export function reopenSession(actor: Actor, sessionId: Uuid) {
 }
 
 export function setPresent(actor: Actor, sessionId: Uuid, personId: Uuid, present: boolean) {
-  const session = sessionFor(actor, sessionId, "session.takeAttendance")
+  const session = sessionFor(actor, sessionId, "session.update")
   const s = actor.state
 
   if (session.status !== "open") {

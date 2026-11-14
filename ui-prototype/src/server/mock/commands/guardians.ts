@@ -1,8 +1,8 @@
 import { msg } from "@/i18n/message"
 import type { Uuid } from "@/lib/domain/types"
-import { ruleViolation } from "@/server/errors"
+import { forbidden, ruleViolation } from "@/server/errors"
 
-import { authorize, can } from "../access"
+import { isAdministrator } from "../access"
 import { now, nowMs } from "../clock"
 import { found } from "../guard"
 import { uuidv7 } from "../ids"
@@ -11,21 +11,23 @@ import type { State } from "../state"
 
 import type { Actor } from "./accounts"
 
+/** Parental links are managed by administrators, like accounts. */
+function administrator(s: State, viewer: Actor["viewer"]) {
+  if (!isAdministrator(s, viewer)) {
+    throw forbidden()
+  }
+}
+
 export function linkChild({ state: s, viewer }: Actor, accountId: Uuid, memberId: Uuid) {
-  authorize(s, viewer, "guardianship.create")
+  administrator(s, viewer)
   const parent = found(accountOf(s, accountId), "account")
   const member = found(personOf(s, memberId), "person")
-  const memberAccount = s.accounts.find((a) => a.personId === member.id)
-
-  if (!can(s, parent, "portal.parent")) {
-    throw ruleViolation(msg("errors.guardians.notParent"))
-  }
 
   if (member.id === parent.personId) {
     throw ruleViolation(msg("errors.guardians.self"))
   }
 
-  if (!memberAccount || !can(s, memberAccount, "portal.member")) {
+  if (!s.accounts.some((a) => a.personId === member.id)) {
     throw ruleViolation(msg("errors.guardians.notMember"))
   }
 
@@ -43,14 +45,10 @@ export function linkChild({ state: s, viewer }: Actor, accountId: Uuid, memberId
 }
 
 export function unlinkChild({ state: s, viewer }: Actor, guardianshipId: Uuid) {
-  authorize(s, viewer, "guardianship.delete")
+  administrator(s, viewer)
   const link = found(
     s.guardianships.find((g) => g.id === guardianshipId),
     "guardianship"
   )
   s.guardianships.splice(s.guardianships.indexOf(link), 1)
-}
-
-export function isGuardian(s: State, accountId: Uuid, personId: Uuid): boolean {
-  return s.guardianships.some((g) => g.accountId === accountId && g.childId === personId)
 }

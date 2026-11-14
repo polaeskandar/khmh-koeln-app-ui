@@ -13,16 +13,15 @@ import type {
 } from "@/lib/domain/types"
 import { forbidden, invalid, notFound, ruleViolation } from "@/server/errors"
 
-import { authorize, can, requireIn } from "../access"
+import { authorize, can, canActForChild, isMember, requireIn } from "../access"
 import { now, nowMs, today } from "../clock"
 import { found, Violations } from "../guard"
 import { uuidv7 } from "../ids"
 import { accountOf, currentUnitsOfPerson, sameUnit, sessionOf } from "../selectors"
 import type { State } from "../state"
 
-import { grantOwner, removeOrphanedAssignments } from "./access"
+import { removeOrphanedAccess } from "./access"
 import type { Actor } from "./accounts"
-import { isGuardian } from "./guardians"
 
 export type LessonInput = {
   sessionId: Uuid | null
@@ -111,7 +110,6 @@ export function createLesson(actor: Actor, unit: Unit, input: LessonInput) {
     updatedAt: now(),
   }
   s.lessons.push(lesson)
-  grantOwner(s, actor.viewer.id, { type: "lesson", id: lesson.id })
 
   return lesson
 }
@@ -143,10 +141,6 @@ export function updateLesson(actor: Actor, lessonId: Uuid, input: LessonInput) {
 export function setLessonStatus(actor: Actor, lessonId: Uuid, status: LessonStatus) {
   const lesson = lessonFor(actor, lessonId, "lesson.update")
 
-  if (status === "published" || lesson.status === "published") {
-    lessonFor(actor, lessonId, "lesson.publish")
-  }
-
   if (status === "published" && !lesson.summary) {
     throw ruleViolation(msg("errors.learning.summaryBeforePublishing"))
   }
@@ -168,7 +162,7 @@ export function deleteLesson(actor: Actor, lessonId: Uuid) {
   }
 
   actor.state.lessons.splice(actor.state.lessons.indexOf(lesson), 1)
-  removeOrphanedAssignments(actor.state)
+  removeOrphanedAccess(actor.state)
 }
 
 export function setResponsible(actor: Actor, lessonId: Uuid, accountId: Uuid) {
@@ -277,7 +271,7 @@ export function deleteTask(actor: Actor, taskId: Uuid) {
   }
 
   actor.state.tasks.splice(actor.state.tasks.indexOf(task), 1)
-  removeOrphanedAssignments(actor.state)
+  removeOrphanedAccess(actor.state)
 }
 
 export function setTaskDone(
@@ -290,8 +284,8 @@ export function setTaskDone(
     s.tasks.find((t) => t.id === taskId),
     "task"
   )
-  const forSelf = viewer.personId === personId && can(s, viewer, "portal.member")
-  const forChild = can(s, viewer, "portal.parent") && isGuardian(s, viewer.id, personId)
+  const forSelf = viewer.personId === personId && isMember(s, viewer)
+  const forChild = canActForChild(s, viewer, personId)
   const inGroup = currentUnitsOfPerson(s, personId, today()).some((unit) =>
     sameUnit(unit, unitOf(task))
   )

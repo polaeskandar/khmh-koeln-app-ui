@@ -67,8 +67,8 @@ export function getUnitSchedule(ctx: Context, unit: Unit, year: number) {
         }
       : null,
     sessions,
-    canManage: can(s, viewer, "schedule.plan", { type: "schedule", id: schedule.id }),
-    canRecord: can(s, viewer, "session.takeAttendance", { type: "schedule", id: schedule.id }),
+    canManage: can(s, viewer, "session.create", unit),
+    canRecord: can(s, viewer, "session.update", unit),
   }
 }
 
@@ -92,7 +92,7 @@ export function getPlanEditor(ctx: Context, unit: Unit, year: number) {
   if (
     !planningYearOptions().includes(year) ||
     !schedule ||
-    !can(s, viewer, "schedule.plan", { type: "schedule", id: schedule.id })
+    !can(s, viewer, "session.create", unit)
   ) {
     notFound()
   }

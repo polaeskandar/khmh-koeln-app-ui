@@ -4,7 +4,6 @@ import { notFound } from "next/navigation"
 
 import type { PlanStatus, Service, Uuid } from "@/lib/domain/types"
 import { can, canInService, canSeeService, canSeeUnit } from "@/server/mock/access"
-import { scheduleRef } from "@/server/mock/resources"
 import { today } from "@/server/mock/clock"
 import {
   planOf,
@@ -113,7 +112,7 @@ export function getService(ctx: Context, serviceId: Uuid) {
     can: {
       manage: can(s, viewer, "service.update", { type: "service", id: service.id }),
       stages: can(s, viewer, "stage.create", { serviceId: service.id, stageId: null }),
-      schedule: canInService(s, viewer, "schedule.plan", service.id),
+      schedule: canInService(s, viewer, "session.create", service.id),
     },
     stages: stagesOf(s, service.id, true)
       .filter((st) => canSeeUnit(s, viewer, { serviceId: service.id, stageId: st.id }))
@@ -152,7 +151,7 @@ export function getScheduleOverview(ctx: Context, serviceId: Uuid, year: number)
         rule: plan?.rule ?? null,
         sessions: sessions.filter((x) => x.status !== "canceled").length,
         canceled: sessions.filter((x) => x.status === "canceled").length,
-        canManage: can(s, viewer, "schedule.plan", scheduleRef(s, u)),
+        canManage: can(s, viewer, "session.create", u),
       }
     })
 }

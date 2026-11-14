@@ -12,8 +12,7 @@ import type {
   Unit,
   Uuid,
 } from "@/lib/domain/types"
-import { can, canSeeUnit, unitsWith } from "@/server/mock/access"
-import { managesAt } from "@/server/mock/delegation"
+import { can, canSeeUnit, isMember, managesAccess, unitsWith } from "@/server/mock/access"
 import { today } from "@/server/mock/clock"
 import {
   accountOfPerson,
@@ -34,7 +33,7 @@ export function reachable(s: State, unit: Unit): { person: Person; via: "own" | 
     (person): { person: Person; via: "own" | "parent" }[] => {
       const own = accountOfPerson(s, person.id)
 
-      if (own && can(s, own, "portal.member")) {
+      if (own && isMember(s, own)) {
         return [{ person, via: "own" as const }]
       }
 
@@ -142,12 +141,12 @@ export function getLesson(ctx: Context, lessonId: Uuid) {
       })),
     can: {
       edit,
-      publish: canLesson(s, viewer, "lesson.publish", lesson),
+      publish: canLesson(s, viewer, "lesson.update", lesson),
       delete: canLesson(s, viewer, "lesson.delete", lesson),
       tasks: canLesson(s, viewer, "task.create", lesson),
       responsible: edit,
     },
-    accessHref: managesAt(s, viewer, ref) ? accessHref(ref) : null,
+    accessHref: managesAccess(s, viewer, ref) ? accessHref(ref) : null,
     responsibleChoices: edit
       ? s.accounts
           .filter((a) => canLesson(s, a, "lesson.update", lesson))

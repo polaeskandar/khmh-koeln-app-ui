@@ -143,6 +143,6 @@ export function getDaysOff(ctx: Context, serviceId: Uuid, year: number) {
     unverified: s.occasions.some((o) => o.date.startsWith(`${year}-`) && o.verifiedAt === null),
     canManage:
       can(s, viewer, "service.update", { type: "service", id: service.id }) ||
-      canInService(s, viewer, "schedule.plan", service.id),
+      canInService(s, viewer, "session.create", service.id),
   }
 }

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 
 import type { Account } from "@/lib/domain/types"
 
-import { can, isStaff } from "./mock/access"
+import { isMember, isParent, isStaff } from "./mock/access"
 import type { State } from "./mock/state"
 import { getShell } from "./queries/shell"
 import { getContext } from "./viewer"
@@ -14,12 +14,16 @@ export const getRequestContext = cache(getContext)
 
 export const getShellData = cache(async () => getShell(await getRequestContext()))
 
-export function homeOf(s: State, account: Account): "/" | "/parent" | "/member" {
+export function homeOf(s: State, account: Account): "/" | "/parent" | "/member" | "/no-access" {
   if (isStaff(s, account)) {
     return "/"
   }
 
-  return can(s, account, "portal.parent") ? "/parent" : "/member"
+  if (isParent(s, account)) {
+    return "/parent"
+  }
+
+  return isMember(s, account) ? "/member" : "/no-access"
 }
 
 export async function getStaffContext() {
@@ -35,7 +39,7 @@ export async function getStaffContext() {
 export async function getParentContext() {
   const ctx = await getRequestContext()
 
-  if (!can(ctx.state, ctx.viewer, "portal.parent")) {
+  if (!isParent(ctx.state, ctx.viewer)) {
     redirect(homeOf(ctx.state, ctx.viewer))
   }
 
@@ -45,7 +49,7 @@ export async function getParentContext() {
 export async function getMemberContext() {
   const ctx = await getRequestContext()
 
-  if (!can(ctx.state, ctx.viewer, "portal.member")) {
+  if (!isMember(ctx.state, ctx.viewer)) {
     redirect(homeOf(ctx.state, ctx.viewer))
   }
 

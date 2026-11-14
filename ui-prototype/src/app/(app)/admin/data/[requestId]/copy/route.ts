@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 
-import { can } from "@/server/mock/access"
+import { isAdministrator } from "@/server/mock/access"
 import { exportPerson } from "@/server/mock/commands/privacy"
 import { getContext } from "@/server/viewer"
 
@@ -9,12 +9,7 @@ export async function GET(_: Request, { params }: RouteContext<"/admin/data/[req
   const { state, viewer } = await getContext()
   const request = state.dataRequests.find((r) => r.id === requestId)
 
-  if (
-    !request ||
-    !request.personId ||
-    request.kind !== "copy" ||
-    !can(state, viewer, "dataRequest.read")
-  ) {
+  if (!request || !request.personId || request.kind !== "copy" || !isAdministrator(state, viewer)) {
     notFound()
   }
 

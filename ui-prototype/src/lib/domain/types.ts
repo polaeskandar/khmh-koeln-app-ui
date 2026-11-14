@@ -1,4 +1,4 @@
-import type { Permission, ResourceRef, ResourceType } from "./resources"
+import type { Action, ResourceRef, ResourceType } from "./resources"
 
 export type Uuid = string
 export type LocalDate = string
@@ -82,55 +82,38 @@ export type Guardianship = {
   createdBy: Uuid | null
 }
 
-export { CHURCH, type Permission, type ResourceRef, type ResourceType } from "./resources"
-
-/** Holders of the role may give and remove `roleId`, on resources of these types in their area. */
-export type DelegationRule = { roleId: Uuid; at: ResourceType[] }
-
-/**
- * A named set of permissions. It includes the roles it inherits from (their permissions and
- * delegation rules), may be assigned only on the listed scope types, and lists which roles its
- * holders may give and remove (only with access.assign / access.revoke). The protected role
- * (Administrator) holds everything, assigns every role and can't be weakened or deleted.
- */
-export type Role = {
-  id: Uuid
-  name: string
-  description: string | null
-  inherits: Uuid[]
-  permissions: Permission[]
-  assignableAt: ResourceType[]
-  delegation: DelegationRule[]
-  protected: boolean
-  createdAt: Instant
-  updatedAt: Instant
-}
+export {
+  type Action,
+  CHURCH,
+  type Permission,
+  type ResourceRef,
+  type ResourceType,
+} from "./resources"
 
 /**
- * One role for one account on one resource, which it applies to with everything below it. Created
- * by someone allowed to delegate it ("granted"), or by the ownership policy when the account
- * created the resource ("owner").
+ * What one member may do with one type of resource within one resource: Daniel may create and
+ * read lessons in 3rd Class. It applies to that resource and everything below it.
  */
-export type RoleAssignment = {
+export type Grant = {
   id: Uuid
   accountId: Uuid
-  roleId: Uuid
   resource: ResourceRef
-  origin: "granted" | "owner"
+  type: ResourceType
+  actions: Action[]
   createdAt: Instant
   createdBy: Uuid | null
 }
 
 /**
- * A fictional resource type that exists only to show that a new type plugs into authorization
- * through the registry: it has no screens of its own.
+ * A member who may give and remove permissions within one resource and everything below it.
+ * Managing access within the whole church makes someone an administrator.
  */
-export type ChurchEvent = {
+export type AccessManager = {
   id: Uuid
-  name: string
-  serviceId: Uuid | null
-  date: LocalDate
+  accountId: Uuid
+  resource: ResourceRef
   createdAt: Instant
+  createdBy: Uuid | null
 }
 
 export type Schedule = {

@@ -11,7 +11,7 @@ import {
   GroupsEditor,
   ResetPasswordButton,
 } from "@/features/accounts/account-actions"
-import { AssignmentChip } from "@/features/access/assignment-chip"
+import { ChildrenLinks } from "@/features/accounts/children-links"
 import { getFormat } from "@/i18n/server"
 import { today } from "@/server/mock/clock"
 import { getAccount } from "@/server/queries/admin"
@@ -75,51 +75,49 @@ export default async function AccountPage({ params }: PageProps<"/admin/accounts
             </li>
           </ul>
         </Section>
-        <Section title={t("roles.title")} description={t("roles.hint")}>
-          <ul className="flex flex-wrap gap-2">
-            {a.roles.map((r) => (
-              <AssignmentChip key={r.id} role={r.role} scope={r.scope} href={r.href} />
-            ))}
-          </ul>
-          {a.can.access ? (
-            <Link
-              href="/admin/access"
-              className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
-            >
-              {t("roles.manage")}
-              <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-            </Link>
+        <Section title={t("access.title")} description={t("access.hint")}>
+          {a.access.administrator ? (
+            <p className="flex items-center gap-2 text-sm font-medium">
+              {t("access.administrator")}
+            </p>
           ) : null}
-        </Section>
-        {a.kinds.member || a.groups.length > 0 ? (
-          <Section title={t("groups.title")} description={t("groups.hint")}>
-            <GroupsEditor accountId={a.id} groups={a.groups} scopes={a.scopes} />
-          </Section>
-        ) : null}
-        {a.kinds.parent ? (
-          <Section title={t("children.title")} description={t("children.hint")}>
-            {a.children.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("children.none")}</p>
-            ) : null}
-            <ul className="flex flex-wrap gap-2">
-              {a.children.map((c) => (
-                <li key={c.id} className="flex flex-col border px-3 py-1.5 text-sm">
-                  <span className="font-medium">{c.child.name}</span>
-                  <span className="text-xs text-muted-foreground">{c.groups.join(" · ")}</span>
+          {a.access.lines.length === 0 && !a.access.administrator ? (
+            <p className="text-sm text-muted-foreground">{t("access.none")}</p>
+          ) : null}
+          {a.access.lines.length > 0 ? (
+            <ul className="flex flex-col divide-y border bg-card">
+              {a.access.lines.map((line) => (
+                <li key={line.id} className="px-4 py-2 text-sm">
+                  {line.href ? (
+                    <Link href={line.href} className="underline-offset-4 hover:underline">
+                      {line.text}
+                    </Link>
+                  ) : (
+                    line.text
+                  )}
                 </li>
               ))}
             </ul>
-            {a.can.guardians ? (
-              <Link
-                href="/admin/access?tab=parents"
-                className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
-              >
-                {t("children.manage")}
-                <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
-              </Link>
-            ) : null}
-          </Section>
-        ) : null}
+          ) : null}
+          <Link
+            href="/admin/access"
+            className="inline-flex items-center gap-1 text-sm underline-offset-4 hover:underline"
+          >
+            {t("access.manage")}
+            <ArrowRight className="size-3.5 rtl:-scale-x-100" aria-hidden="true" />
+          </Link>
+        </Section>
+        <Section title={t("groups.title")} description={t("groups.hint")}>
+          <GroupsEditor accountId={a.id} groups={a.groups} scopes={a.scopes} />
+        </Section>
+        <Section title={t("children.title")} description={t("children.hint")}>
+          <ChildrenLinks
+            accountId={a.id}
+            name={a.name}
+            links={a.children}
+            choices={a.childChoices}
+          />
+        </Section>
       </PageBody>
     </>
   )

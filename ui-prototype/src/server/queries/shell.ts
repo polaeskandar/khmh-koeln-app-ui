@@ -1,8 +1,8 @@
 import "server-only"
 
 import {
-  can,
   holdsAnywhere,
+  isAdministrator,
   isStaff,
   sessionsWith,
   unitsWith,
@@ -38,9 +38,9 @@ export async function getShell(ctx: Context) {
     viewer: viewerInfo(s, viewer),
     personas: personasOf(s),
     nav: {
-      accounts: can(s, viewer, "account.read"),
+      accounts: isAdministrator(s, viewer),
       access: opensAccess(s, viewer),
-      data: can(s, viewer, "dataRequest.read"),
+      data: isAdministrator(s, viewer),
       services: visibleServices(s, viewer)
         .filter((x) => x.archivedAt === null)
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -49,8 +49,8 @@ export async function getShell(ctx: Context) {
         holdsAnywhere(s, viewer, "lesson.read") || holdsAnywhere(s, viewer, "lesson.create"),
       tasks: holdsAnywhere(s, viewer, "task.read"),
       attendance:
-        unitsWith(s, viewer, "session.takeAttendance").length > 0 ||
-        sessionsWith(s, viewer, "session.takeAttendance").length > 0,
+        unitsWith(s, viewer, "session.update").length > 0 ||
+        sessionsWith(s, viewer, "update").length > 0,
     },
     staff: isStaff(s, viewer),
     now: now(),

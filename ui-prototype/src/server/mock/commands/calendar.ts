@@ -79,7 +79,7 @@ function requireDaysOffManager({ state: s, viewer }: Actor, serviceId: Uuid) {
 
   if (
     !can(s, viewer, "service.update", { type: "service", id: serviceId }) &&
-    !canInService(s, viewer, "schedule.plan", serviceId)
+    !canInService(s, viewer, "session.create", serviceId)
   ) {
     throw forbidden()
   }

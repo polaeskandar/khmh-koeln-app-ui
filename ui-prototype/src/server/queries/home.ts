@@ -2,7 +2,7 @@ import "server-only"
 
 import { PLANNING_REMINDER_FROM } from "@/lib/domain/planning"
 import { localTimeOf } from "@/lib/domain/time"
-import { canSeeSession, schedulesWith, sessionsWith } from "@/server/mock/access"
+import { canSeeSession, sessionsWith, unitsWith } from "@/server/mock/access"
 import { nowMs, today } from "@/server/mock/clock"
 import { planOf, scheduleFor, serviceOf } from "@/server/mock/selectors"
 import type { Context } from "@/server/viewer"
@@ -21,7 +21,7 @@ export function planningYears(date: string): number[] {
 }
 
 export function planningReminders({ state: s, viewer }: Context) {
-  const units = schedulesWith(s, viewer, "schedule.confirm")
+  const units = unitsWith(s, viewer, "session.create")
 
   return planningYears(today()).flatMap((year) => {
     const byService = new Map<
@@ -73,7 +73,7 @@ function partOfDay() {
 export function getHome(ctx: Context, postponed: number[]) {
   const { state: s, viewer } = ctx
   const date = today()
-  const sessions = sessionsWith(s, viewer, "session.takeAttendance")
+  const sessions = sessionsWith(s, viewer, "update")
     .filter((x) => x.date === date && canSeeSession(s, viewer, x))
     .sort(bySessionTime)
     .map((x) => sessionCard(ctx, x))

@@ -22,9 +22,7 @@ import { accountRef, bySessionTime, personRef, sessionCard, unitOf } from "./pre
 export function getAttendanceOverview(ctx: Context) {
   const { state: s, viewer } = ctx
   const date = today()
-  const mine = sessionsWith(s, viewer, "session.takeAttendance").filter((x) =>
-    canSeeSession(s, viewer, x)
-  )
+  const mine = sessionsWith(s, viewer, "update").filter((x) => canSeeSession(s, viewer, x))
 
   return {
     today: mine
@@ -83,8 +81,8 @@ export function getSessionPage(ctx: Context, sessionId: Uuid) {
       .sort(byName),
     anonymous: s.anonymousCounts[session.id]?.present ?? 0,
     can: {
-      record: can(s, viewer, "session.takeAttendance", sessionRef(session.id)),
-      correct: can(s, viewer, "session.correctAttendance", sessionRef(session.id)),
+      record: can(s, viewer, "session.update", sessionRef(session.id)),
+      correct: can(s, viewer, "session.update", sessionRef(session.id)),
       manage: can(s, viewer, "session.update", sessionRef(session.id)),
       unit: canSeeUnit(s, viewer, unit),
     },
@@ -94,7 +92,7 @@ export function getSessionPage(ctx: Context, sessionId: Uuid) {
 export function searchPeople(ctx: Context, query: string) {
   const { state: s, viewer } = ctx
 
-  if (query.trim().length < 2 || sessionsWith(s, viewer, "session.takeAttendance").length === 0) {
+  if (query.trim().length < 2 || sessionsWith(s, viewer, "update").length === 0) {
     return []
   }
 

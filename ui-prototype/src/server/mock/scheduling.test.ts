@@ -1,11 +1,10 @@
 import { describe, expect, test } from "vitest"
 
-import { ROLE_IDS } from "@/lib/domain/policy"
 import type { PlanRule } from "@/lib/domain/types"
 import { ProblemError } from "@/server/errors"
 import { accountNamed, contextFor } from "@/test/context"
 
-import { assignRole } from "./commands/access"
+import { saveGrant } from "./commands/access"
 import { setDaysOffMode, toggleDayOff } from "./commands/calendar"
 import {
   addOneOffSession,
@@ -234,7 +233,7 @@ describe("single sessions", () => {
     expect(s.plans.find((p) => p.scheduleId === third.id && p.year === 2026)?.version).toBe(1)
   })
 
-  test("a role scoped to Sunday School plans only Sunday School", () => {
+  test("permission to create sessions in Sunday School plans only Sunday School", () => {
     const { s, schedules, youthSchedule } = setUp()
     const mariam = contextFor(s, accountNamed(s, "mariam.fahmy"))
     const daniel = contextFor(s, accountNamed(s, "daniel.michael"))
@@ -253,10 +252,14 @@ describe("single sessions", () => {
 
     expect(fail(() => savePlan(daniel, input(third.id)))).toBe("errors.forbidden")
     expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("errors.notFound.schedule")
-    assignRole(mariam, daniel.viewer.id, ROLE_IDS.serviceLeader, {
-      type: "service",
-      id: sundaySchool,
-    })
+    for (const type of ["stage", "session"] as const) {
+      saveGrant(mariam, {
+        accountId: daniel.viewer.id,
+        resource: { type: "service", id: sundaySchool },
+        type,
+        actions: type === "stage" ? ["read"] : ["create"],
+      })
+    }
     expect(fail(() => savePlan(daniel, input(schedules[0].id)))).toBe("ok")
     expect(fail(() => savePlan(daniel, input(youthSchedule.id)))).toBe("errors.forbidden")
   })

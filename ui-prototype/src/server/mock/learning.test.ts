@@ -83,21 +83,20 @@ describe("what parents and members see of a lesson", () => {
 })
 
 describe("who opens a lesson", () => {
-  test("a servant opens, changes and deletes only their own lessons", () => {
+  test("lesson permissions for a stage cover its lessons, and nothing in other stages", () => {
     const s = seed("church")
-    const george = contextFor(s, accountNamed(s, "george.nashed"))
     const rebecca = contextFor(s, accountNamed(s, "rebecca.habib"))
     const animals = lessonNamed(s, "God made the animals")
-    const titles = (ctx: typeof george) =>
+    const david = lessonNamed(s, "David and Goliath")
+    const titles = (ctx: typeof rebecca) =>
       getPreparation(ctx).flatMap((g) => [...g.upcoming, ...g.earlier].map((l) => l.title))
 
-    expect(status(() => getLesson(rebecca, animals.id))).toBe(404)
-    expect(status(() => setLessonStatus(rebecca, animals.id, "ready"))).toBe(404)
-    expect(status(() => deleteLesson(rebecca, animals.id))).toBe(404)
-    expect(titles(rebecca)).not.toContain("God made the animals")
-    expect(titles(george)).toContain("God made the animals")
-    expect(getLesson(george, animals.id).can.edit).toBe(true)
-    expect(status(() => setLessonStatus(george, animals.id, "ready"))).toBe("ok")
+    expect(getLesson(rebecca, animals.id).can.edit).toBe(true)
+    expect(status(() => setLessonStatus(rebecca, animals.id, "ready"))).toBe("ok")
+    expect(status(() => deleteLesson(rebecca, animals.id))).toBe(403)
+    expect(titles(rebecca)).toContain("God made the animals")
+    expect(status(() => getLesson(rebecca, david.id))).toBe(404)
+    expect(titles(rebecca)).not.toContain("David and Goliath")
   })
 
   test("a service leader manages every lesson of the service", () => {

@@ -14,7 +14,7 @@ import {
 import { linkChild, unlinkChild } from "@/server/mock/commands/guardians"
 
 import { run } from "./run"
-import { resource, shortText, unit, uuid } from "./schemas"
+import { shortText, unit, uuid } from "./schemas"
 
 const newAccount = z.object({
   personId: uuid.nullable(),
@@ -22,7 +22,6 @@ const newAccount = z.object({
   lastName: shortText,
   username: shortText,
   temporaryPassword: shortText,
-  roles: z.array(z.object({ roleId: uuid, resource })).max(20),
   groups: z.array(unit).max(20),
   childIds: z.array(uuid).max(20),
 })
