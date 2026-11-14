@@ -31,28 +31,25 @@ Desktop pictures are 1440 px wide at 2×, phone pictures 390 × 844 at 3×. To r
 | Screen | Screenshot | Route |
 | --- | --- | --- |
 | Accounts | [01](admin/01-accounts.png) | `/admin/accounts` |
-| New account: person, roles, sign-in, hand-over | [02](admin/02-new-account-person.png), [03](admin/03-new-account-roles.png), [04](admin/04-new-account-sign-in.png), [05](admin/05-hand-over.png) | `/admin/accounts` |
+| New account: person, groups and children, sign-in, hand-over | [02](admin/02-new-account-person.png), [03](admin/03-new-account-groups.png), [04](admin/04-new-account-sign-in.png), [05](admin/05-hand-over.png) | `/admin/accounts` |
 | An account, reset password, delete | [06](admin/06-account.png), [07](admin/07-reset-password.png), [08](admin/08-delete-account.png) | `/admin/accounts/:id` |
 | Data requests | [20](admin/20-data-requests.png), [an erasure](admin/21-data-request.png) | `/admin/data`, `/admin/data/:id` |
 
 ## Access (`access/`)
 
-Administration › Access: a resource explorer, the role hierarchy and parental access. See
-[`../docs/authorization.md`](../docs/authorization.md) for the model.
+Administration › Access: the church as a tree, and who has access to the selected place. See
+[`../docs/authorization.md`](../docs/authorization.md).
 
 | Screen | Screenshot | Route |
 | --- | --- | --- |
-| Administrator: the whole church, who has access there (the protected role locked) | [01](access/01-administrator-church.png) | `/admin/access` |
-| An event (a resource type added through the registry) with its coordinator | [02](access/02-event-coordinator.png) | `/admin/access?tab=resources&r=event:<id>` |
-| Roles & permissions: Service leader builds on Servant and Lesson editor; inherited permissions marked | [03](access/03-role-hierarchy.png) | `/admin/access?tab=roles&role=<id>` |
-| Role editor: no loops; a new role built on Servant | [04](access/04-role-editor-no-loops.png), [05](access/05-new-role.png) | `/admin/access/roles/<id>`, `/admin/access/roles/new` |
-| Parental access, link a member | [06](access/06-parental-access.png), [07](access/07-link-member.png) | `/admin/access?tab=parents` |
-| Service leader: only Sunday School | [08](access/08-leader-sunday-school.png), [phone](access/21-access-mobile.png), [browse on the phone](access/22-access-mobile-browse.png) | `/admin/access` as Christine |
-| Assign a role: person, role (and why others can't be given), where, review, after | [09](access/09-assign-person.png), [10](access/10-assign-role.png), [11](access/11-assign-where.png), [12](access/12-assign-review.png), [13](access/13-stage-after.png) | `/admin/access?tab=resources&r=stage:<id>` |
-| A place outside her area | [14](access/14-outside-her-area.png) | `/admin/access?tab=resources&r=service:<youth>` |
-| One lesson for Maria; she edits it and sees no other lesson | [15](access/15-one-lesson.png), [16](access/16-maria-edits-the-lesson.png), [17](access/17-maria-preparation.png) | `…&r=lesson:<id>`, `/lessons/<id>`, `/lessons` |
-| Overlapping roles: review, direct and inherited together, removing the broader one keeps the narrower | [18](access/18-overlap-review.png), [19](access/19-inherited-and-direct.png), [20](access/20-revoke-keeps-narrower.png) | `/admin/access` |
-| A servant's view of Sunday School | [23](access/23-servant-sunday-school.png) | `/services/<id>` as Daniel |
+| Administrator: the whole church and its administrators; Sunday School | [01](access/01-administrator-church.png), [02](access/02-sunday-school.png) | `/admin/access`, `?r=service:<id>` |
+| Let Marina manage access in 2nd Class | [03](access/03-choose-manager.png), [04](access/04-manager-chosen.png) | `?r=stage:<id>` |
+| Christine manages Sunday School only; a stage | [05](access/05-leader-sunday-school.png), [06](access/06-stage.png), [phone](access/15-access-mobile.png), [tree on the phone](access/16-access-mobile-tree.png) | `/admin/access` as Christine |
+| Daniel may create and read lessons in 3rd Class | [07](access/07-give-daniel.png), [08](access/08-daniel-lessons.png) | `?r=stage:<id>&type=lesson` |
+| Only what she may do herself; outside her area | [09](access/09-only-what-she-has.png), [10](access/10-outside-her-area.png) | |
+| Maria reads and updates one lesson, then loses it | [11](access/11-one-lesson.png), [12](access/12-maria-edits-the-lesson.png), [13](access/13-maria-lessons.png), [14](access/14-remove.png) | `?r=lesson:<id>`, `/lessons/<id>` |
+| Daniel's Sunday School and a lesson he only reads | [17](access/17-servant-sunday-school.png), [18](access/18-servant-reads-a-lesson.png) | `/services/<id>`, `/lessons/<id>` as Daniel |
+| A new servant gets the sessions of 2nd Class | [19](access/19-new-servant-sessions.png) | `?r=stage:<id>&type=session` |
 
 ## Services (`services/`)
 
@@ -75,7 +72,7 @@ Administration › Access: a resource explorer, the role hierarchy and parental 
 | A year with history, a one-off session | [06](schedule/06-year-2026.png), [07](schedule/07-one-off-session.png), [08](schedule/08-one-off-in-calendar.png) | `/services/:id/stages/:stage` |
 | A draft plan | [09](schedule/09-draft-2027.png) | `/services/:id?year=2027` |
 | A session's actions, reschedule, change the plan from a date | [10](schedule/10-session-menu.png), [11](schedule/11-reschedule.png), [12](schedule/12-change-plan.png) | `/services/:id/stages/:stage` |
-| A Service leader plans her stages; a servant only reads another service's schedule | [13](schedule/13-scoped-leader-can-plan.png), [14](schedule/14-other-service-read-only.png) | as Christine, as Daniel |
+| Christine plans her stages; Daniel takes attendance in Youth Gathering but doesn't plan it | [13](schedule/13-scoped-leader-can-plan.png), [14](schedule/14-other-service-read-only.png) | as Christine, as Daniel |
 
 ## Attendance (`attendance/`)
 
@@ -89,8 +86,7 @@ Administration › Access: a resource explorer, the role hierarchy and parental 
 
 | Screen | Screenshot | Route |
 | --- | --- | --- |
-| Preparation, grouped by class, as a servant (only his own lessons) | [01](lessons/01-preparation.png) | `/lessons` |
-| A new servant sees only their own lessons, not a colleague's | [10](lessons/10-servant-own-lessons.png) | `/lessons` as Andrew |
+| Preparation, grouped by class, as a servant (the lessons of his classes) | [01](lessons/01-preparation.png) | `/lessons` |
 | Lesson editor, draft, publish, published | [02](lessons/02-lesson-editor.png), [03](lessons/03-lesson-draft.png), [04](lessons/04-publish.png), [05](lessons/05-lesson-published.png) | `/lessons/new`, `/lessons/:id` |
 | Tasks, task editor, progress | [06](lessons/06-tasks.png), [07](lessons/07-task-editor.png), [08](lessons/08-task-progress.png), [reported by a parent](lessons/09-task-progress-reported.png) | `/lessons/tasks`, `/lessons/tasks/:id` |
 
