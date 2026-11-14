@@ -28,8 +28,10 @@ Permission      "<type>.<action>"   lesson.update, lesson.publish, session.takeA
 Role            id, name, description, inherits[], permissions[] (own), assignableAt[] (scope types),
                 delegation[] ({ role, at: scope types }), protected
 Assignment      id, account, role, resource, origin (granted | owner), created at/by
-Access event    granted | revoked, actor, account, role, resource, at   (audit trail)
 ```
+
+The app keeps no activity log (decision of 13 November 2026, backend #442): an assignment records when and by whom it
+was given, nothing records removals.
 
 ## Resource hierarchy
 
@@ -157,7 +159,7 @@ system.
 
 | Tab | Who | What |
 | --- | --- | --- |
-| Resource management | holders of `access.assign` or `access.revoke` | A searchable tree of the church: services, stages, schedules; lessons, sessions, tasks and events grouped and paged. Only places where the viewer manages access, and the places leading there, are listed. The selected place shows its path, who has a role given exactly there (grouped by role, large groups counted until opened), who reaches it from above (grouped by where it was given, changeable only there), what each role allows there, and recent changes. "Assign role": person (existing accounts), role (only those the viewer may give, with why others can't), where (this place or a broader one the viewer controls), review (new permissions, those already held, overlaps), confirm. Removing shows what the person loses and what stays. |
+| Resource management | holders of `access.assign` or `access.revoke` | A searchable tree of the church: services, stages, schedules; lessons, sessions, tasks and events grouped and paged. Only places where the viewer manages access, and the places leading there, are listed. The selected place shows its path, who has a role given exactly there (grouped by role, large groups counted until opened), who reaches it from above (grouped by where it was given, changeable only there), and what each role allows there. "Assign role": person (existing accounts), role (only those the viewer may give, with why others can't), where (this place or a broader one the viewer controls), review (new permissions, those already held, overlaps), confirm. Removing shows what the person loses and what stays. |
 | Roles & permissions | `role.read` (`role.create`/`update`/`delete` to change) | Roles grouped by where they are given, each with what it builds on. A role: its inheritance tree, where it can be given, permissions by resource type (own, or "from Servant"), whom it may give and where, who has it. The editor computes inheritance, loops, valid places and effects on other roles and delegators while editing. |
 | Parental access | `guardianship.read` (`create`/`delete` to change) | Parents and the children they follow; link and unlink. |
 
