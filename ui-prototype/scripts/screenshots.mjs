@@ -12,6 +12,7 @@ const FOLDERS = [
   "auth",
   "home",
   "admin",
+  "access",
   "services",
   "schedule",
   "attendance",
@@ -104,6 +105,12 @@ const link = (page, name, options = {}) =>
   visible(page.getByRole("link", { name, ...options })).first()
 const field = (page, name, options = {}) => visible(page.getByLabel(name, options)).first()
 const dialog = (page) => visible(page.locator("[role=dialog], [role=alertdialog]")).last()
+const shows = (locator, timeout = 5000) =>
+  visible(locator)
+    .first()
+    .waitFor({ timeout })
+    .then(() => true)
+    .catch(() => false)
 
 async function openBrowser(name, options = desktop, { locale = "en", dark = false } = {}) {
   const context = await browser.newContext({ ...options, colorScheme: dark ? "dark" : "light" })
@@ -267,7 +274,7 @@ async function accountsAndFirstSignIn() {
   await shot(page, "admin", "02-new-account-person")
   await button(page, "Next").click()
   await button(page, "Servant").click()
-  await field(page, "Where Servant applies").selectOption({ label: "Sunday School - 2nd Class" })
+  await field(page, "Where Servant applies").selectOption({ label: "Sunday School › 2nd Class" })
   await shot(page, "admin", "03-new-account-roles")
   await button(page, "Next").click()
   check(
@@ -507,63 +514,254 @@ async function annualPlanning(christine, sundaySchool) {
   await page.context().close()
 }
 
-async function rolesAndScopes() {
-  console.log("Scenario F: a scoped role")
-  const page = await signIn("Mariam Fahmy")
-  await go(page, "/admin/access")
-  await shot(page, "admin", "10-access-roles")
-  await clickAndWait(page, link(page, /^Service leader/), /\/roles\//)
-  await shot(page, "admin", "11-role")
-  await go(page, "/admin/access/roles/new")
-  await shot(page, "admin", "12-new-role")
-  await go(page, "/admin/access?tab=assignments")
-  await shot(page, "admin", "13-assignments")
-  await button(page, "Give a role").click()
-  await field(page, "Person", { exact: true }).fill("Daniel")
-  await visible(dialog(page).getByRole("button", { name: /Daniel Michael/ }))
-    .first()
-    .click()
-  await field(page, "Role", { exact: true }).selectOption({ label: "Service leader" })
-  await field(page, "Where", { exact: true }).selectOption({ label: "Sunday School (all stages)" })
-  await shot(page, "admin", "14-give-role")
-  await dialog(page).getByRole("button", { name: "Give role" }).click()
+const tree = (page) => visible(page.getByRole("tree", { name: "Resources" })).first()
+const treeItem = (page, name) => tree(page).getByRole("treeitem", { name }).first()
+
+/** Opens a place in the resource explorer; a group (Lessons, Events) only opens its list. */
+async function openPlace(page, name) {
+  const before = page.url()
+  await treeItem(page, name).click()
+  await page.waitForURL((url) => url.href !== before)
   await settle(page)
-  await shot(page, "admin", "15-assignments-after")
+}
+
+async function openGroup(page, name, child) {
+  await treeItem(page, name).click()
+  await treeItem(page, child).waitFor()
+}
+
+/** Assign role, step by step; returns on the review step for a screenshot. */
+async function assignSteps(page, { person, role, scope, shots = {} }) {
+  await button(page, "Assign role", { exact: true }).click()
+  await field(page, "Find by name or username").fill(person.split(" ")[0])
+  await dialog(page).getByRole("radio", { name: person }).click()
+  if (shots.person) await shot(page, "access", shots.person)
+  await dialog(page).getByRole("button", { name: "Next" }).click()
+  await dialog(page).getByRole("radio", { name: role, exact: true }).click()
+  if (shots.role) {
+    await dialog(page).getByText("Why can’t I give other roles?").click()
+    await shot(page, "access", shots.role)
+  }
+  await dialog(page).getByRole("button", { name: "Next" }).click()
+  await dialog(page).getByRole("radio", { name: scope }).click()
+  if (shots.scope) await shot(page, "access", shots.scope)
+  await dialog(page).getByRole("button", { name: "Next" }).click()
+  await visible(dialog(page).getByText(/gets the role/)).waitFor()
+}
+
+async function confirmAssign(page) {
+  await dialog(page).getByRole("button", { name: "Assign role", exact: true }).click()
+  await page.locator("[role=dialog]").waitFor({ state: "detached" })
+  await settle(page)
+}
+
+const directRows = (page) => page.getByRole("region", { name: "Assigned here" })
+
+async function accessAsAdministrator() {
+  console.log("Access A, E and I: the administrator, the role hierarchy and a new resource type")
+  const page = await signIn("Mariam Fahmy")
+  await clickAndWait(page, link(page, "Access", { exact: true }), /\/admin\/access/)
+  check(await shows(treeItem(page, /^Youth Gathering/)), "the whole church is listed")
+  check(
+    await shows(directRows(page).getByText("Administrator", { exact: true })),
+    "the church shows who administers it"
+  )
+  await shot(page, "access", "01-administrator-church")
+
+  await openPlace(page, /^Youth Gathering/)
+  const youth = new URL(page.url()).searchParams.get("r")
+  await openGroup(page, /^Events/, /^Summer camp 2027/)
+  await openPlace(page, /^Summer camp 2027/)
+  await assignSteps(page, {
+    person: "Mark Shenouda",
+    role: "Event coordinator",
+    scope: /^Summer camp 2027, as selected/,
+  })
+  await confirmAssign(page)
+  check(
+    await shows(directRows(page).getByText("Mark Shenouda")),
+    "an event, a type added through the registry, takes roles like any other place"
+  )
+  await shot(page, "access", "02-event-coordinator")
+
+  await go(page, "/admin/access?tab=roles&role=019a3f00-0000-7000-8000-000000000002")
+  check(
+    await visible(page.getByText("from Session helper")).first().isVisible(),
+    "inherited permissions say where they come from"
+  )
+  await shot(page, "access", "03-role-hierarchy")
+  await go(page, "/admin/access/roles/019a3f00-0000-7000-8000-000000000007")
+  check(
+    await visible(page.getByText("Service leader already includes this role.")).first().isVisible(),
+    "a role can't build on a role that already includes it"
+  )
+  await shot(page, "access", "04-role-editor-no-loops")
+  await go(page, "/admin/access/roles/new")
+  await field(page, "Name").fill("Assistant leader")
+  await page.getByRole("checkbox", { name: /^Servant/ }).click()
+  await shot(page, "access", "05-new-role")
   await go(page, "/admin/access?tab=parents")
-  await shot(page, "admin", "16-parental-access")
+  await shot(page, "access", "06-parental-access")
   await button(page, "Link a member").click()
-  await shot(page, "admin", "17-link-member")
+  await shot(page, "access", "07-link-member")
   await page.keyboard.press("Escape")
+  await page.context().close()
+
+  return youth
+}
+
+async function accessAsServiceLeader(youth) {
+  console.log("Access B, D, G and H: Christine manages access within Sunday School")
+  const page = await signIn("Christine Adel")
+  await clickAndWait(page, link(page, "Access", { exact: true }), /\/admin\/access/)
+  check(
+    !(await visible(page.getByRole("link", { name: "Roles & permissions" })).count()),
+    "a service leader doesn't edit roles"
+  )
+  check(
+    !(await tree(page)
+      .getByRole("treeitem", { name: /^Youth Gathering/ })
+      .count()),
+    "Youth Gathering isn't hers to manage"
+  )
+  await shot(page, "access", "08-leader-sunday-school")
+
+  await openPlace(page, /^3rd Class/)
+  await assignSteps(page, {
+    person: "Daniel Michael",
+    role: "Servant",
+    scope: /^3rd Class, as selected/,
+    shots: { person: "09-assign-person", role: "10-assign-role", scope: "11-assign-where" },
+  })
+  await shot(page, "access", "12-assign-review")
+  await confirmAssign(page)
+  check(await shows(directRows(page).getByText("Daniel Michael")), "Daniel now serves in 3rd Class")
+  await shot(page, "access", "13-stage-after")
+
+  await go(page, `/admin/access?tab=resources&r=${youth}`)
+  check(
+    await visible(page.getByText("This place is outside the area where you manage access."))
+      .first()
+      .isVisible(),
+    "an address outside her area shows nothing of it"
+  )
+  await shot(page, "access", "14-outside-her-area")
+
+  await go(page, "/admin/access")
+  await treeItem(page, /^1st Class/).click()
+  await page.waitForURL(/r=stage/)
+  await settle(page)
+  await openGroup(page, /^Lessons/, /^The Good Samaritan/)
+  await openPlace(page, /^The Good Samaritan/)
+  await assignSteps(page, {
+    person: "Maria Hanna",
+    role: "Lesson editor",
+    scope: /^The Good Samaritan, as selected/,
+  })
+  await confirmAssign(page)
+  await shot(page, "access", "15-one-lesson")
+  const lesson = await link(page, "Open", { exact: true }).getAttribute("href")
+
+  const maria = await signIn("Maria Hanna")
+  await go(maria, lesson)
+  check(await link(maria, "Edit").isVisible(), "Maria edits The Good Samaritan")
+  await shot(maria, "access", "16-maria-edits-the-lesson")
+  await go(maria, "/lessons")
+  check(
+    (await visible(maria.getByText("Noah's ark")).count()) === 0,
+    "but no other lesson of 1st Class"
+  )
+  await shot(maria, "access", "17-maria-preparation")
+  await maria.context().close()
+
+  await go(page, "/admin/access")
+  await assignSteps(page, {
+    person: "Daniel Michael",
+    role: "Servant",
+    scope: /^Sunday School, as selected/,
+  })
+  check(
+    await visible(dialog(page).getByText(/Also has Servant for Sunday School › 1st Class/))
+      .first()
+      .isVisible(),
+    "the review names the narrower roles Daniel already has"
+  )
+  await shot(page, "access", "18-overlap-review")
+  await confirmAssign(page)
+  await openPlace(page, /^3rd Class/)
+  await shot(page, "access", "19-inherited-and-direct")
+  await go(page, "/admin/access")
+  await button(page, "Remove Servant from Daniel Michael").click()
+  await visible(dialog(page).getByText("Still in place")).waitFor()
+  await shot(page, "access", "20-revoke-keeps-narrower")
+  await dialog(page).getByRole("button", { name: "Remove role" }).click()
+  await page.locator("[role=alertdialog]").waitFor({ state: "detached" })
+  await settle(page)
+  await page.context().close()
+
+  const mobile = await signIn("Christine Adel", phone)
+  await go(mobile, "/admin/access")
+  await shot(mobile, "access", "21-access-mobile")
+  await button(mobile, "Browse resources").click()
+  await shot(mobile, "access", "22-access-mobile-browse")
+  await mobile.context().close()
+}
+
+async function accessAsServant() {
+  console.log("Access C: Daniel serves in 1st and 3rd Class")
+  const daniel = await signIn("Daniel Michael")
+  check(
+    !(await visible(daniel.getByRole("link", { name: "Access", exact: true })).count()),
+    "a servant manages nobody's access"
+  )
+  await go(daniel, "/services")
+  await clickAndWait(daniel, link(daniel, /^Sunday School/), /\/services\/[^/]+$/)
+  check(
+    !(await visible(daniel.getByText("2nd Class")).count()),
+    "he doesn't see the stages he doesn't serve in"
+  )
+  await shot(daniel, "access", "23-servant-sunday-school")
+  await clickAndWait(daniel, link(daniel, "Schedule"), /tab=schedule/)
+  await clickAndWait(daniel, link(daniel, "3rd Class"), /\/stages\//)
+  check(
+    !(await visible(daniel.getByRole("button", { name: "Add one-off session" })).count()),
+    "a servant sees the schedule but doesn't plan it"
+  )
+  await go(daniel, "/services")
+  await clickAndWait(daniel, link(daniel, /^Youth Gathering/), /\/services\/[^/]+$/)
+  await shot(daniel, "schedule", "14-other-service-read-only")
+  await daniel.context().close()
+
+  const christine = await signIn("Christine Adel")
+  await go(christine, "/services")
+  await clickAndWait(christine, link(christine, /^Sunday School/), /\/services\/[^/]+$/)
+  await clickAndWait(christine, link(christine, "Schedule"), /tab=schedule/)
+  await clickAndWait(christine, link(christine, "3rd Class"), /\/stages\//)
+  check(
+    await button(christine, "Add one-off session").isVisible(),
+    "the service leader plans her stages"
+  )
+  await shot(christine, "schedule", "13-scoped-leader-can-plan")
+  await christine.context().close()
+}
+
+async function dataRequests() {
+  console.log("Data protection requests")
+  const page = await signIn("Mariam Fahmy")
   await go(page, "/admin/data")
   await shot(page, "admin", "20-data-requests")
   await clickAndWait(page, link(page, /Theresa Wadie/), /\/admin\/data\//)
   await shot(page, "admin", "21-data-request")
   await page.context().close()
-
-  const daniel = await signIn("Daniel Michael")
-  await go(daniel, "/services")
-  await clickAndWait(daniel, link(daniel, /^Sunday School/), /\/services\/[^/]+$/)
-  await clickAndWait(daniel, link(daniel, "Schedule"), /tab=schedule/)
-  await clickAndWait(daniel, link(daniel, "3rd Class"), /\/stages\//)
-  check(await button(daniel, "Add one-off session").isVisible(), "Daniel now plans Sunday School")
-  await shot(daniel, "schedule", "13-scoped-leader-can-plan")
-  await go(daniel, "/services")
-  await clickAndWait(daniel, link(daniel, /^Youth Gathering/), /\/services\/[^/]+$/)
-  check(
-    !(await visible(daniel.getByRole("button", { name: "Add one-off session" })).count()),
-    "but not Youth Gathering"
-  )
-  await shot(daniel, "schedule", "14-other-service-read-only")
-  await daniel.context().close()
 }
 
 async function lessonsAndTasks() {
-  console.log("Scenario G: Daniel prepares a lesson")
+  console.log("Scenario H: Daniel prepares a lesson")
   const page = await signIn("Daniel Michael")
   await go(page, "/lessons")
   check(
-    await visible(page.getByText("Prepared by Marina Samuel")).first().isVisible(),
-    "a service leader sees every lesson of the service with its servant"
+    (await visible(page.getByText("Joseph forgives his brothers")).count()) === 0,
+    "a servant sees only the lessons he writes, not Youssef's in the same class"
   )
   await shot(page, "lessons", "01-preparation")
   await clickAndWait(
@@ -602,7 +800,7 @@ async function lessonsAndTasks() {
   await settle(page)
   await shot(page, "lessons", "05-lesson-published")
 
-  console.log("Scenario H: a task for Noah's ark, completed by a parent")
+  console.log("Scenario I: a task for Noah's ark, completed by a parent")
   await go(page, "/lessons/tasks")
   await shot(page, "lessons", "06-tasks")
   await go(page, "/lessons")
@@ -669,7 +867,7 @@ async function lessonsAndTasks() {
 }
 
 async function memberPortal() {
-  console.log("Scenario I: Nevine reads a lesson as a member")
+  console.log("Scenario J: Nevine reads a lesson as a member")
   const page = await signIn("Nevine Boulos")
   await shot(page, "member", "01-home")
   await go(page, "/member/lessons")
@@ -756,6 +954,8 @@ async function languagesAndDarkMode(sundaySchool, sessionUrl) {
     await clickAndWait(page, page.locator('a[href*="/plan?year=2028"]').first(), /\/plan/)
     await field(page, locale === "de" ? "Beginnt um" : "يبدأ الساعة").fill("12:00")
     await shot(page, "languages", `${locale}-03-plan-editor`)
+    await go(page, "/admin/access")
+    await shot(page, "languages", `${locale}-09-access-leader`)
     await go(page, sessionUrl)
     await shot(page, "languages", `${locale}-04-attendance`)
     await page.context().close()
@@ -796,7 +996,10 @@ try {
   const christine = await homeScreens()
   const sundaySchool = await serviceScreens()
   await annualPlanning(christine, sundaySchool)
-  await rolesAndScopes()
+  const youth = await accessAsAdministrator()
+  await accessAsServiceLeader(youth)
+  await accessAsServant()
+  await dataRequests()
   await lessonsAndTasks()
   await memberPortal()
   const sessionUrl = await attendance()
