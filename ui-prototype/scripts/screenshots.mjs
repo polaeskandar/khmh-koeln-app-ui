@@ -273,9 +273,7 @@ async function accountsAndFirstSignIn() {
   await page.getByRole("radio", { name: /Andrew Samir/ }).click()
   await shot(page, "admin", "02-new-account-person")
   await button(page, "Next").click()
-  await button(page, "Servant").click()
-  await field(page, "Where Servant applies").selectOption({ label: "Sunday School › 2nd Class" })
-  await shot(page, "admin", "03-new-account-roles")
+  await shot(page, "admin", "03-new-account-groups")
   await button(page, "Next").click()
   check(
     (await field(page, "Username", { exact: true }).inputValue()) === "andrew.samir",
@@ -301,6 +299,16 @@ async function accountsAndFirstSignIn() {
   await shot(page, "admin", "08-delete-account")
   await page.keyboard.press("Escape")
 
+  await go(page, "/admin/access")
+  await openPlace(page, /^Sunday School/)
+  await openPlace(page, /^2nd Class/)
+  await openPlace(page, /^Sessions/)
+  await give(page, {
+    person: "Andrew Samir",
+    actions: ["Read", "Update"],
+    shot: "19-new-servant-sessions",
+  })
+
   const andrew = await openBrowser("Andrew")
   await go(andrew, "/sign-in")
   await field(andrew, "Username").fill("Andrew.Samir")
@@ -321,12 +329,6 @@ async function accountsAndFirstSignIn() {
     "Andrew sees his class today"
   )
   await shot(andrew, "home", "05-new-servant-home")
-  await go(andrew, "/lessons")
-  check(
-    (await visible(andrew.getByText("David and Goliath")).count()) === 0,
-    "a servant doesn't see a colleague's lesson of the same class"
-  )
-  await shot(andrew, "lessons", "10-servant-own-lessons")
   await andrew.context().close()
   await page.context().close()
 }
@@ -514,10 +516,10 @@ async function annualPlanning(christine, sundaySchool) {
   await page.context().close()
 }
 
-const tree = (page) => visible(page.getByRole("tree", { name: "Resources" })).first()
+const tree = (page) => visible(page.getByRole("tree", { name: "Places in the church" })).first()
 const treeItem = (page, name) => tree(page).getByRole("treeitem", { name }).first()
 
-/** Opens a place in the resource explorer; a group (Lessons, Events) only opens its list. */
+/** Selects a place (or a group such as Lessons) in the Access tree. */
 async function openPlace(page, name) {
   const before = page.url()
   await treeItem(page, name).click()
@@ -525,190 +527,169 @@ async function openPlace(page, name) {
   await settle(page)
 }
 
-async function openGroup(page, name, child) {
-  await treeItem(page, name).click()
+/** Opens a branch of the tree without selecting it. */
+async function expand(page, name, child) {
+  await treeItem(page, name).locator("span[aria-hidden=true]").first().click()
   await treeItem(page, child).waitFor()
 }
 
-/** Assign role, step by step; returns on the review step for a screenshot. */
-async function assignSteps(page, { person, role, scope, shots = {} }) {
-  await button(page, "Assign role", { exact: true }).click()
+/** Give access: a person, what it is for, which permissions; optionally a screenshot before saving. */
+async function give(page, { person, what = null, actions, manage = false, shot: name = null }) {
+  await button(page, "Give access", { exact: true }).click()
   await field(page, "Find by name or username").fill(person.split(" ")[0])
   await dialog(page).getByRole("radio", { name: person }).click()
-  if (shots.person) await shot(page, "access", shots.person)
-  await dialog(page).getByRole("button", { name: "Next" }).click()
-  await dialog(page).getByRole("radio", { name: role, exact: true }).click()
-  if (shots.role) {
-    await dialog(page).getByText("Why can’t I give other roles?").click()
-    await shot(page, "access", shots.role)
-  }
-  await dialog(page).getByRole("button", { name: "Next" }).click()
-  await dialog(page).getByRole("radio", { name: scope }).click()
-  if (shots.scope) await shot(page, "access", shots.scope)
-  await dialog(page).getByRole("button", { name: "Next" }).click()
-  await visible(dialog(page).getByText(/gets the role/)).waitFor()
-}
 
-async function confirmAssign(page) {
-  await dialog(page).getByRole("button", { name: "Assign role", exact: true }).click()
+  if (what) {
+    await dialog(page).getByRole("radio", { name: what, exact: true }).click()
+  }
+
+  for (const action of actions) {
+    await dialog(page).getByRole("checkbox", { name: action, exact: true }).click()
+  }
+
+  if (manage) {
+    await dialog(page)
+      .getByRole("checkbox", { name: /May manage access here|Administrator/ })
+      .click()
+  }
+
+  if (name) {
+    await shot(page, "access", name)
+  }
+
+  await dialog(page).getByRole("button", { name: "Save", exact: true }).click()
   await page.locator("[role=dialog]").waitFor({ state: "detached" })
   await settle(page)
 }
 
-const directRows = (page) => page.getByRole("region", { name: "Assigned here" })
+const who = (page) => page.getByRole("region", { name: "Who has access" })
 
 async function accessAsAdministrator() {
-  console.log("Access A, E and I: the administrator, the role hierarchy and a new resource type")
+  console.log("Access: the administrator sees the whole church and chooses who manages access")
   const page = await signIn("Mariam Fahmy")
   await clickAndWait(page, link(page, "Access", { exact: true }), /\/admin\/access/)
   check(await shows(treeItem(page, /^Youth Gathering/)), "the whole church is listed")
   check(
-    await shows(directRows(page).getByText("Administrator", { exact: true })),
-    "the church shows who administers it"
+    await shows(who(page).getByText("Administrator", { exact: true })),
+    "the church shows its administrators"
   )
   await shot(page, "access", "01-administrator-church")
 
   await openPlace(page, /^Youth Gathering/)
   const youth = new URL(page.url()).searchParams.get("r")
-  await openGroup(page, /^Events/, /^Summer camp 2027/)
-  await openPlace(page, /^Summer camp 2027/)
-  await assignSteps(page, {
-    person: "Mark Shenouda",
-    role: "Event coordinator",
-    scope: /^Summer camp 2027, as selected/,
-  })
-  await confirmAssign(page)
+  await openPlace(page, /^Sunday School/)
   check(
-    await shows(directRows(page).getByText("Mark Shenouda")),
-    "an event, a type added through the registry, takes roles like any other place"
+    await shows(who(page).getByText("Manages access here")),
+    "Christine manages access in Sunday School"
   )
-  await shot(page, "access", "02-event-coordinator")
+  await shot(page, "access", "02-sunday-school")
 
-  await go(page, "/admin/access?tab=roles&role=019a3f00-0000-7000-8000-000000000002")
+  await openPlace(page, /^2nd Class/)
+  await give(page, {
+    person: "Marina Samuel",
+    what: "2nd Class",
+    actions: [],
+    manage: true,
+    shot: "03-choose-manager",
+  })
   check(
-    await visible(page.getByText("from Session helper")).first().isVisible(),
-    "inherited permissions say where they come from"
+    await shows(who(page).getByText("Manages access here")),
+    "Marina now manages access in 2nd Class"
   )
-  await shot(page, "access", "03-role-hierarchy")
-  await go(page, "/admin/access/roles/019a3f00-0000-7000-8000-000000000007")
-  check(
-    await visible(page.getByText("Service leader already includes this role.")).first().isVisible(),
-    "a role can't build on a role that already includes it"
-  )
-  await shot(page, "access", "04-role-editor-no-loops")
-  await go(page, "/admin/access/roles/new")
-  await field(page, "Name").fill("Assistant leader")
-  await page.getByRole("checkbox", { name: /^Servant/ }).click()
-  await shot(page, "access", "05-new-role")
-  await go(page, "/admin/access?tab=parents")
-  await shot(page, "access", "06-parental-access")
-  await button(page, "Link a member").click()
-  await shot(page, "access", "07-link-member")
-  await page.keyboard.press("Escape")
+  await shot(page, "access", "04-manager-chosen")
   await page.context().close()
 
   return youth
 }
 
 async function accessAsServiceLeader(youth) {
-  console.log("Access B, D, G and H: Christine manages access within Sunday School")
+  console.log("Access: Christine gives and removes access within Sunday School")
   const page = await signIn("Christine Adel")
   await clickAndWait(page, link(page, "Access", { exact: true }), /\/admin\/access/)
-  check(
-    !(await visible(page.getByRole("link", { name: "Roles & permissions" })).count()),
-    "a service leader doesn't edit roles"
-  )
   check(
     !(await tree(page)
       .getByRole("treeitem", { name: /^Youth Gathering/ })
       .count()),
     "Youth Gathering isn't hers to manage"
   )
-  await shot(page, "access", "08-leader-sunday-school")
+  await shot(page, "access", "05-leader-sunday-school")
 
   await openPlace(page, /^3rd Class/)
-  await assignSteps(page, {
+  await shot(page, "access", "06-stage")
+  await openPlace(page, /^Lessons/)
+  await give(page, {
     person: "Daniel Michael",
-    role: "Servant",
-    scope: /^3rd Class, as selected/,
-    shots: { person: "09-assign-person", role: "10-assign-role", scope: "11-assign-where" },
+    actions: ["Create", "Read"],
+    shot: "07-give-daniel",
   })
-  await shot(page, "access", "12-assign-review")
-  await confirmAssign(page)
-  check(await shows(directRows(page).getByText("Daniel Michael")), "Daniel now serves in 3rd Class")
-  await shot(page, "access", "13-stage-after")
+  check(
+    await shows(who(page).getByText("Daniel Michael")),
+    "Daniel may now create and read lessons in 3rd Class"
+  )
+  await shot(page, "access", "08-daniel-lessons")
 
-  await go(page, `/admin/access?tab=resources&r=${youth}`)
+  await openPlace(page, /^Sunday School/)
+  await button(page, "Give access", { exact: true }).click()
+  await dialog(page).getByRole("radio", { name: "Sunday School", exact: true }).click()
+  check(
+    await dialog(page).getByRole("checkbox", { name: "Delete", exact: true }).isDisabled(),
+    "she can't give what she can't do herself"
+  )
+  await shot(page, "access", "09-only-what-she-has")
+  await page.keyboard.press("Escape")
+
+  await go(page, `/admin/access?r=${youth}`)
   check(
     await visible(page.getByText("This place is outside the area where you manage access."))
       .first()
       .isVisible(),
     "an address outside her area shows nothing of it"
   )
-  await shot(page, "access", "14-outside-her-area")
+  await shot(page, "access", "10-outside-her-area")
 
   await go(page, "/admin/access")
-  await treeItem(page, /^1st Class/).click()
-  await page.waitForURL(/r=stage/)
-  await settle(page)
-  await openGroup(page, /^Lessons/, /^The Good Samaritan/)
+  await expand(page, /^1st Class/, /^Lessons/)
+  await expand(page, /^Lessons/, /^The Good Samaritan/)
   await openPlace(page, /^The Good Samaritan/)
-  await assignSteps(page, {
-    person: "Maria Hanna",
-    role: "Lesson editor",
-    scope: /^The Good Samaritan, as selected/,
-  })
-  await confirmAssign(page)
-  await shot(page, "access", "15-one-lesson")
+  await give(page, { person: "Maria Hanna", actions: ["Read", "Update"] })
+  await shot(page, "access", "11-one-lesson")
   const lesson = await link(page, "Open", { exact: true }).getAttribute("href")
 
   const maria = await signIn("Maria Hanna")
   await go(maria, lesson)
   check(await link(maria, "Edit").isVisible(), "Maria edits The Good Samaritan")
-  await shot(maria, "access", "16-maria-edits-the-lesson")
+  await shot(maria, "access", "12-maria-edits-the-lesson")
   await go(maria, "/lessons")
   check(
     (await visible(maria.getByText("Noah's ark")).count()) === 0,
     "but no other lesson of 1st Class"
   )
-  await shot(maria, "access", "17-maria-preparation")
-  await maria.context().close()
+  await shot(maria, "access", "13-maria-lessons")
 
-  await go(page, "/admin/access")
-  await assignSteps(page, {
-    person: "Daniel Michael",
-    role: "Servant",
-    scope: /^Sunday School, as selected/,
-  })
-  check(
-    await visible(dialog(page).getByText(/Also has Servant for Sunday School › 1st Class/))
-      .first()
-      .isVisible(),
-    "the review names the narrower roles Daniel already has"
-  )
-  await shot(page, "access", "18-overlap-review")
-  await confirmAssign(page)
-  await openPlace(page, /^3rd Class/)
-  await shot(page, "access", "19-inherited-and-direct")
-  await go(page, "/admin/access")
-  await button(page, "Remove Servant from Daniel Michael").click()
-  await visible(dialog(page).getByText("Still in place")).waitFor()
-  await shot(page, "access", "20-revoke-keeps-narrower")
-  await dialog(page).getByRole("button", { name: "Remove role" }).click()
+  await button(page, "Remove access of Maria Hanna to The Good Samaritan").click()
+  await shot(page, "access", "14-remove")
+  await dialog(page).getByRole("button", { name: "Remove", exact: true }).click()
   await page.locator("[role=alertdialog]").waitFor({ state: "detached" })
   await settle(page)
+  await go(maria, lesson)
+  check(
+    new URL(maria.url()).pathname !== lesson ||
+      (await visible(maria.getByText("This page doesn’t exist")).count()) > 0,
+    "Maria loses the lesson when her access is removed"
+  )
+  await maria.context().close()
   await page.context().close()
 
   const mobile = await signIn("Christine Adel", phone)
   await go(mobile, "/admin/access")
-  await shot(mobile, "access", "21-access-mobile")
-  await button(mobile, "Browse resources").click()
-  await shot(mobile, "access", "22-access-mobile-browse")
+  await shot(mobile, "access", "15-access-mobile")
+  await button(mobile, "Choose a place").click()
+  await shot(mobile, "access", "16-access-mobile-tree")
   await mobile.context().close()
 }
 
 async function accessAsServant() {
-  console.log("Access C: Daniel serves in 1st and 3rd Class")
+  console.log("Access: what Daniel can do in Sunday School")
   const daniel = await signIn("Daniel Michael")
   check(
     !(await visible(daniel.getByRole("link", { name: "Access", exact: true })).count()),
@@ -718,17 +699,32 @@ async function accessAsServant() {
   await clickAndWait(daniel, link(daniel, /^Sunday School/), /\/services\/[^/]+$/)
   check(
     !(await visible(daniel.getByText("2nd Class")).count()),
-    "he doesn't see the stages he doesn't serve in"
+    "he doesn't see the stages he has no access to"
   )
-  await shot(daniel, "access", "23-servant-sunday-school")
-  await clickAndWait(daniel, link(daniel, "Schedule"), /tab=schedule/)
-  await clickAndWait(daniel, link(daniel, "3rd Class"), /\/stages\//)
+  await shot(daniel, "access", "17-servant-sunday-school")
+  await go(daniel, "/lessons")
   check(
-    !(await visible(daniel.getByRole("button", { name: "Add one-off session" })).count()),
-    "a servant sees the schedule but doesn't plan it"
+    await visible(daniel.getByText("Moses and the burning bush")).first().isVisible(),
+    "he reads the lessons of 3rd Class"
   )
+  await clickAndWait(
+    daniel,
+    visible(
+      daniel.locator('a[href^="/lessons/"]').filter({ hasText: "Moses and the burning" })
+    ).first(),
+    /\/lessons\/[^/]+$/
+  )
+  check(
+    !(await visible(daniel.getByRole("link", { name: "Edit" })).count()),
+    "but doesn't change them"
+  )
+  await shot(daniel, "access", "18-servant-reads-a-lesson")
   await go(daniel, "/services")
   await clickAndWait(daniel, link(daniel, /^Youth Gathering/), /\/services\/[^/]+$/)
+  check(
+    !(await visible(daniel.getByRole("button", { name: "Add one-off session" })).count()),
+    "he takes attendance in Youth Gathering but doesn't plan it"
+  )
   await shot(daniel, "schedule", "14-other-service-read-only")
   await daniel.context().close()
 
@@ -760,15 +756,15 @@ async function lessonsAndTasks() {
   const page = await signIn("Daniel Michael")
   await go(page, "/lessons")
   check(
-    (await visible(page.getByText("Joseph forgives his brothers")).count()) === 0,
-    "a servant sees only the lessons he writes, not Youssef's in the same class"
+    (await visible(page.getByText("David and Goliath")).count()) === 0,
+    "a servant sees the lessons of his classes only, not 2nd Class"
   )
   await shot(page, "lessons", "01-preparation")
   await clickAndWait(
     page,
     visible(
       page
-        .getByRole("region", { name: "Sunday School - 3rd Class" })
+        .getByRole("region", { name: "Sunday School - 1st Class" })
         .getByRole("link", { name: "New lesson" })
     ).first(),
     /\/lessons\/new/
