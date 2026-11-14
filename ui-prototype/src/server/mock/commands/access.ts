@@ -50,24 +50,6 @@ export function ensureAdministratorRemains(
   }
 }
 
-function record(
-  s: State,
-  kind: "granted" | "revoked",
-  assignment: RoleAssignment,
-  actorId: Uuid | null
-) {
-  s.accessEvents.push({
-    id: uuidv7(nowMs()),
-    at: now(),
-    actorId,
-    kind,
-    accountId: assignment.accountId,
-    roleId: assignment.roleId,
-    roleName: roleOf(s, assignment.roleId)?.name ?? "",
-    resource: assignment.resource,
-  })
-}
-
 export function addAssignment(
   s: State,
   input: {
@@ -99,7 +81,6 @@ export function addAssignment(
     createdBy: input.by,
   }
   s.assignments.push(assignment)
-  record(s, "granted", assignment, input.by)
 
   return assignment
 }
@@ -138,7 +119,6 @@ export function removeAssignment({ state: s, viewer }: Actor, assignmentId: Uuid
   checkRevoke(s, viewer, assignment)
   ensureAdministratorRemains(s, { removedAssignmentId: assignment.id })
   s.assignments.splice(s.assignments.indexOf(assignment), 1)
-  record(s, "revoked", assignment, viewer.id)
 }
 
 export type RoleInput = {

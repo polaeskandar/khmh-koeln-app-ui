@@ -1067,10 +1067,6 @@
       "givenBy": "Vergeben von {name} am {date}",
       "givenOn": "Vergeben am {date}",
       "protected": "Geschützte Rolle",
-      "history": "Letzte Änderungen hier",
-      "granted": "{actor} hat {person} die Rolle {role} gegeben",
-      "revoked": "{actor} hat {person} die Rolle {role} entzogen",
-      "system": "Die App",
       "outside": "Dieser Ort liegt außerhalb des Bereichs, in dem Sie den Zugriff verwalten.",
       "outsideHint": "Sie verwalten den Zugriff in {places}. Für alles andere fragen Sie einen Administrator."
     },

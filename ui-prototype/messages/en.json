@@ -1067,10 +1067,6 @@
       "givenBy": "Given by {name} on {date}",
       "givenOn": "Given on {date}",
       "protected": "Protected role",
-      "history": "Recent changes here",
-      "granted": "{actor} gave {person} the role {role}",
-      "revoked": "{actor} removed the role {role} from {person}",
-      "system": "The app",
       "outside": "This place is outside the area where you manage access.",
       "outsideHint": "You manage access within {places}. For anything else, ask an administrator."
     },

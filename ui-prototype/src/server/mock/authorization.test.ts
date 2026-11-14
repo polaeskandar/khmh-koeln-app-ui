@@ -362,7 +362,6 @@ describe("B and H: Christine delegates within Sunday School", () => {
       )
     ).toBe("ok")
     expect(can(s, daniel, "session.takeAttendance", nextSession("3rd Class"))).toBe(true)
-    expect(s.accessEvents.at(-1)).toMatchObject({ kind: "granted", roleName: "Servant" })
   })
 
   test("she can't give Administrator, Service leader, roles outside Sunday School or at a level her rules don't allow", () => {
@@ -592,7 +591,6 @@ describe("G: revocation", () => {
     removeAssignment(christine, broad.id)
     expect(can(s, daniel, "session.takeAttendance", nextSession("2nd Class"))).toBe(false)
     expect(can(s, daniel, "session.takeAttendance", nextSession("3rd Class"))).toBe(true)
-    expect(s.accessEvents.at(-1)).toMatchObject({ kind: "revoked" })
   })
 
   test("inherited access can't be removed below where it was given; protected and own ones are kept", () => {

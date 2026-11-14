@@ -559,23 +559,6 @@ export function getResourceAccess(ctx: Context, resource: ResourceRef): Resource
     capabilities: Object.fromEntries(
       [...roleIds].map((id) => [id, capabilitiesAt(s, id, resource.type)])
     ),
-    history: s.accessEvents
-      .filter((e) => sameRef(e.resource, resource))
-      .slice(-5)
-      .reverse()
-      .map((e) => {
-        const actor = e.actorId ? accountOf(s, e.actorId) : undefined
-        const person = accountOf(s, e.accountId)
-
-        return {
-          id: e.id,
-          at: e.at,
-          kind: e.kind,
-          actor: actor ? accountName(s, actor) : null,
-          person: person ? accountName(s, person) : "",
-          role: e.roleName,
-        }
-      }),
     assign: assignOptions(ctx, resource),
   }
 }

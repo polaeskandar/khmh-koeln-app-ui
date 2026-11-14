@@ -1,7 +1,6 @@
 import "server-only"
 
 import type {
-  AccessEvent,
   Account,
   AnnualPlan,
   ChurchEvent,
@@ -40,7 +39,6 @@ export type State = {
   /** Bumped on every role change, so cached effective permissions are recomputed. */
   rolesVersion: number
   assignments: RoleAssignment[]
-  accessEvents: AccessEvent[]
   events: ChurchEvent[]
   schedules: Schedule[]
   plans: AnnualPlan[]

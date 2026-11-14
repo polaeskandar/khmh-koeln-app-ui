@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   ChevronDown,
   CornerDownRight,
-  History,
   Lock,
   ShieldCheck,
 } from "lucide-react"
@@ -362,32 +361,6 @@ export function ResourcePanel({ data }: { data: ResourceAccessView }) {
               </div>
             ))}
           </div>
-        </section>
-      ) : null}
-
-      {data.history.length > 0 ? (
-        <section aria-labelledby="access-history" className="flex flex-col gap-2">
-          <h3
-            id="access-history"
-            className="flex items-center gap-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-          >
-            <History className="size-3.5" aria-hidden="true" />
-            {t("history")}
-          </h3>
-          <ul className="flex flex-col gap-1 text-sm">
-            {data.history.map((e) => (
-              <li key={e.id} className={cn("flex flex-wrap gap-x-2 text-muted-foreground")}>
-                <span className="tabular-nums">{f.mediumDate(f.instantDate(e.at))}</span>
-                <span className="text-foreground">
-                  {t(e.kind, {
-                    actor: e.actor ?? t("system"),
-                    person: e.person,
-                    role: e.role,
-                  })}
-                </span>
-              </li>
-            ))}
-          </ul>
         </section>
       ) : null}
     </section>

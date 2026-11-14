@@ -1067,10 +1067,6 @@
       "givenBy": "منحه {name} في {date}",
       "givenOn": "مُنح في {date}",
       "protected": "دور محمي",
-      "history": "آخر التغييرات هنا",
-      "granted": "منح {actor} الدور {role} لـ {person}",
-      "revoked": "سحب {actor} الدور {role} من {person}",
-      "system": "التطبيق",
       "outside": "هذا المكان خارج النطاق الذي تدير فيه الوصول.",
       "outsideHint": "تدير الوصول داخل {places}. لأي شيء آخر، اسأل مسؤول النظام."
     },

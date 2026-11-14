@@ -121,18 +121,6 @@ export type RoleAssignment = {
   createdBy: Uuid | null
 }
 
-/** The audit trail of Access: every role given and removed, by whom and when. */
-export type AccessEvent = {
-  id: Uuid
-  at: Instant
-  actorId: Uuid | null
-  kind: "granted" | "revoked"
-  accountId: Uuid
-  roleId: Uuid
-  roleName: string
-  resource: ResourceRef
-}
-
 /**
  * A fictional resource type that exists only to show that a new type plugs into authorization
  * through the registry: it has no screens of its own.

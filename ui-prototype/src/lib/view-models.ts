@@ -125,15 +125,6 @@ export type AssignOptions = {
   unavailable: { id: Uuid; name: string; reason: string }[]
 }
 
-export type AccessHistoryEntry = {
-  id: Uuid
-  at: Instant
-  kind: "granted" | "revoked"
-  actor: string | null
-  person: string
-  role: string
-}
-
 export type ResourceAccessView = {
   resource: ResourceLabel & { archived: boolean }
   path: (ResourceLabel & { href: string | null })[]
@@ -143,7 +134,6 @@ export type ResourceAccessView = {
   inherited: InheritedGroup[]
   /** What each role listed here allows on this resource and below it. */
   capabilities: Record<Uuid, CapabilityGroup[]>
-  history: AccessHistoryEntry[]
   assign: AssignOptions | null
 }
 

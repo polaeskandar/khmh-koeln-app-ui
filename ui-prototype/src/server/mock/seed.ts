@@ -183,7 +183,6 @@ export function seed(data: DemoData): State {
     roles: [],
     rolesVersion: 0,
     assignments: [],
-    accessEvents: [],
     events: [],
     schedules: [],
     plans: [],
