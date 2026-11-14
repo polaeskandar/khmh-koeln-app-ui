@@ -27,8 +27,9 @@ and attendance is taken on them by hand. Servants prepare lessons and give tasks
 members read the published lessons and mark tasks done. Children are members. Requests to see or delete personal data
 are handled in Administration › Data. The app speaks English, German and Arabic (right to left) and has a dark mode.
 
-The implementation tickets are polaeskandar/khmh-koeln-app-backend#353–#419 and
-polaeskandar/khmh-koeln-app-frontend#406–#459.
+The implementation tickets are polaeskandar/khmh-koeln-app-backend#353–#457 and
+polaeskandar/khmh-koeln-app-frontend#406–#467; [`docs/authorization.md`](docs/authorization.md#implementation) maps the
+access work to them.
 
 ## Trying the prototype
 

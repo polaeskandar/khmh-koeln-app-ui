@@ -219,12 +219,41 @@ insecure state:
 6. Switch `/api/me` and the Access endpoints; the frontend follows.
 7. Drop `role.scope`, `staff_assignment`, the old voter and the old permission enum in a final migration.
 
+## Implementation
+
+The production work is planned as issues (backend `B`, frontend `F`); the prototype is the reference for behaviour and
+screens.
+
+| Requirement | Backend | Frontend | Prototype |
+| --- | --- | --- | --- |
+| Access context in place | [B#354](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/354) | [F#406](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/406) | `src/features/access`, `src/server/mock` |
+| Resource registry, one authorization parent, extensibility (I) | [B#355](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/355), [B#439](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/439) | [F#407](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/407) | `resources.ts`, events, `retreat` test |
+| Role hierarchy, loops, places, delegation rules (E) | [B#440](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/440), [B#447](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/447) | [F#421](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/421), [F#462](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/462) | `roles.ts`, Roles & permissions |
+| Protected Administrator, last administrator (A) | [B#359](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/359) | [F#421](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/421) | `ensureAdministratorRemains` |
+| Assignments on one resource; migration | [B#356](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/356) | [F#463](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/463) | `RoleAssignment` |
+| Evaluator: containment, type, create on parent, archived (F, D) | [B#357](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/357), [B#455](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/455) | [F#407](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/407) | `access.ts` |
+| Symfony Security integration | [B#448](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/448) | — | — |
+| Delegation with ceiling; give and remove (B, G, H) | [B#358](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/358), [B#449](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/449) | [F#464](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/464), [F#465](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/465) | `delegation.ts`, assign and remove dialogs |
+| Resource explorer | [B#450](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/450) | [F#422](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/422) | `resource-explorer.tsx` |
+| Who has access to a place, from where (C, F) | [B#441](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/441) | [F#463](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/463) | `resource-panel.tsx` |
+| Ownership policy, servants' own lessons (D) | [B#446](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/446), [B#420](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/420), [B#444](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/444) | [F#460](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/460) | `grantOwner` |
+| `/api/me` and permission-aware navigation | [B#360](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/360) | [F#407](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/407), [F#412](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/412), [F#414](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/414) | `getShell` |
+| Every endpoint on the evaluator, cut over safely | [B#456](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/456), [B#445](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/445), [B#452](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/452), [B#453](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/453) | — | mock commands and queries |
+| Parents and members by relationship | [B#371](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/371), [B#454](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/454) | [F#423](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/423) | `canActForChild`, Parental access |
+| Accounts stay separate | [B#365](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/365), [B#453](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/453) | [F#418](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/418), [F#419](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/419) | assign picks existing accounts only |
+| Moving resources; deleted resources | [B#451](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/451), [B#443](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/443) | — | `moveProblem`, `removeOrphanedAssignments` |
+| Security and journey tests | [B#379](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/379) | [F#105](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/105) | `authorization.test.ts`, `screenshots.mjs` |
+| Removing the old model | [B#383](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/383), [B#384](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/384) | [F#426](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/426), [F#466](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/466) | old Access UI removed |
+| Documentation | [B#457](https://github.com/polaeskandar/khmh-koeln-app-backend/issues/457) | [F#467](https://github.com/polaeskandar/khmh-koeln-app-frontend/issues/467) | this document |
+
 ## Open decisions
 
 1. When someone loses their stage role, should their Lesson editor roles there end too? Default: no, assignments are
    independent.
 2. Should servants read colleagues' lessons? One permission on Servant (`lesson.read`); default no (board decision).
 3. Assignment expiry (e.g. for helpers) is not in the model; it would be a `valid_until` on assignments.
+4. The event type is fictional: it proves extensibility in the prototype; production registers a test-only type instead
+   (B#355) until the church wants events.
 
 ## References
 
